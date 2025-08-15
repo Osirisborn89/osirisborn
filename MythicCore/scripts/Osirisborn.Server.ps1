@@ -1,250 +1,131 @@
 #requires -Version 7.0
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
 
-# --- Paths ---
-$Script:Root     = Split-Path $PSScriptRoot -Parent       # ...\MythicCore
-$Script:Modules  = Join-Path $PSScriptRoot 'modules'      # ...\scripts\modules
-$Script:WWW      = Join-Path $Script:Root  'www'          # ...\www
-$Script:Data     = Join-Path $Script:Root  'data'         # ...\data
-$Script:Mirror   = Join-Path $Script:WWW   'mirror.json'
-$Script:Port     = 7777
+$ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Modules    = Join-Path $ScriptRoot 'modules'
+$DataDir    = Join-Path (Split-Path $ScriptRoot -Parent) 'data'
+$Mirror     = Join-Path (Split-Path $ScriptRoot -Parent) 'www\mirror.json'
+$Www        = Join-Path (Split-Path $ScriptRoot -Parent) 'www'
 
-# --- Import modules with explicit paths (and dot-source fallback) ---
-$importsOk = $true
-function Try-Import([string]$name){
-  $p = Join-Path $Script:Modules $name
-  try {
-    Import-Module $p -Force -ErrorAction Stop
-  } catch {
-    try {
-      . $p   # dot-source fallback
-    } catch {
-      $script:importsOk = $false
-    }
+. (Join-Path $Modules 'Osirisborn.Store.psm1')
+. (Join-Path $Modules 'Osirisborn.XP.psm1')
+. (Join-Path $Modules 'Osirisborn.Missions.psm1')
+
+function Write-Json([System.Net.HttpListenerResponse]$res, $obj, [int]$status=200) {
+  $res.StatusCode = $status
+  $json  = ($obj | ConvertTo-Json -Depth 6)
+  $bytes = [Text.Encoding]::UTF8.GetBytes($json)
+  $res.ContentType = 'application/json; charset=utf-8'
+  $res.OutputStream.Write($bytes,0,$bytes.Length)
+  $res.Close()
+}
+function Write-File([System.Net.HttpListenerResponse]$res, [string]$path, [string]$contentType) {
+  $bytes = [IO.File]::ReadAllBytes($path)
+  $res.StatusCode = 200
+  $res.ContentType = $contentType
+  $res.OutputStream.Write($bytes,0,$bytes.Length)
+  $res.Close()
+}
+function Read-Body([System.Net.HttpListenerRequest]$req) {
+  $sr   = New-Object IO.StreamReader($req.InputStream, $req.ContentEncoding)
+  $text = $sr.ReadToEnd(); $sr.Close()
+  if ([string]::IsNullOrWhiteSpace($text)) { return @{} }
+  try { return $text | ConvertFrom-Json -Depth 6 } catch { return @{} }
+}
+function Summarize-XP([int]$Days=30) {
+  Initialize-OsStore
+  $s = Get-OsStore
+  $end   = (Get-Date).Date
+  $start = $end.AddDays(-[Math]::Max(0, $Days-1))
+  $buckets = @{}
+  for ($d=$start; $d -le $end; $d=$d.AddDays(1)) { $buckets[$d.ToString('yyyy-MM-dd')] = 0 }
+  $log = if ($s.meta -and $s.meta.xpLog) { $s.meta.xpLog } else { @() }
+  foreach ($e in $log) {
+    $dt = [DateTime]::Parse($e.at)
+    $key = $dt.ToString('yyyy-MM-dd')
+    if ($buckets.ContainsKey($key)) { $buckets[$key] += [int]$e.delta }
   }
-}
-Try-Import 'Osirisborn.Store.psm1'
-Try-Import 'Osirisborn.XP.psm1'
-Try-Import 'Osirisborn.Missions.psm1'
-
-# ---------- Helpers ----------
-function Write-Bytes {
-  param(
-    [Parameter(Mandatory)][System.Net.HttpListenerContext]$ctx,
-    [Parameter(Mandatory)][byte[]]$Bytes,
-    [int]$Code = 200,
-    [string]$ContentType = 'text/plain; charset=utf-8'
-  )
-  $ctx.Response.StatusCode  = $Code
-  $ctx.Response.ContentType = $ContentType
-  $ctx.Response.OutputStream.Write($Bytes, 0, $Bytes.Length)
-  $ctx.Response.Close()
-}
-function Write-Text {
-  param(
-    [Parameter(Mandatory)][System.Net.HttpListenerContext]$ctx,
-    [Parameter(Mandatory)][string]$Text,
-    [int]$Code = 200,
-    [string]$ContentType = 'text/plain; charset=utf-8'
-  )
-  $bytes = [Text.Encoding]::UTF8.GetBytes($Text)
-  Write-Bytes -ctx $ctx -Bytes $bytes -Code $Code -ContentType $ContentType
-}
-function Write-Json {
-  param(
-    [Parameter(Mandatory)][System.Net.HttpListenerContext]$ctx,
-    [Parameter(Mandatory)]$Obj,
-    [int]$Code = 200
-  )
-  $json = ($Obj | ConvertTo-Json -Depth 10)
-  Write-Text -ctx $ctx -Text $json -Code $Code -ContentType 'application/json; charset=utf-8'
-}
-function Read-JsonBody {
-  param([Parameter(Mandatory)][System.Net.HttpListenerRequest]$req)
-  if (-not $req.HasEntityBody) { return @{} }
-  $sr = New-Object IO.StreamReader($req.InputStream, [Text.Encoding]::UTF8)
-  $txt = $sr.ReadToEnd(); $sr.Close()
-  if ([string]::IsNullOrWhiteSpace($txt)) { return @{} }
-  try { $txt | ConvertFrom-Json } catch { @{} }
-}
-function Parse-Query {
-  param([Parameter(Mandatory)][uri]$uri)
-  $q = @{}
-  $raw = $uri.Query
-  if ([string]::IsNullOrEmpty($raw)) { return $q }
-  $raw.TrimStart('?').Split('&', [StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object {
-    $kv = $_.Split('=',2)
-    $k  = [uri]::UnescapeDataString($kv[0])
-    $v  = if ($kv.Length -gt 1) { [uri]::UnescapeDataString($kv[1]) } else { '' }
-    $q[$k] = $v
+  $series = @(); $cum = 0
+  foreach ($kv in ($buckets.GetEnumerator() | Sort-Object Name)) {
+    $cum += [int]$kv.Value
+    $series += [pscustomobject]@{ date=$kv.Key; xp=[int]$kv.Value; cumulative=$cum }
   }
-  $q
-}
-
-# ---------- XP series (primary: store; fallback: mirror.json) ----------
-function Get-XpSeries {
-  param([int]$Days = 30)
-
-  $to   = (Get-Date).Date
-  $from = $to.AddDays(-[Math]::Max(0,$Days-1))
-
-  # accumulate XP by day from the real store if possible
-  $map  = @{}
-  $summary = $null
-
-  try {
-    # requires Osirisborn.Store + data shape
-    $s = Get-OsStore
-    $log = @($s.meta.xpLog)
-    foreach($e in $log){
-      $d = (Get-Date $e.at).ToString('yyyy-MM-dd')
-      $map[$d] = [int]($map[$d] + [int]$e.delta)
-    }
-    $todayKey = $to.ToString('yyyy-MM-dd')
-    $xpToday  = [int]($map[$todayKey] ?? 0)
-    $goal     = [int]($s.targets.dailyGoal ?? 0)
-    $summary  = [pscustomobject]@{
+  $nowKey   = (Get-Date).ToString('yyyy-MM-dd')
+  $xpToday  = if ($buckets.ContainsKey($nowKey)) { [int]$buckets[$nowKey] } else { 0 }
+  $goal     = if ($s.settings -and $s.settings.dailyGoal) { [int]$s.settings.dailyGoal } else { 300 }
+  $remain   = [Math]::Max(0, $goal - $xpToday)
+  $o = Get-OsXP
+  return @{
+    days   = $Days
+    series = $series
+    summary = @{
       xpToday     = $xpToday
       dailyGoal   = $goal
-      remaining   = [int]([Math]::Max(0, $goal - $xpToday))
-      rank        = $s.user.rank
-      xp          = [int]$s.user.xp
-      progressPct = [int]$s.user.progressPct
-    }
-  } catch {
-    # fallback: mirror.json (has summary + today's XP/goal)
-    try {
-      $m = Get-Content $Script:Mirror -Raw | ConvertFrom-Json
-      $xpToday = [int]($m.targets.xpToday ?? 0)
-      $summary = [pscustomobject]@{
-        xpToday     = $xpToday
-        dailyGoal   = [int]($m.targets.dailyGoal ?? 0)
-        remaining   = [int]($m.targets.xpRemaining ?? 0)
-        rank        = $m.user.rank
-        xp          = [int]$m.user.xp
-        progressPct = [int]$m.user.progressPct
-      }
-      # put xpToday into the last day so the chart isn’t flat
-      $map[$to.ToString('yyyy-MM-dd')] = $xpToday
-    } catch {
-      $summary = $null
+      remaining   = $remain
+      rank        = $o.Rank
+      xp          = $o.XP
+      progressPct = $o.ProgressPct
     }
   }
-
-  $series = @()
-  $cum = 0
-  for($d=$from; $d -le $to; $d=$d.AddDays(1)){
-    $key = $d.ToString('yyyy-MM-dd')
-    $xp  = [int]($map[$key] ?? 0)
-    $cum += $xp
-    $series += [pscustomobject]@{ date=$key; xp=$xp; cumulative=$cum }
-  }
-  [pscustomobject]@{ days=$Days; series=$series; summary=$summary }
 }
 
-# ---------- HTTP listener ----------
+$Port = 7777
 $listener = [System.Net.HttpListener]::new()
-$prefix   = "http://localhost:$($Script:Port)/"
-$listener.Prefixes.Clear(); $listener.Prefixes.Add($prefix)
+$listener.Prefixes.Add("http://localhost:$Port/")
 $listener.Start()
-Write-Host "Osirisborn server running → $prefix  (Ctrl+C to stop)"
+Write-Host "Osirisborn server running → http://localhost:$Port/  (Ctrl+C to stop)"
 
 try {
   while ($listener.IsListening) {
     $ctx = $listener.GetContext()
     try {
-      $req  = $ctx.Request
-      $path = $req.Url.AbsolutePath
-      $qs   = Parse-Query $req.Url
+      $req = $ctx.Request; $res = $ctx.Response
+      $path = $req.Url.AbsolutePath; $method = $req.HttpMethod.ToUpperInvariant()
 
-      # --- Static files ---
-      if ($path -eq '/' -or $path -match '^/index\.html$') {
-        $html = Get-Content (Join-Path $Script:WWW 'index.html') -Raw
-        Write-Text -ctx $ctx -Text $html -ContentType 'text/html; charset=utf-8'
-        continue
-      }
-      elseif ($path -match '^/client\.js$') {
-        $js = Get-Content (Join-Path $Script:WWW 'client.js') -Raw
-        Write-Text -ctx $ctx -Text $js -ContentType 'application/javascript; charset=utf-8'
-        continue
-      }
-      elseif ($path -match '^/mirror\.json$' -and (Test-Path $Script:Mirror)) {
-        $json = Get-Content $Script:Mirror -Raw
-        Write-Text -ctx $ctx -Text $json -ContentType 'application/json; charset=utf-8'
-        continue
-      }
+      if ($path -eq '/' -or $path -match '^/index\.html$') { Write-File $res (Join-Path $Www 'index.html') 'text/html; charset=utf-8'; continue }
+      elseif ($path -match '^/client\.js$')                 { Write-File $res (Join-Path $Www 'client.js') 'application/javascript; charset=utf-8'; continue }
+      elseif ($path -match '^/mirror\.json$' -and (Test-Path $Mirror)) { Write-File $res $Mirror 'application/json; charset=utf-8'; continue }
 
-      # --- Diagnostics ---
-      if ($path -eq '/diag') {
-        $visible = @()
-        try {
-          $visible = Get-Command Add-OsMission,Get-OsMissions,Add-OsXP,Get-OsXP -ErrorAction SilentlyContinue |
-                     Select-Object Name,ModuleName
-        } catch {}
-        Write-Json -ctx $ctx @{
-          modulesPath = $Script:Modules
-          exists      = @{
-            missions = Test-Path (Join-Path $Script:Modules 'Osirisborn.Missions.psm1')
-            xp       = Test-Path (Join-Path $Script:Modules 'Osirisborn.XP.psm1')
-            store    = Test-Path (Join-Path $Script:Modules 'Osirisborn.Store.psm1')
-          }
-          mode        = 'inline'
-          visible     = $visible
+      if     ($path -eq '/diag') {
+        $exists = @{
+          store    = Test-Path (Join-Path $Modules 'Osirisborn.Store.psm1')
+          xp       = Test-Path (Join-Path $Modules 'Osirisborn.XP.psm1')
+          missions = Test-Path (Join-Path $Modules 'Osirisborn.Missions.psm1')
         }
-        continue
+        $visible = Get-Command Add-OsMission,Get-OsMissions,Add-OsXP,Get-OsXP -ErrorAction SilentlyContinue |
+                   Select-Object Name,ModuleName
+        Write-Json $res @{ mode='inline'; modulesPath=$Modules; exists=$exists; visible=$visible }; continue
       }
-
-      # --- XP ---
-      if ($path -eq '/xp.json') {
-        $days = 30
-        if ($qs.ContainsKey('days')) { [void][int]::TryParse($qs['days'], [ref]$days) }
-        Write-Json -ctx $ctx (Get-XpSeries -Days $days)
-        continue
+      if     ($path -eq '/xp.json') {
+        $days = 30; try { if ($req.QueryString['days']) { $days = [int]$req.QueryString['days'] } } catch {}
+        Write-Json $res (Summarize-XP -Days $days); continue
       }
-
-      # --- Missions (filter nulls/empties) ---
-      if ($path -eq '/api/missions' -and $req.HttpMethod -eq 'GET') {
-        if (-not (Get-Command Get-OsMissions -ErrorAction SilentlyContinue)) {
-          throw "Missions module not loaded."
+      if     ($path -eq '/api/missions' -and $method -eq 'GET') {
+        Initialize-OsStore
+        $items = Get-OsMissions | ForEach-Object {
+          [pscustomobject]@{ id="$($_.Id)"; title="$($_.Title)"; xp=[int]$_.XP; status="$($_.Status)" }
         }
-        $items = @(Get-OsMissions |
-          Where-Object { $_ -and ($_.id ?? $_.Id) } |
-          Select-Object @{n='id';e={$_.id ?? $_.Id}},
-                        @{n='title';e={$_.title ?? $_.Title}},
-                        @{n='xp';e={[int]($_.xp ?? $_.XP)}},
-                        @{n='status';e={$_.status ?? $_.Status}})
-        Write-Json -ctx $ctx @{ items = $items }
-        continue
+        Write-Json $res @{ items = @($items) }; continue
+      }
+      if     ($path -eq '/api/mission/add' -and $method -eq 'POST') {
+        $b = Read-Body $req; $id="$($b.id)"; $title="$($b.title)"; $xp=[int]$b.xp
+        if (-not $id)   { Write-Json $res @{ error="Missing id" } 400; continue }
+        if (-not $title){ $title='New Mission' }
+        Add-OsMission -Id $id -XP $xp -Title $title | Out-Null
+        Write-Json $res @{ ok=$true; id=$id }; continue
+      }
+      if     ($path -eq '/api/mission/complete' -and $method -eq 'POST') {
+        $b = Read-Body $req; $id="$($b.id)"
+        if (-not $id) { Write-Json $res @{ error='Missing id' } 400; continue }
+        $null = Complete-OsMission -Id $id
+        $xp = Get-OsXP
+        Write-Json $res @{ ok=$true; id=$id; rank=$xp.Rank; xp=$xp.XP; progressPct=$xp.ProgressPct }; continue
       }
 
-      if ($path -eq '/api/mission/add' -and $req.HttpMethod -eq 'POST') {
-        $b = Read-JsonBody -req $req
-        if (-not (Get-Command Add-OsMission -ErrorAction SilentlyContinue)) {
-          throw "Missions module not loaded."
-        }
-        Add-OsMission -Id $b.id -XP ([int]$b.xp) -Title $b.title | Out-Null
-        Write-Json -ctx $ctx @{ ok = $true }
-        continue
-      }
-
-      if ($path -eq '/api/mission/complete' -and $req.HttpMethod -eq 'POST') {
-        $b = Read-JsonBody -req $req
-        if (-not (Get-Command Complete-OsMission -ErrorAction SilentlyContinue)) {
-          throw "Missions module not loaded."
-        }
-        Complete-OsMission -Id $b.id | Out-Null
-        Write-Json -ctx $ctx @{ ok = $true }
-        continue
-      }
-
-      # Fallback
-      Write-Json -ctx $ctx @{ error = "Not found: $path" } 404
-    }
-    catch {
-      Write-Json -ctx $ctx @{ error = $_.Exception.Message } 500
+      Write-Json $res @{ error = "Not found: $path" } 404
+    } catch {
+      try { Write-Json $ctx.Response @{ error = $_.Exception.Message } } catch {}
     }
   }
-}
-finally {
-  $listener.Stop(); $listener.Close()
-}
+} finally { $listener.Stop(); $listener.Close() }
