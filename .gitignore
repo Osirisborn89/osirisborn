@@ -1,19 +1,7 @@
-# OS junk
-Thumbs.db
-.DS_Store
-
-# Project data (do NOT commit)
-MythicCore/data/
-MythicCore/www/mirror.json
-
-# Logs / exports / local helpers
-*.log
+data/
+*.plasma
 *.bak
-*.csv
-*.cmd
-*.bat
-*.lnk
-
-# Editors
-.vscode/
-.idea/
+node_modules/
+target/
+desktop/src-tauri/target/
+*.log
