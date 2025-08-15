@@ -1,275 +1,189 @@
 #requires -Version 7.0
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
 
-# ---- Paths
-$Root     = Join-Path $env:USERPROFILE 'Osirisborn\MythicCore'
-$DataDir  = Join-Path $Root 'data'
-$WWW      = Join-Path $Root 'www'
-$Store    = Join-Path $DataDir 'store.plasma'
-$Mirror   = Join-Path $Root 'www\mirror.json'
-$Port     = 7777
+# --- Paths (relative to this script)
+$ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Modules    = Join-Path $ScriptRoot 'modules'
+$RootDir    = Split-Path $ScriptRoot -Parent
+$DataDir    = Join-Path $RootDir 'data'
+$Www        = Join-Path $RootDir 'www'
+$Mirror     = Join-Path $RootDir 'www\mirror.json'
+$Store      = Join-Path $DataDir 'store.plasma'   # store file used by modules
 
-# ---- Helpers: storage
-function Read-Store {
-  if (Test-Path $Store) {
-    try { return (Get-Content $Store -Raw | ConvertFrom-Json -Depth 64) } catch { }
-  }
-  # default
-  [pscustomobject]@{
-    user = [pscustomobject]@{ xp=0; rank="Initiate"; alias="Osirisborn"; progressPct=0; streakCurrent=0; streakLongest=0 }
-    missions = [pscustomobject]@{ catalog=@{}; completed=@() }
-    meta = [pscustomobject]@{ xpLog=@() }
-    settings = [pscustomobject]@{ dailyGoal = 300; notify=$true }
-  }
+# --- Load modules
+. (Join-Path $Modules 'Osirisborn.Store.psm1')
+. (Join-Path $Modules 'Osirisborn.XP.psm1')
+. (Join-Path $Modules 'Osirisborn.Missions.psm1')
+
+# --- Helpers
+function Write-Json([System.Net.HttpListenerResponse]$res, $obj, [int]$status=200) {
+  $res.StatusCode = $status
+  $json  = ($obj | ConvertTo-Json -Depth 6)
+  $bytes = [Text.Encoding]::UTF8.GetBytes($json)
+  $res.ContentType = 'application/json; charset=utf-8'
+  $res.OutputStream.Write($bytes,0,$bytes.Length)
+  $res.Close()
 }
-function Write-Store($s) {
-  New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
-  $json = $s | ConvertTo-Json -Depth 64
-  Set-Content -Path $Store -Value $json -Encoding UTF8
-  # mirror (small summary consumed by some views)
-  $mir = [pscustomobject]@{
-    user = [pscustomobject]@{
-      xp=[int]$s.user.xp; rank=$s.user.rank; alias=$s.user.alias; progressPct=[int]$s.user.progressPct;
-      streakCurrent = [int]($s.user.streakCurrent   ?? 0)
-      streakLongest = [int]($s.user.streakLongest   ?? 0)
-      badges        = [int](($s.meta.badges?.Count) ?? 0)
+function Write-File([System.Net.HttpListenerResponse]$res, [string]$path, [string]$contentType) {
+  $bytes = [IO.File]::ReadAllBytes($path)
+  $res.StatusCode = 200
+  $res.ContentType = $contentType
+  $res.OutputStream.Write($bytes,0,$bytes.Length)
+  $res.Close()
+}
+function Read-Body([System.Net.HttpListenerRequest]$req) {
+  $sr   = New-Object IO.StreamReader($req.InputStream, $req.ContentEncoding)
+  $text = $sr.ReadToEnd(); $sr.Close()
+  if ([string]::IsNullOrWhiteSpace($text)) { return @{} }
+  try { return $text | ConvertFrom-Json -Depth 6 } catch { return @{} }
+}
+function Summarize-XP([int]$Days=30) {
+  Initialize-OsStore
+  $s = Get-OsStore
+
+  $end   = (Get-Date).Date
+  $start = $end.AddDays(-[Math]::Max(0, $Days-1))
+
+  # daily buckets
+  $buckets = @{}
+  for ($d=$start; $d -le $end; $d=$d.AddDays(1)) { $buckets[$d.ToString('yyyy-MM-dd')] = 0 }
+
+  $log = if ($s.meta -and $s.meta.xpLog) { $s.meta.xpLog } else { @() }
+  foreach ($e in $log) {
+    try {
+      $dt  = [DateTime]::Parse($e.at)
+      $key = $dt.ToString('yyyy-MM-dd')
+      if ($buckets.ContainsKey($key)) { $buckets[$key] += [int]$e.delta }
+    } catch {}
+  }
+
+  $series = @(); $cum = 0
+  foreach ($kv in ($buckets.GetEnumerator() | Sort-Object Name)) {
+    $cum += [int]$kv.Value
+    $series += [pscustomobject]@{ date=$kv.Key; xp=[int]$kv.Value; cumulative=$cum }
+  }
+
+  $nowKey   = (Get-Date).ToString('yyyy-MM-dd')
+  $xpToday  = if ($buckets.ContainsKey($nowKey)) { [int]$buckets[$nowKey] } else { 0 }
+  $goal     = if ($s.settings -and $s.settings.dailyGoal) { [int]$s.settings.dailyGoal } else { 300 }
+  $remain   = [Math]::Max(0, $goal - $xpToday)
+
+  $o = Get-OsXP
+  return @{
+    days   = $Days
+    series = $series
+    summary = @{
+      xpToday     = $xpToday
+      dailyGoal   = $goal
+      remaining   = $remain
+      rank        = $o.Rank
+      xp          = $o.XP
+      progressPct = $o.ProgressPct
     }
-    targets = [pscustomobject]@{
-      dailyGoal = [int]($s.settings.dailyGoal ?? 300)
-      xpToday   = 0; xpRemaining = [int]($s.settings.dailyGoal ?? 300); suggestions = @()
-    }
-    updated = (Get-Date).ToString("o")
   }
-  Set-Content -Path $Mirror -Value ($mir | ConvertTo-Json -Depth 6) -Encoding UTF8
 }
 
-# ---- Rank thresholds
-$Ranks = @(
-"Initiate","Ghost","Signal Diver","Network Phantom","Redline Operative",
-"Shadow Architect","Spectral Engineer","Elite","Voidbreaker","God Tier: Osirisborn"
-)
-$Threshold = @{
-  "Initiate"=0; "Ghost"=200; "Signal Diver"=600; "Network Phantom"=1200; "Redline Operative"=2000;
-  "Shadow Architect"=3000; "Spectral Engineer"=4500; "Elite"=6500; "Voidbreaker"=9000; "God Tier: Osirisborn"=12000
-}
-function Update-RankProgress([int]$xp,[string]$rank){
-  $idx = [Math]::Max(0, $Ranks.IndexOf($rank))
-  $curr = $Threshold[$Ranks[$idx]]
-  $next = $Threshold[$Ranks[ [Math]::Min($idx+1,$Ranks.Count-1) ]]
-  $span = [Math]::Max(1, $next-$curr)
-  $pct  = [int][Math]::Clamp( 100*($xp-$curr)/$span, 0, 100 )
-  [pscustomobject]@{ NextRank = $Ranks[ [Math]::Min($idx+1,$Ranks.Count-1) ]; ProgressPct=$pct }
-}
-function Add-XP([int]$delta,[string]$reason){
-  $s = Read-Store
-  $s.user.xp = [int]$s.user.xp + $delta
-  # rank up
-  foreach($r in $Ranks){ if ($s.user.xp -ge $Threshold[$r]) { $s.user.rank=$r } }
-  $pg = Update-RankProgress -xp $s.user.xp -rank $s.user.rank
-  $s.user.progressPct = $pg.ProgressPct
-  # log
-  if (-not $s.meta) { $s | Add-Member meta ([pscustomobject]@{}) -Force }
-  if (-not $s.meta.xpLog){ $s.meta | Add-Member xpLog @() -Force }
-  $entry = [pscustomobject]@{ at=(Get-Date).ToString("o"); delta=$delta; reason=$reason; total=[int]$s.user.xp; rank=$s.user.rank }
-  $s.meta.xpLog = @($s.meta.xpLog + $entry)
-  Write-Store $s
-  return $s
-}
-
-# ---- HTTP
-Add-Type -AssemblyName System.Net.HttpListener
+# --- Server
+$Port = 7777
 $listener = [System.Net.HttpListener]::new()
-$listener.Prefixes.Add("http://+:$Port/")
+$listener.Prefixes.Add("http://localhost:$Port/")
 $listener.Start()
+
+# Auto-open browser
 Start-Process "http://localhost:$Port/"
 Write-Host "Osirisborn server running → http://localhost:$Port/  (Ctrl+C to stop)"
 
-while ($true) {
-  $ctx   = $listener.GetContext()
-  $req   = $ctx.Request
-  $res   = $ctx.Response
-  $path  = $req.Url.AbsolutePath
-  $meth  = $req.HttpMethod
+try {
+  while ($listener.IsListening) {
+    $ctx = $listener.GetContext()
+    try {
+      $req = $ctx.Request; $res = $ctx.Response
+      $path = $req.Url.AbsolutePath; $method = $req.HttpMethod.ToUpperInvariant()
 
-  try {
-    # ---- Static: index.html
-    if ($meth -eq 'GET' -and ($path -eq '/' -or $path -eq '/index.html')) {
-      $html = Get-Content (Join-Path $WWW 'index.html') -Raw
-      $bytes = [Text.Encoding]::UTF8.GetBytes($html)
-      $res.ContentType = 'text/html; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
-    # ---- Static: client.js
-    elseif ($meth -eq 'GET' -and $path -eq '/client.js') {
-      $js = Get-Content (Join-Path $WWW 'client.js') -Raw
-      $bytes = [Text.Encoding]::UTF8.GetBytes($js)
-      $res.ContentType = 'application/javascript; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
-    # ---- Static: mirror.json (if present)
-    elseif ($meth -eq 'GET' -and $path -eq '/mirror.json' -and (Test-Path $Mirror)) {
-      $json = Get-Content $Mirror -Raw
-      $bytes = [Text.Encoding]::UTF8.GetBytes($json)
-      $res.ContentType = 'application/json; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
+      # --- Static files ---
+      if     ($path -eq '/' -or $path -match '^/index\.html$') { Write-File $res (Join-Path $Www 'index.html') 'text/html; charset=utf-8'; continue }
+      elseif ($path -match '^/client\.js$')                    { Write-File $res (Join-Path $Www 'client.js') 'application/javascript; charset=utf-8'; continue }
+      elseif ($path -match '^/mirror\.json$' -and (Test-Path $Mirror)) { Write-File $res $Mirror 'application/json; charset=utf-8'; continue }
 
-    # ---- DIAG
-    if ($meth -eq 'GET' -and $path -eq '/diag') {
-      $diag = [pscustomobject]@{
-        modulesPath = (Join-Path $Root 'scripts\modules')
-        exists = [pscustomobject]@{
-          store    = Test-Path $Store
-          missions = $true
-          xp       = $true
+      # --- DIAG
+      if ($path -eq '/diag') {
+        $exists = @{
+          store    = Test-Path (Join-Path $Modules 'Osirisborn.Store.psm1')
+          xp       = Test-Path (Join-Path $Modules 'Osirisborn.XP.psm1')
+          missions = Test-Path (Join-Path $Modules 'Osirisborn.Missions.psm1')
         }
-        mode = 'inline'
-        visible = @(
-          [pscustomobject]@{ Name='(inline) storage'; ModuleName='(inline)' },
-          [pscustomobject]@{ Name='(inline) missions'; ModuleName='(inline)' }
-        )
+        $visible = Get-Command Add-OsMission,Get-OsMissions,Add-OsXP,Get-OsXP -ErrorAction SilentlyContinue |
+                   Select-Object Name,ModuleName
+        Write-Json $res @{ mode='module'; modulesPath=$Modules; exists=$exists; visible=$visible }; continue
       }
-      $out = $diag | ConvertTo-Json -Depth 6
-      $bytes = [Text.Encoding]::UTF8.GetBytes($out)
-      $res.ContentType = 'application/json; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
 
-    # ---- XP series + summary
-    if ($meth -eq 'GET' -and $path -match '^/xp\.json$') {
-      $days = [int]($req.QueryString['days'] ?? '30')
-      $s = Read-Store
-      # build daily buckets from xpLog
-      $from = (Get-Date).Date.AddDays(-($days-1))
-      $buckets = @{}
-      foreach($i in 0..($days-1)){ $buckets[$from.AddDays($i).ToString('yyyy-MM-dd')] = 0 }
-      foreach($e in ($s.meta.xpLog ?? @())){
-        try {
-          $d = (Get-Date $e.at).ToString('yyyy-MM-dd')
-          if ($buckets.ContainsKey($d)) { $buckets[$d] = [int]$buckets[$d] + [int]$e.delta }
-        } catch {}
+      # --- XP series + summary
+      if ($path -eq '/xp.json') {
+        $days = 30; try { if ($req.QueryString['days']) { $days = [int]$req.QueryString['days'] } } catch {}
+        Write-Json $res (Summarize-XP -Days $days); continue
       }
-      $series = @()
-      $cum=0
-      foreach($kv in $buckets.GetEnumerator() | Sort-Object Name){
-        $cum += [int]$kv.Value
-        $series += [pscustomobject]@{ date=$kv.Key; xp=[int]$kv.Value; cumulative=[int]$cum }
-      }
-      $pg = Update-RankProgress -xp ([int]$s.user.xp) -rank $s.user.rank
-      $summary = [pscustomobject]@{
-        xpToday     = [int]($buckets[(Get-Date).ToString('yyyy-MM-dd')] ?? 0)
-        dailyGoal   = [int]($s.settings.dailyGoal ?? 300)
-        remaining   = [int][Math]::Max(0, ($s.settings.dailyGoal ?? 300) - ([int]($buckets[(Get-Date).ToString('yyyy-MM-dd')] ?? 0)))
-        rank        = $s.user.rank
-        xp          = [int]$s.user.xp
-        progressPct = [int]$pg.ProgressPct
-      }
-      $payload = [pscustomobject]@{ days=$days; series=$series; summary=$summary }
-      $json = $payload | ConvertTo-Json -Depth 6
-      $bytes = [Text.Encoding]::UTF8.GetBytes($json)
-      $res.ContentType = 'application/json; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
 
-    # ---- Missions: list/add/complete
-    if ($meth -eq 'GET' -and $path -eq '/api/missions') {
-      $s = Read-Store
-      $items = @()
-      $cat = $s.missions.catalog
-      if ($cat -isnot [hashtable]) { $cat = @{} }
-      foreach($k in $cat.Keys){
-        $m = $cat[$k]
-        $done = ($s.missions.completed ?? @()) -contains $k
-        $items += [pscustomobject]@{ id=$m.id; title=$m.title; xp=[int]$m.xp; status=($done ? 'Completed' : 'In Progress') }
+      # --- Missions
+      if ($path -eq '/api/missions' -and $method -eq 'GET') {
+        Initialize-OsStore
+        $items = Get-OsMissions | ForEach-Object {
+          [pscustomobject]@{ id="$($_.Id)"; title="$($_.Title)"; xp=[int]$_.XP; status="$($_.Status)" }
+        }
+        Write-Json $res @{ items = @($items) }; continue
       }
-      $out = [pscustomobject]@{ items = $items }
-      $json = $out | ConvertTo-Json -Depth 6
-      $bytes = [Text.Encoding]::UTF8.GetBytes($json)
-      $res.ContentType = 'application/json; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
-    if ($meth -eq 'POST' -and $path -eq '/api/mission/add') {
-      $body = (New-Object IO.StreamReader($req.InputStream,$req.ContentEncoding)).ReadToEnd()
-      $p = $null; try { $p = $body | ConvertFrom-Json } catch {}
-      if (-not $p.id) { throw "Missing id" }
-      $s = Read-Store
-      if ($s.missions.catalog -isnot [hashtable]) { $s.missions.catalog = @{} }
-      $s.missions.catalog[$p.id] = [pscustomobject]@{ id=$p.id; title=($p.title ?? 'New Mission'); xp=[int]($p.xp ?? 0) }
-      Write-Store $s
-      $json = '{"ok":true}'
-      $bytes = [Text.Encoding]::UTF8.GetBytes($json)
-      $res.ContentType = 'application/json; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
-    if ($meth -eq 'POST' -and $path -eq '/api/mission/complete') {
-      $body = (New-Object IO.StreamReader($req.InputStream,$req.ContentEncoding)).ReadToEnd()
-      $p = $null; try { $p = $body | ConvertFrom-Json } catch {}
-      if (-not $p.id) { throw "Missing id" }
-      $s = Read-Store
-      $m = $s.missions.catalog[$p.id]
-      if (-not $m) { throw "Mission not found: $($p.id)" }
-      if (-not $s.missions.completed) { $s.missions.completed = @() }
-      if (($s.missions.completed) -contains $p.id) {
-        $json='{"ok":true,"already":true}'
-      } else {
-        $s.missions.completed = @($s.missions.completed + $p.id)
-        Write-Store (Add-XP -delta ([int]$m.xp) -reason "Mission: $($m.title)")
-        $json='{"ok":true}'
+
+      if ($path -eq '/api/mission/add' -and $method -eq 'POST') {
+        $b = Read-Body $req; $id="$($b.id)"; $title="$($b.title)"; $xp=[int]$b.xp
+        if (-not $id)   { Write-Json $res @{ error="Missing id" } 400; continue }
+        if (-not $title){ $title='New Mission' }
+        Add-OsMission -Id $id -XP $xp -Title $title | Out-Null
+        Write-Json $res @{ ok=$true; id=$id }; continue
       }
-      $bytes = [Text.Encoding]::UTF8.GetBytes($json)
-      $res.ContentType = 'application/json; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
 
-    # ---- Backup (create timestamped copy of store.plasma)
-    if ($meth -eq 'POST' -and $path -eq '/api/backup') {
-      New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
-      $ts = (Get-Date).ToString('yyyyMMdd-HHmmss')
-      $dest = Join-Path $DataDir ("store.{0}.json" -f $ts)
-      if (Test-Path $Store) { Copy-Item $Store $dest -Force } else { Set-Content -Path $dest -Value '{}' -Encoding UTF8 }
-      $json = @{ ok=$true; file=$dest } | ConvertTo-Json
-      $bytes = [Text.Encoding]::UTF8.GetBytes($json)
-      $res.ContentType = 'application/json; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
-
-    # ---- Restore (from 'latest' or a path)
-    if ($meth -eq 'POST' -and $path -eq '/api/restore') {
-      $body = (New-Object IO.StreamReader($req.InputStream,$req.ContentEncoding)).ReadToEnd()
-      $p = $null; try { $p = $body | ConvertFrom-Json } catch {}
-      $file = "$($p.file)"
-      if (-not $file) { throw "Missing 'file' property" }
-      if ($file -eq 'latest') {
-        $pick = Get-ChildItem -Path $DataDir -Filter 'store.*.json' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-        if (-not $pick) { throw "No backups found in $DataDir" }
-        Copy-Item $pick.FullName $Store -Force
-        $out = @{ ok=$true; file=$pick.FullName }
-      } else {
-        if (-not (Test-Path $file)) { throw "Backup not found: $file" }
-        Copy-Item $file $Store -Force
-        $out = @{ ok=$true; file=$file }
+      if ($path -eq '/api/mission/complete' -and $method -eq 'POST') {
+        $b = Read-Body $req; $id="$($b.id)"
+        if (-not $id) { Write-Json $res @{ error='Missing id' } 400; continue }
+        $null = Complete-OsMission -Id $id
+        $xp = Get-OsXP
+        Write-Json $res @{ ok=$true; id=$id; rank=$xp.Rank; xp=$xp.XP; progressPct=$xp.ProgressPct }; continue
       }
-      # refresh mirror after restore
-      $s = Read-Store; Write-Store $s
-      $json = $out | ConvertTo-Json
-      $bytes = [Text.Encoding]::UTF8.GetBytes($json)
-      $res.ContentType = 'application/json; charset=utf-8'
-      $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close(); continue
-    }
 
-    # ---- Fallback 404
-    $res.StatusCode = 404
-    $msg = @{ error = "Not found: $path" } | ConvertTo-Json
-    $bytes = [Text.Encoding]::UTF8.GetBytes($msg)
-    $res.ContentType = 'application/json; charset=utf-8'
-    $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close()
+      # --- Backup (timestamped copy of store)
+      if ($path -eq '/api/backup' -and $method -eq 'POST') {
+        New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
+        $ts   = (Get-Date).ToString('yyyyMMdd-HHmmss')
+        $dest = Join-Path $DataDir ("store.{0}.json" -f $ts)
+        if (Test-Path $Store) { Copy-Item $Store $dest -Force } else { Set-Content -Path $dest -Value '{}' -Encoding UTF8 }
+        Write-Json $res @{ ok=$true; file=$dest }; continue
+      }
+
+      # --- Restore (from 'latest' or explicit path)
+      if ($path -eq '/api/restore' -and $method -eq 'POST') {
+        $b = Read-Body $req
+        $file = "$($b.file)"
+        if (-not $file) { Write-Json $res @{ error="Missing 'file' property" } 400; continue }
+        if ($file -eq 'latest') {
+          $pick = Get-ChildItem -Path $DataDir -Filter 'store.*.json' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $pick) { Write-Json $res @{ error="No backups found in $DataDir" } 404; continue }
+          Copy-Item $pick.FullName $Store -Force
+          Initialize-OsStore
+          Write-Json $res @{ ok=$true; file=$pick.FullName }; continue
+        } else {
+          if (-not (Test-Path $file)) { Write-Json $res @{ error="Backup not found: $file" } 404; continue }
+          Copy-Item $file $Store -Force
+          Initialize-OsStore
+          Write-Json $res @{ ok=$true; file=$file }; continue
+        }
+      }
+
+      # Not found
+      Write-Json $res @{ error = "Not found: $path" } 404
+
+    } catch {
+      try { Write-Json $ctx.Response @{ error = $_.Exception.Message } } catch {}
+    }
   }
-  catch {
-    $res.StatusCode = 500
-    $err = @{ error = $_.Exception.Message } | ConvertTo-Json
-    $bytes = [Text.Encoding]::UTF8.GetBytes($err)
-    $res.ContentType = 'application/json; charset=utf-8'
-    $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close()
-  }
+} finally {
+  try { $listener.Stop(); $listener.Close() } catch {}
 }
-
