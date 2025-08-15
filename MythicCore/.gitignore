@@ -1,0 +1,6 @@
+# Sensitive / runtime
+data/
+backups/
+.secrets/
+.env
+*.log
