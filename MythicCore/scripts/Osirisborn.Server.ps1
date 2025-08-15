@@ -2,16 +2,21 @@
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
+# --- Paths (relative to this script)
 $ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Modules    = Join-Path $ScriptRoot 'modules'
-$DataDir    = Join-Path (Split-Path $ScriptRoot -Parent) 'data'
-$Mirror     = Join-Path (Split-Path $ScriptRoot -Parent) 'www\mirror.json'
-$Www        = Join-Path (Split-Path $ScriptRoot -Parent) 'www'
+$RootDir    = Split-Path $ScriptRoot -Parent
+$DataDir    = Join-Path $RootDir 'data'
+$Www        = Join-Path $RootDir 'www'
+$Mirror     = Join-Path $RootDir 'www\mirror.json'
+$Store      = Join-Path $DataDir 'store.plasma'   # store file used by modules
 
+# --- Load modules
 . (Join-Path $Modules 'Osirisborn.Store.psm1')
 . (Join-Path $Modules 'Osirisborn.XP.psm1')
 . (Join-Path $Modules 'Osirisborn.Missions.psm1')
 
+# --- Helpers
 function Write-Json([System.Net.HttpListenerResponse]$res, $obj, [int]$status=200) {
   $res.StatusCode = $status
   $json  = ($obj | ConvertTo-Json -Depth 6)
@@ -36,25 +41,34 @@ function Read-Body([System.Net.HttpListenerRequest]$req) {
 function Summarize-XP([int]$Days=30) {
   Initialize-OsStore
   $s = Get-OsStore
+
   $end   = (Get-Date).Date
   $start = $end.AddDays(-[Math]::Max(0, $Days-1))
+
+  # daily buckets
   $buckets = @{}
   for ($d=$start; $d -le $end; $d=$d.AddDays(1)) { $buckets[$d.ToString('yyyy-MM-dd')] = 0 }
+
   $log = if ($s.meta -and $s.meta.xpLog) { $s.meta.xpLog } else { @() }
   foreach ($e in $log) {
-    $dt = [DateTime]::Parse($e.at)
-    $key = $dt.ToString('yyyy-MM-dd')
-    if ($buckets.ContainsKey($key)) { $buckets[$key] += [int]$e.delta }
+    try {
+      $dt  = [DateTime]::Parse($e.at)
+      $key = $dt.ToString('yyyy-MM-dd')
+      if ($buckets.ContainsKey($key)) { $buckets[$key] += [int]$e.delta }
+    } catch {}
   }
+
   $series = @(); $cum = 0
   foreach ($kv in ($buckets.GetEnumerator() | Sort-Object Name)) {
     $cum += [int]$kv.Value
     $series += [pscustomobject]@{ date=$kv.Key; xp=[int]$kv.Value; cumulative=$cum }
   }
+
   $nowKey   = (Get-Date).ToString('yyyy-MM-dd')
   $xpToday  = if ($buckets.ContainsKey($nowKey)) { [int]$buckets[$nowKey] } else { 0 }
   $goal     = if ($s.settings -and $s.settings.dailyGoal) { [int]$s.settings.dailyGoal } else { 300 }
   $remain   = [Math]::Max(0, $goal - $xpToday)
+
   $o = Get-OsXP
   return @{
     days   = $Days
@@ -70,10 +84,14 @@ function Summarize-XP([int]$Days=30) {
   }
 }
 
+# --- Server
 $Port = 7777
 $listener = [System.Net.HttpListener]::new()
 $listener.Prefixes.Add("http://localhost:$Port/")
 $listener.Start()
+
+# Auto-open browser
+Start-Process "http://localhost:$Port/"
 Write-Host "Osirisborn server running → http://localhost:$Port/  (Ctrl+C to stop)"
 
 try {
@@ -83,11 +101,13 @@ try {
       $req = $ctx.Request; $res = $ctx.Response
       $path = $req.Url.AbsolutePath; $method = $req.HttpMethod.ToUpperInvariant()
 
-      if ($path -eq '/' -or $path -match '^/index\.html$') { Write-File $res (Join-Path $Www 'index.html') 'text/html; charset=utf-8'; continue }
-      elseif ($path -match '^/client\.js$')                 { Write-File $res (Join-Path $Www 'client.js') 'application/javascript; charset=utf-8'; continue }
+      # --- Static files ---
+      if     ($path -eq '/' -or $path -match '^/index\.html$') { Write-File $res (Join-Path $Www 'index.html') 'text/html; charset=utf-8'; continue }
+      elseif ($path -match '^/client\.js$')                    { Write-File $res (Join-Path $Www 'client.js') 'application/javascript; charset=utf-8'; continue }
       elseif ($path -match '^/mirror\.json$' -and (Test-Path $Mirror)) { Write-File $res $Mirror 'application/json; charset=utf-8'; continue }
 
-      if     ($path -eq '/diag') {
+      # --- DIAG
+      if ($path -eq '/diag') {
         $exists = @{
           store    = Test-Path (Join-Path $Modules 'Osirisborn.Store.psm1')
           xp       = Test-Path (Join-Path $Modules 'Osirisborn.XP.psm1')
@@ -95,27 +115,33 @@ try {
         }
         $visible = Get-Command Add-OsMission,Get-OsMissions,Add-OsXP,Get-OsXP -ErrorAction SilentlyContinue |
                    Select-Object Name,ModuleName
-        Write-Json $res @{ mode='inline'; modulesPath=$Modules; exists=$exists; visible=$visible }; continue
+        Write-Json $res @{ mode='module'; modulesPath=$Modules; exists=$exists; visible=$visible }; continue
       }
-      if     ($path -eq '/xp.json') {
+
+      # --- XP series + summary
+      if ($path -eq '/xp.json') {
         $days = 30; try { if ($req.QueryString['days']) { $days = [int]$req.QueryString['days'] } } catch {}
         Write-Json $res (Summarize-XP -Days $days); continue
       }
-      if     ($path -eq '/api/missions' -and $method -eq 'GET') {
+
+      # --- Missions
+      if ($path -eq '/api/missions' -and $method -eq 'GET') {
         Initialize-OsStore
         $items = Get-OsMissions | ForEach-Object {
           [pscustomobject]@{ id="$($_.Id)"; title="$($_.Title)"; xp=[int]$_.XP; status="$($_.Status)" }
         }
         Write-Json $res @{ items = @($items) }; continue
       }
-      if     ($path -eq '/api/mission/add' -and $method -eq 'POST') {
+
+      if ($path -eq '/api/mission/add' -and $method -eq 'POST') {
         $b = Read-Body $req; $id="$($b.id)"; $title="$($b.title)"; $xp=[int]$b.xp
         if (-not $id)   { Write-Json $res @{ error="Missing id" } 400; continue }
         if (-not $title){ $title='New Mission' }
         Add-OsMission -Id $id -XP $xp -Title $title | Out-Null
         Write-Json $res @{ ok=$true; id=$id }; continue
       }
-      if     ($path -eq '/api/mission/complete' -and $method -eq 'POST') {
+
+      if ($path -eq '/api/mission/complete' -and $method -eq 'POST') {
         $b = Read-Body $req; $id="$($b.id)"
         if (-not $id) { Write-Json $res @{ error='Missing id' } 400; continue }
         $null = Complete-OsMission -Id $id
@@ -123,9 +149,41 @@ try {
         Write-Json $res @{ ok=$true; id=$id; rank=$xp.Rank; xp=$xp.XP; progressPct=$xp.ProgressPct }; continue
       }
 
+      # --- Backup (timestamped copy of store)
+      if ($path -eq '/api/backup' -and $method -eq 'POST') {
+        New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
+        $ts   = (Get-Date).ToString('yyyyMMdd-HHmmss')
+        $dest = Join-Path $DataDir ("store.{0}.json" -f $ts)
+        if (Test-Path $Store) { Copy-Item $Store $dest -Force } else { Set-Content -Path $dest -Value '{}' -Encoding UTF8 }
+        Write-Json $res @{ ok=$true; file=$dest }; continue
+      }
+
+      # --- Restore (from 'latest' or explicit path)
+      if ($path -eq '/api/restore' -and $method -eq 'POST') {
+        $b = Read-Body $req
+        $file = "$($b.file)"
+        if (-not $file) { Write-Json $res @{ error="Missing 'file' property" } 400; continue }
+        if ($file -eq 'latest') {
+          $pick = Get-ChildItem -Path $DataDir -Filter 'store.*.json' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $pick) { Write-Json $res @{ error="No backups found in $DataDir" } 404; continue }
+          Copy-Item $pick.FullName $Store -Force
+          Initialize-OsStore
+          Write-Json $res @{ ok=$true; file=$pick.FullName }; continue
+        } else {
+          if (-not (Test-Path $file)) { Write-Json $res @{ error="Backup not found: $file" } 404; continue }
+          Copy-Item $file $Store -Force
+          Initialize-OsStore
+          Write-Json $res @{ ok=$true; file=$file }; continue
+        }
+      }
+
+      # Not found
       Write-Json $res @{ error = "Not found: $path" } 404
+
     } catch {
       try { Write-Json $ctx.Response @{ error = $_.Exception.Message } } catch {}
     }
   }
-} finally { $listener.Stop(); $listener.Close() }
+} finally {
+  try { $listener.Stop(); $listener.Close() } catch {}
+}

@@ -2,123 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Osirisborn — Dashboard</title>
+  <title>Osirisborn — Control Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
-      --bg:#0f1220; --panel:#171a2b; --muted:#7986a3; --text:#e7ecf4; --accent:#7aa2ff; --good:#28c76f; --bad:#ff4d4f;
+      --bg:#0f1220; --panel:#171a2b; --muted:#7986a3; --text:#e7ecf5; --acc:#63f2a5; --warn:#f2b263; --danger:#ff6b6b;
+      --ringbg:#2a314a; --ring:#63f2a5;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font:14px/1.4 system-ui,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text); background:linear-gradient(120deg,#0b0e1a,#12162a 40%,#0b0e1a);
-    }
-    .wrap{max-width:1000px; margin:0 auto; padding:24px}
-    header{display:flex; align-items:center; gap:12px; margin-bottom:18px}
-    header .logo{
-      width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#2f3b64,#7aa2ff);
-      box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 6px 18px rgba(122,162,255,.25);
-    }
-    h1{font-size:18px; margin:0}
-    .row{display:grid; grid-template-columns:320px 1fr; gap:16px; align-items:start}
-    .panel{background:var(--panel); border-radius:14px; padding:16px; box-shadow:0 2px 18px rgba(0,0,0,.25)}
+    html,body{height:100%;}
+    body{margin:0;background:var(--bg);color:var(--text);}
+    .wrap{max-width:1000px;margin:0 auto;padding:20px;}
+    header{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px;}
+    .title{font-size:20px;font-weight:600;letter-spacing:.4px;}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    button{background:#222844;color:var(--text);border:1px solid #2e3757;border-radius:10px;padding:8px 12px;cursor:pointer}
+    button:hover{border-color:#3c4770}
+    button.primary{background:#1f2b3f;border-color:#3a5b4a}
+    button.destructive{border-color:#5b2d2d;background:#1f1414}
+    .grid{display:grid;grid-template-columns:360px 1fr; gap:16px;}
+    .card{background:var(--panel);border:1px solid #252c47;border-radius:16px;padding:14px}
     .muted{color:var(--muted)}
-    .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:12px}
-    .kpi{background:#111528; border-radius:12px; padding:12px}
-    .kpi .label{font-size:12px; color:var(--muted)}
-    .kpi .value{font-size:20px; margin-top:6px}
-    /* ring */
-    .ringbox{display:flex; gap:14px; align-items:center}
-    .ring{--pct:.0; width:96px; height:96px; border-radius:50%;
-      background:
-        conic-gradient(var(--accent) calc(var(--pct)*1turn), rgba(122,162,255,.12) 0),
-        radial-gradient(closest-side, var(--panel) 72%, transparent 73% 100%, transparent 0);
-      display:grid; place-items:center; font-weight:600}
-    .ring span{font-size:18px}
-    /* chart */
-    svg#chart{width:100%; height:150px; display:block; background:#0e1330; border-radius:10px; margin-top:10px}
-    .headrow{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px}
-    .btn{background:#1f2744; border:1px solid rgba(255,255,255,.08); color:#dfe6ff; padding:8px 10px; border-radius:10px; cursor:pointer}
-    .btn:hover{filter:brightness(1.08)}
-    table{width:100%; border-collapse:collapse; margin-top:8px; border-radius:10px; overflow:hidden}
-    th, td{padding:8px 10px; text-align:left}
-    thead th{background:#10162f; color:#9bb0e7; font-weight:600; font-size:12px}
-    tbody tr:nth-child(odd){background:#0f1431}
-    tbody tr:nth-child(even){background:#0c1028}
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
-    .status-completed{color:var(--good); font-weight:600}
-    .status-progress{color:#ffd166; font-weight:600}
-    footer{margin-top:18px; color:var(--muted); font-size:12px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+    .ring-wrap{display:flex;align-items:center;gap:16px}
+    .ring{width:120px;height:120px;display:grid;place-items:center;background:
+      conic-gradient(var(--ring) calc(360deg * var(--pct)), var(--ringbg) 0);
+      border-radius:50%}
+    .ring::before{content:"";width:92px;height:92px;border-radius:50%;background:var(--panel);display:block}
+    .ring span{position:absolute;font-weight:700}
+    table{width:100%;border-collapse: collapse}
+    th,td{padding:8px;border-bottom:1px solid #242b46}
+    th{text-align:left;color:var(--muted);font-weight:600}
+    .status-completed{color:var(--acc);font-weight:600}
+    .status-progress{color:#c9cbe0}
+    .footer{margin-top:12px;color:var(--muted);font-size:12px}
+    svg{width:100%;height:120px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div class="logo"></div>
-      <h1>Osirisborn — Control Panel</h1>
-      <div class="muted">local</div>
+      <div class="title">Osirisborn — Control Panel</div>
+      <div class="controls">
+        <button id="btn-refresh">Refresh</button>
+        <button id="btn-add">+ Mission</button>
+        <button id="btn-backup">Backup</button>
+        <button id="btn-restore">Restore (latest)</button>
+      </div>
     </header>
 
-    <div class="row">
-      <!-- LEFT: Progress -->
-      <section class="panel">
-        <div class="headrow">
+    <div class="grid">
+      <section class="card">
+        <div class="ring-wrap">
+          <div id="ring" class="ring" style="--pct:.0"><span id="pct" class="mono">0%</span></div>
           <div>
-            <div class="muted">Overall Progress</div>
-            <div id="rank" style="font-size:16px; font-weight:600">Rank: —</div>
-          </div>
-          <button id="btn-refresh" class="btn">Refresh</button>
-        </div>
-
-        <div class="ringbox">
-          <div id="ring" class="ring"><span id="pct">0%</span></div>
-          <div>
-            <div class="kpis">
-              <div class="kpi"><div class="label">Total XP</div><div class="value mono" id="xp">0</div></div>
-              <div class="kpi"><div class="label">Daily Goal</div><div class="value mono" id="goal">—</div></div>
-              <div class="kpi"><div class="label">Today</div><div class="value mono" id="today">0</div></div>
-              <div class="kpi"><div class="label">Remaining</div><div class="value mono" id="remain">—</div></div>
-            </div>
+            <div id="rank" style="font-weight:700;margin-bottom:2px">Rank: —</div>
+            <div class="muted">XP: <span id="xp" class="mono">0</span></div>
+            <div class="muted">Goal: <span id="goal" class="mono">—</span> · Today: <span id="today" class="mono">0</span> · Remaining: <span id="remain" class="mono">—</span></div>
           </div>
         </div>
-
-        <div style="margin-top:12px">
-          <div class="muted" style="margin-bottom:6px">Last <span id="days">30</span> days</div>
+        <div style="margin-top:10px" class="card">
           <svg id="chart" viewBox="0 0 600 120" preserveAspectRatio="none">
-            <polyline id="series" fill="none" stroke="url(#grad)" stroke-width="2" points=""/>
-            <defs>
-              <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stop-color="#7aa2ff"/>
-                <stop offset="100%" stop-color="#28c76f"/>
-              </linearGradient>
-            </defs>
+            <polyline id="series" fill="none" stroke="currentColor" stroke-width="2" points=""></polyline>
           </svg>
+          <div class="muted footer">Last <span id="days">0</span> days</div>
         </div>
       </section>
 
-      <!-- RIGHT: Missions -->
-      <section class="panel">
-        <div class="headrow">
-          <div class="muted" style="font-weight:600">Missions</div>
-          <div style="display:flex; gap:8px">
-            <button id="btn-add" class="btn">+ Mission</button>
-          </div>
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:700">Missions</div>
         </div>
         <table>
-          <thead>
-            <tr><th class="mono">Id</th><th>Title</th><th class="mono">XP</th><th>Status</th><th></th></tr>
-          </thead>
-          <tbody id="missions">
-            <tr><td colspan="5" class="muted">Loading…</td></tr>
-          </tbody>
+          <thead><tr><th>ID</th><th>Title</th><th>XP</th><th>Status</th><th></th></tr></thead>
+          <tbody id="missions"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
         </table>
       </section>
     </div>
 
-    <footer>Press <span class="mono">R</span> to refresh.</footer>
+    <div id="toast" class="footer muted"></div>
   </div>
-
-  <script src="/client.js"></script>
+  <script src="/client.js" defer></script>
 </body>
 </html>

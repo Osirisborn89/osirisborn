@@ -19,6 +19,12 @@
     return json ?? {};
   }
 
+  function toast(msg) {
+    const t = $("#toast");
+    t.textContent = msg || "";
+    if (msg) setTimeout(() => (t.textContent = ""), 4000);
+  }
+
   function setRing(pct) {
     const ring = $("#ring"); const span = $("#pct");
     const clamped = Math.max(0, Math.min(100, pct|0));
@@ -31,12 +37,13 @@
     const pts = series.map(s => s.xp);
     const max = Math.max(1, ...pts);
     const step = (w - pad*2) / Math.max(1, series.length-1);
-    const d = series.map((row, i) => {
+    let d = [];
+    series.forEach((row, i) => {
       const x = pad + i*step;
       const y = h - pad - (row.xp / max) * (h - pad*2);
-      return `${x},${y}`;
-    }).join(" ");
-    $("#series").setAttribute("points", d);
+      d.push(`${x},${y}`);
+    });
+    $("#series").setAttribute("points", d.join(" "));
     $("#days").textContent = series.length;
   }
 
@@ -61,13 +68,13 @@
     const rows = (data.items || []).map(x => {
       const btn = x.status === "Completed"
         ? `<button disabled>Done</button>`
-        : `<button data-complete="${x.id}">Complete</button>`;
+        : `<button data-complete="\${x.id}">Complete</button>`;
       return `<tr>
-        <td class="mono">${x.id}</td>
-        <td>${x.title}</td>
-        <td class="mono">${x.xp}</td>
-        <td class="${statusClass(x.status)}">${x.status}</td>
-        <td>${btn}</td>
+        <td class="mono">\${x.id}</td>
+        <td>\${x.title}</td>
+        <td class="mono">\${x.xp}</td>
+        <td class="\${statusClass(x.status)}">\${x.status}</td>
+        <td>\${btn}</td>
       </tr>`;
     });
     $("#missions").innerHTML = rows.join("") || `<tr><td colspan="5" class="muted">No missions yet.</td></tr>`;
@@ -89,22 +96,32 @@
     await renderSummary(30);
   }
 
+  async function doBackup() {
+    const res = await post("/api/backup", {});
+    toast(`Backup saved: ${res.file || 'ok'}`);
+  }
+
+  async function doRestore() {
+    if (!confirm("Restore MOST RECENT backup? Your current data will be overwritten.")) return;
+    const res = await post("/api/restore", { file: "latest" });
+    toast(`Restored: ${res.file || 'latest'}`);
+    await renderSummary(30);
+    await renderMissions();
+  }
+
   function wire() {
     $("#btn-refresh").addEventListener("click", () => { renderSummary(30); renderMissions(); });
     $("#btn-add").addEventListener("click", () => addMissionFlow());
+    $("#btn-backup").addEventListener("click", () => doBackup().catch(e => toast(e.message)));
+    $("#btn-restore").addEventListener("click", () => doRestore().catch(e => toast(e.message)));
     document.body.addEventListener("click", (e) => {
       const id = e.target?.getAttribute?.("data-complete");
       if (id) { completeMission(id).catch(err => alert(err.message)); }
     });
-    document.addEventListener("keydown", (e) => {
-      if (e.key.toLowerCase() === "r") { renderSummary(30); renderMissions(); }
-    });
+    document.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "r") { renderSummary(30); renderMissions(); }});
 
-    // initial
     renderSummary(30).catch(console.error);
     renderMissions().catch(console.error);
-
-    // auto-refresh every 30s
     setInterval(() => { renderSummary(30); renderMissions(); }, 30000);
   }
 
