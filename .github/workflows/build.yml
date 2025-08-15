@@ -1,0 +1,26 @@
+name: build-zip
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  zip:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clean local-only files
+        shell: pwsh
+        run: |
+          if (Test-Path 'MythicCore\data') { Remove-Item -Recurse -Force 'MythicCore\data' }
+          if (Test-Path 'MythicCore\www\mirror.json') { Remove-Item -Force 'MythicCore\www\mirror.json' }
+      - name: Create portable zip
+        shell: pwsh
+        run: |
+          $name = "Osirisborn-Portable-${{ github.run_number }}.zip"
+          Compress-Archive -Path 'MythicCore','Start-Osirisborn.cmd' -DestinationPath $name -Force
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: osirisborn-portable
+          path: Osirisborn-Portable-*.zip
