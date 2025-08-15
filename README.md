@@ -1,23 +1,27 @@
-MIT License
+# Osirisborn (Proprietary)
 
-Copyright (c) 2025 Osirisborn89
+**Copyright © 2025 Osirisborn89. All rights reserved.**  
+This is proprietary software. **No redistribution, copying, sublicensing, or public publishing** is permitted without written permission from the owner.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+> By using this software you agree to the terms in **EULA.txt**.
 
-The above copyright notice and this permission notice shall be included in
-all copi
-Set-Location $env:USERPROFILE\Osirisborn
+---
 
-@'
-# Osirisborn
+## What’s in here
+- `MythicCore/scripts/` PowerShell CLI, GUI, and mini server
+- `MythicCore/www/` local dashboard (served by the mini server)
+- `scripts/modules/` data store, XP, missions modules
 
-Personal XP + missions tracker (PowerShell + tiny local server + web UI).
+**Not versioned:** runtime data in `MythicCore/data/` and the live mirror file `MythicCore/www/mirror.json` (see `.gitignore`).
 
-## Quick start
-- Run: `pwsh -NoProfile -ExecutionPolicy Bypass -File "$HOME\Osirisborn\MythicCore\scripts\Osirisborn.Server.ps1"`
-- Open: http://localhost:7777/
+---
+
+## Quick start (local)
+```powershell
+# CLI
+$cli = Join-Path $env:USERPROFILE 'Osirisborn\MythicCore\scripts\osirisborn.ps1'
+& $cli xp 1 "hello world"
+
+# Dashboard server
+pwsh -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\Osirisborn\MythicCore\scripts\Osirisborn.Server.ps1"
+# then open http://localhost:7777/

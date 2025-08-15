@@ -1,0 +1,8 @@
+END-USER LICENSE AGREEMENT (EULA)
+Copyright © 2025 Osirisborn89. All rights reserved.
+
+This software is proprietary. You may install and use it for your own internal, non-commercial purposes only. 
+You may not copy, modify, distribute, sublicense, sell, or host it, in whole or in part, without prior written permission from the owner.
+
+NO WARRANTY. THE SOFTWARE IS PROVIDED “AS IS” WITHOUT ANY WARRANTIES OR CONDITIONS OF ANY KIND.
+LIMITATION OF LIABILITY. TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY DAMAGES ARISING FROM USE OF THE SOFTWARE.
