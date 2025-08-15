@@ -81,7 +81,6 @@ Add-Type -AssemblyName System.Net.HttpListener
 $listener = [System.Net.HttpListener]::new()
 $listener.Prefixes.Add("http://+:$Port/")
 $listener.Start()
-Start-Process "http://localhost:$Port/"
 Write-Host "Osirisborn server running → http://localhost:$Port/  (Ctrl+C to stop)"
 
 while ($true) {
@@ -272,4 +271,3 @@ while ($true) {
     $res.OutputStream.Write($bytes,0,$bytes.Length); $res.Close()
   }
 }
-
