@@ -5,3 +5,11 @@ node_modules/
 target/
 desktop/src-tauri/target/
 *.log
+# Project data (do NOT commit)
+MythicCore/data/
+MythicCore/www/mirror.json
+
+# Logs/exports
+*.log
+*.bak
+*.csv
