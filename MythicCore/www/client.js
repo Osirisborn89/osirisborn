@@ -109,7 +109,16 @@
     await renderMissions();
   }
 
-  function wire() {
+  function wire() {\r\n    const xp1 = document.getElementById('btn-xp1');
+    if (xp1) xp1.addEventListener('click', () => addXp(1, 'Check-in').catch(err => alert(err.message)));
+
+    const xpC = document.getElementById('btn-xpCustom');
+    if (xpC) xpC.addEventListener('click', async () => {
+      const v = Number(prompt('XP amount:', '25') || '0');
+      if (!v) return;
+      const why = prompt('Reason:', 'Manual XP') || 'Manual XP';
+      await addXp(v, why).catch(err => alert(err.message));
+    });
     $("#btn-refresh").addEventListener("click", () => { renderSummary(30); renderMissions(); });
     $("#btn-add").addEventListener("click", () => addMissionFlow());
     $("#btn-backup").addEventListener("click", () => doBackup().catch(e => toast(e.message)));
@@ -128,3 +137,9 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
   else wire();
 })();
+
+
+async function addXp(delta, reason) {
+  await post('/api/xp', { delta, reason });
+  await renderSummary(30);
+}
