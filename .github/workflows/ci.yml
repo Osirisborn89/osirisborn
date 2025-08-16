@@ -2,31 +2,33 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: ["main", "less-**"]
   pull_request:
-    branches: ["**"]
+    branches: ["main"]
+
+permissions:
+  contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   test:
     name: Pester on ${{ matrix.shell }}
     runs-on: windows-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        shell: [pwsh, powershell]   # PowerShell 7 + Windows PowerShell 5
+        shell: [pwsh, powershell]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Prepare PowerShell (${{ matrix.shell }})
         shell: ${{ matrix.shell }}
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
-          # Avoid Windows 'sc' alias collision during scripts
           Remove-Item alias:sc -ErrorAction SilentlyContinue
 
       - name: Install Pester 5.5+
@@ -40,5 +42,4 @@ jobs:
 
       - name: Run tests (Pester CI)
         shell: ${{ matrix.shell }}
-        run: |
-          Invoke-Pester -Path .\tests -CI
+        run: Invoke-Pester -Path .\tests -CI
