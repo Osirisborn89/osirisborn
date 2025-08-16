@@ -1,0 +1,21 @@
+name: smoke
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Smoke.ps1
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          Remove-Item alias:sc -ErrorAction SilentlyContinue
+          pwsh -NoProfile -ExecutionPolicy Bypass -File .\tools\Run-Server.ps1 -Port 7780 | Out-Null
+          pwsh -NoProfile -File .\tools\Smoke.ps1 -Port 7780 -AddXP
+          pwsh -NoProfile -File .\tools\Stop-Server.ps1 -Port 7780 | Out-Null
