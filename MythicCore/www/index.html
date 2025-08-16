@@ -83,6 +83,68 @@
     <div id="toast" class="footer muted"></div>
   </div>
   <script src="/client.js" defer></script>
+
+<!-- =======================
+  BEGIN LESS-001: Lessons Tile & View
+  ======================= -->
+<style>
+  .bp-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin:12px 0}
+  .bp-tile{display:block;padding:14px 16px;border:1px solid rgba(255,255,255,.12);border-radius:12px;text-decoration:none}
+  .bp-tile:hover{transform:translateY(-1px)}
+  .bp-muted{opacity:.8;font-size:.9rem}
+  .bp-badge{display:inline-block;padding:2px 8px;border:1px solid rgba(255,255,255,.18);border-radius:999px;font-size:.75rem;margin-left:8px}
+  @media (max-width:480px){.bp-grid{grid-template-columns:1fr}}
+</style>
+
+<section id="bp-lessons-tile-section">
+  <div class="bp-grid">
+    <a class="bp-tile" href="/lessons" data-nav>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">Lessons</h3>
+        <span class="bp-badge">MVP</span>
+      </div>
+      <p class="bp-muted" style="margin:.5rem 0 0;">
+        Enter the Curriculum Hub → tracks, progress, and missions-linked XP.
+      </p>
+      <div style="margin-top:.75rem;display:flex;align-items:center;gap:8px;">
+        <div aria-hidden="true" style="width:10px;height:10px;border-radius:50%;border:2px solid currentColor;"></div>
+        <span class="bp-muted">Python Mastery • 0%</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section id="bp-lessons-view" hidden>
+  <header style="margin:12px 0 8px;">
+    <h2 style="margin:0;">Curriculum Hub</h2>
+    <p class="bp-muted" style="margin:.25rem 0 0;">
+      Tracks will sync with local <code>MythicCore/data/curriculum.json</code> in LESS-002.
+    </p>
+  </header>
+
+  <div class="bp-grid" id="bp-tracks">
+    <article class="bp-tile" tabindex="0">
+      <h3 style="margin:0;">Python Mastery</h3>
+      <p class="bp-muted" style="margin:.25rem 0 .5rem;">Beginner → Job-ready • Lessons, challenges, capstones</p>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div aria-hidden="true" style="width:36px;height:36px;border-radius:50%;border:3px solid currentColor;"></div>
+        <div>
+          <div class="bp-muted">Progress: <strong>0%</strong> (stub)</div>
+          <div class="bp-muted">Rank-aware XP hooks</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="bp-tile" aria-disabled="true">
+      <h3 style="margin:0;">Web & JS/TS</h3>
+      <p class="bp-muted" style="margin:.25rem 0 0;">Locked until schema lands (LESS-002)</p>
+    </article>
+  </div>
+</section>
+<!-- =======================
+  END LESS-001
+  ======================= -->
 </body>
 </html>
+
 

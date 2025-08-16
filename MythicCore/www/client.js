@@ -143,3 +143,42 @@ async function addXp(delta, reason) {
   await post('/api/xp', { delta, reason });
   await renderSummary(30);
 }
+/* ==== BEGIN LESS-001: lightweight router for /lessons ==== */
+(function () {
+  const lessonsView = document.getElementById('bp-lessons-view');
+  const lessonsTileSection = document.getElementById('bp-lessons-tile-section');
+
+  if (!lessonsTileSection || !lessonsView) return;
+
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-nav]');
+    if (!a) return;
+    const href = a.getAttribute('href');
+    try {
+      const sameOrigin = new URL(href, window.location.origin).origin === window.location.origin;
+      if (sameOrigin && href && href.startsWith('/')) {
+        e.preventDefault();
+        if (href !== window.location.pathname) {
+          window.history.pushState({}, '', href);
+        }
+        renderRoute();
+      }
+    } catch (_) { /* noop */ }
+  });
+
+  window.addEventListener('popstate', renderRoute);
+
+  function renderRoute() {
+    const path = window.location.pathname;
+    const showLessons = (path === '/lessons');
+    lessonsView.hidden = !showLessons;
+    if (lessonsTileSection) lessonsTileSection.hidden = showLessons;
+    if (showLessons) {
+      const firstCard = document.querySelector('#bp-tracks .bp-tile');
+      if (firstCard) firstCard.focus({ preventScroll: true });
+    }
+  }
+
+  renderRoute();
+})();
+ /* ==== END LESS-001 ==== */
