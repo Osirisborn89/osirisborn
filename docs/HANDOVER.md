@@ -44,3 +44,7 @@ Repo: https://github.com/Osirisborn89/osirisborn
 ## Decisions
 - Proprietary project (LICENSE removed; EULA/COPYRIGHT present)
 - Theme: neon cyberpunk w/ Egyptian vibes (Anubis voice ≈ Ian McKellen/Gandalf)
+- LESS-001: Lessons entrypoint
+  - Dashboard tile linking to /lessons
+  - SPA routing with history/pushState
+  - Stub Curriculum Hub view with Python Mastery (0%) track card

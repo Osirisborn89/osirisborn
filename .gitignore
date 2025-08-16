@@ -13,3 +13,5 @@ MythicCore/www/mirror.json
 *.log
 *.bak
 *.csv
+backup-*/
+backup-less-*/
