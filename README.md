@@ -1,4 +1,5 @@
 ![CI](https://github.com/Osirisborn89/osirisborn/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Osirisborn89/osirisborn/actions/workflows/ci.yml/badge.svg)
 # Osirisborn (Proprietary)
 
 **Copyright © 2025 Osirisborn89. All rights reserved.**  
@@ -26,4 +27,5 @@ $cli = Join-Path $env:USERPROFILE 'Osirisborn\MythicCore\scripts\osirisborn.ps1'
 # Dashboard server
 pwsh -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\Osirisborn\MythicCore\scripts\Osirisborn.Server.ps1"
 # then open http://localhost:7777/
+
 
