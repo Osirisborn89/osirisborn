@@ -389,3 +389,31 @@ async function addXp(delta, reason) {
 })();
  /* ==== END LESSONS ROUTE FLAG ==== */
 
+
+/* ==== BEGIN LESS-002: lessons summary wiring ==== */
+(function(){
+  async function updateLessonsSummary(){
+    try{
+      const res = await fetch("/api/lessons/summary",{cache:"no-store"});
+      if(!res.ok) throw new Error("summary bad");
+      const data = await res.json();
+      if(!data || !Array.isArray(data.tracks)) return;
+      const t = data.tracks.find(x => x.id === "python") || data.tracks[0];
+      if(!t) return;
+      const pct = Number.isFinite(t.progress) ? t.progress : 0;
+
+      const tile = document.getElementById("bp-lessons-tile-progress");
+      if (tile) tile.textContent = `${t.title} • ${pct}%`;
+
+      const pv = document.getElementById("bp-lessons-progress");
+      if (pv)  pv.textContent = `${pct}%`;
+    }catch(e){ /* silent for MVP */ }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", updateLessonsSummary);
+  } else {
+    updateLessonsSummary();
+  }
+})();
+ /* ==== END LESS-002 ==== */
+
