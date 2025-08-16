@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Pester on ${{ matrix.shell }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [pwsh, powershell]   # PowerShell 7 + Windows PowerShell 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare PowerShell (${{ matrix.shell }})
+        shell: ${{ matrix.shell }}
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          # Avoid Windows 'sc' alias collision during scripts
+          Remove-Item alias:sc -ErrorAction SilentlyContinue
+
+      - name: Install Pester 5.5+
+        shell: ${{ matrix.shell }}
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          if (-not (Get-Module Pester -ListAvailable | Where-Object { $_.Version -ge [Version]'5.5' })) {
+            Install-Module Pester -Scope CurrentUser -Force -SkipPublisherCheck -MinimumVersion 5.5
+          }
+          Import-Module Pester -MinimumVersion 5.5 -Force
+
+      - name: Run tests (Pester CI)
+        shell: ${{ matrix.shell }}
+        run: |
+          Invoke-Pester -Path .\tests -CI
