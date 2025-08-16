@@ -90,6 +90,129 @@ try {
     try {
       $req = $ctx.Request; $res = $ctx.Response
       $path = $req.Url.AbsolutePath
+# ==== BEGIN LESSONS API GUARD (LESS-002) — SAFE ====
+$__p = $path
+
+function _bpGetRes {
+  foreach ($n in 'context','ctx','httpContext','httpCtx') {
+    $v = Get-Variable -Name $n -ErrorAction SilentlyContinue
+    if ($v) { try { if ($v.Value -and $v.Value.Response) { return $v.Value.Response } } catch {} }
+  }
+  foreach ($n in 'Response','response','res') {
+    $v = Get-Variable -Name $n -ErrorAction SilentlyContinue
+    if ($v -and $v.Value) { return $v.Value }
+  }
+  return $null
+}
+function _bpSetProp($o,$name,$val){
+  if ($null -ne $o -and ($o.PSObject.Properties.Name -contains $name)) {
+    try { $o.$name = $val } catch {}
+  }
+}
+function _bpWriteJson($obj, [int]$code = 200) {
+  try { $json = $obj | ConvertTo-Json -Depth 12 } catch { $json = '{"error":"serialization"}' }
+  $bytes = [Text.Encoding]::UTF8.GetBytes($json)
+  $r = _bpGetRes
+  _bpSetProp $r 'ContentType' 'application/json; charset=utf-8'
+  _bpSetProp $r 'ContentLength64' $bytes.Length
+  _bpSetProp $r 'StatusCode' $code
+  try {
+    if ($r -and $r.OutputStream) {
+      $r.OutputStream.Write($bytes,0,$bytes.Length)
+      $r.OutputStream.Close()
+    } else {
+      # last resort for unknown hosts: write to console/stdout
+      [Console]::Out.WriteLine([Text.Encoding]::UTF8.GetString($bytes))
+    }
+  } catch {}
+}
+
+function _bpDataDir {
+  if ($PSScriptRoot) { $root = $PSScriptRoot } else { $root = Split-Path -Parent $PSCommandPath }
+  [IO.Path]::GetFullPath((Join-Path $root "..\data"))
+}
+
+if ($__p -eq "/api/lessons/summary") {
+  try {
+    $dataDir = _bpDataDir
+    $currPath = Join-Path $dataDir "curriculum.json"
+    $progPath = Join-Path $dataDir "progress.lessons.json"
+    $tracks = @()
+
+    if (Test-Path $currPath) {
+      $curr = Get-Content $currPath -Raw | ConvertFrom-Json
+      $prog = if (Test-Path $progPath) { Get-Content $progPath -Raw | ConvertFrom-Json } else { $null }
+
+      foreach ($t in $curr.tracks) {
+        $lessonsCount = 0
+        foreach ($m in $t.modules) { $lessonsCount += @($m.lessons).Count }
+        $completed = 0
+        if ($prog -and ($prog.PSObject.Properties.Name -contains $t.id)) {
+          $completed = @($prog.$($t.id).completedLessons).Count
+        }
+        $progress = if ($lessonsCount -gt 0) { [Math]::Round(($completed*100.0)/$lessonsCount) } else { 0 }
+        $tracks += [PSCustomObject]@{
+          id        = $t.id
+          title     = $t.title
+          lessons   = $lessonsCount
+          completed = $completed
+          progress  = $progress
+        }
+      }
+    }
+
+    _bpWriteJson ([PSCustomObject]@{ totalTracks = @($tracks).Count; tracks = $tracks })
+    continue
+  } catch {
+    _bpWriteJson @{ error = "lessons-summary-failed" } 500
+    continue
+  }
+}
+elseif ($__p -like "/api/lessons/track/*") {
+  try {
+    $tid = $__p.Substring("/api/lessons/track/".Length)
+    if ([string]::IsNullOrWhiteSpace($tid)) { _bpWriteJson @{ error="missing-track-id" } 400; continue }
+
+    $dataDir = _bpDataDir
+    $currPath = Join-Path $dataDir "curriculum.json"
+    $progPath = Join-Path $dataDir "progress.lessons.json"
+
+    if (!(Test-Path $currPath)) { _bpWriteJson @{ error="no-curriculum" } 404; continue }
+
+    $curr = Get-Content $currPath -Raw | ConvertFrom-Json
+    $track = $curr.tracks | Where-Object { $_.id -eq $tid }
+    if (-not $track) { _bpWriteJson @{ error="track-not-found" } 404; continue }
+
+    $prog = if (Test-Path $progPath) { Get-Content $progPath -Raw | ConvertFrom-Json } else { $null }
+    $completedSet = @{}
+    if ($prog -and ($prog.PSObject.Properties.Name -contains $tid)) {
+      foreach ($lid in $prog.$tid.completedLessons) { $completedSet[$lid] = $true }
+    }
+
+    $total = 0; $done = 0
+    foreach ($m in $track.modules) {
+      foreach ($l in $m.lessons) {
+        $total++
+        if ($completedSet.ContainsKey($l.id)) { $done++; $l | Add-Member -NotePropertyName completed -NotePropertyValue $true -Force }
+        else                                   {        $l | Add-Member -NotePropertyName completed -NotePropertyValue $false -Force }
+      }
+    }
+    $progress = if ($total -gt 0) { [Math]::Round(($done*100.0)/$total) } else { 0 }
+
+    _bpWriteJson ([PSCustomObject]@{
+      id       = $track.id
+      title    = $track.title
+      progress = $progress
+      modules  = $track.modules
+      totals   = @{ lessons = $total; completed = $done }
+    })
+    continue
+  } catch {
+    _bpWriteJson @{ error = "lessons-track-failed" } 500
+    continue
+  }
+}
+# ==== END LESSONS API GUARD (LESS-002) ====
       $method = $req.HttpMethod.ToUpperInvariant()
 
       # Static
@@ -225,3 +348,6 @@ if     ($path -eq '/' -or $path -match '^/index\.html$') { Write-File $res (Join
     }
   }
 } finally { try { $listener.Stop(); $listener.Close() } catch {} }
+
+
+
