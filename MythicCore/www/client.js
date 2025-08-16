@@ -182,3 +182,210 @@ async function addXp(delta, reason) {
   renderRoute();
 })();
  /* ==== END LESS-001 ==== */
+
+/* ==== LESSONS FALLBACK INIT (static baton support) ==== */
+(function () {
+  try {
+    var baton = sessionStorage.getItem("bp-route");
+    if (baton && typeof window !== "undefined" && window.history && window.location.pathname !== baton) {
+      sessionStorage.removeItem("bp-route");
+      window.history.replaceState({}, "", baton);
+    }
+  } catch (e) { /* no-op */ }
+})();
+
+
+/* ==== BEGIN LESS-001 HASH ROUTER (safe, no-server) ==== */
+(function () {
+  function getRoute() {
+    // Prefer hash route (e.g., "#/lessons"); fall back to path ("/lessons")
+    var hash = (typeof window !== "undefined" ? window.location.hash : "") || "";
+    if (hash.replace(/\/+$/,"") === "#/lessons") return "lessons";
+    var path = (typeof window !== "undefined" ? window.location.pathname : "") || "";
+    if (path.replace(/\/+$/,"") === "/lessons") return "lessons"; // supports old path, too
+    return "home";
+  }
+
+  function renderRoute() {
+    var route = getRoute();
+    var showLessons = (route === "lessons");
+    var lessonsView = document.getElementById("bp-lessons-view");
+    var lessonsTileSection = document.getElementById("bp-lessons-tile-section");
+    if (lessonsView) lessonsView.hidden = !showLessons;
+    if (lessonsTileSection) lessonsTileSection.hidden = showLessons;
+    if (showLessons) {
+      var firstCard = document.querySelector("#bp-tracks .bp-tile");
+      if (firstCard && firstCard.focus) firstCard.focus({ preventScroll: true });
+    }
+  }
+
+  // Intercept internal nav clicks that use data-nav and have hrefs starting with "#"
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest('a[data-nav]');
+    if (!a) return;
+    var href = a.getAttribute("href") || "";
+    if (href.startsWith("#/")) {
+      e.preventDefault();
+      // set the hash; hashchange will render
+      if (window.location.hash !== href) window.location.hash = href;
+      else renderRoute();
+    }
+  });
+
+  window.addEventListener("hashchange", renderRoute);
+  // First paint
+  renderRoute();
+})();
+ /* ==== END LESS-001 HASH ROUTER ==== */
+
+
+/* ==== BEGIN LESS-001 HASH ROUTER V2 (capture + hash, no server deps) ==== */
+(function () {
+  function currentRoute() {
+    var h = (typeof window!=="undefined" ? window.location.hash : "") || "";
+    if (h.replace(/\/+$/,"") === "#/lessons") return "lessons";
+    var p = (typeof window!=="undefined" ? window.location.pathname : "") || "";
+    if (p.replace(/\/+$/,"") === "/lessons") return "lessons"; // supports old path too
+    return "home";
+  }
+
+  function render() {
+    var route = currentRoute();
+    var showLessons = (route === "lessons");
+    var v = document.getElementById("bp-lessons-view");
+    var t = document.getElementById("bp-lessons-tile-section");
+    if (v) v.hidden = !showLessons;
+    if (t) t.hidden = showLessons;
+    if (showLessons) {
+      var first = document.querySelector("#bp-tracks .bp-tile");
+      if (first && first.focus) first.focus({ preventScroll: true });
+    }
+  }
+
+  // Capture-phase click so no other handler can swallow it
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[data-nav]') : null;
+    if (!a) return;
+    var href = a.getAttribute("href") || "";
+    if (href.startsWith("#/")) {
+      e.preventDefault();
+      if (window.location.hash !== href) window.location.hash = href;
+      render();
+    }
+  }, true);
+
+  window.addEventListener("hashchange", render);
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", render);
+  } else {
+    render();
+  }
+})();
+ /* ==== END LESS-001 HASH ROUTER V2 ==== */
+
+
+/* ==== BEGIN LESS-001 HASH ROUTER V3 (force styles; no server deps) ==== */
+(function () {
+  function routeIsLessons() {
+    try {
+      var h = window.location.hash || "";
+      if (h.replace(/\/+$/,"") === "#/lessons") return true;
+      var p = window.location.pathname || "";
+      if (p.replace(/\/+$/,"") === "/lessons") return true; // legacy path support
+    } catch (e) {}
+    return false;
+  }
+
+  function showLessons() {
+    var v = document.getElementById("bp-lessons-view");
+    var t = document.getElementById("bp-lessons-tile-section");
+    if (v) {
+      // remove "hidden" and force visible
+      v.hidden = false;
+      try { v.removeAttribute("hidden"); } catch(e){}
+      v.style.removeProperty("display");
+      v.style.setProperty("display","block","important");
+      v.style.setProperty("visibility","visible","important");
+      v.style.setProperty("opacity","1","important");
+    }
+    if (t) {
+      // force hide tile section
+      t.hidden = true;
+      try { t.setAttribute("hidden",""); } catch(e){}
+      t.style.setProperty("display","none","important");
+      t.style.setProperty("visibility","hidden","important");
+      t.style.setProperty("opacity","0","important");
+    }
+    // a11y focus
+    var first = document.querySelector("#bp-tracks .bp-tile");
+    if (first && first.focus) { try { first.focus({ preventScroll:true }); } catch(e){} }
+  }
+
+  function showHome() {
+    var v = document.getElementById("bp-lessons-view");
+    var t = document.getElementById("bp-lessons-tile-section");
+    if (v) {
+      v.hidden = true;
+      try { v.setAttribute("hidden",""); } catch(e){}
+      v.style.setProperty("display","none","important");
+      v.style.setProperty("visibility","hidden","important");
+      v.style.setProperty("opacity","0","important");
+    }
+    if (t) {
+      t.hidden = false;
+      try { t.removeAttribute("hidden"); } catch(e){}
+      t.style.removeProperty("display");
+      t.style.setProperty("display","block","important");
+      t.style.setProperty("visibility","visible","important");
+      t.style.setProperty("opacity","1","important");
+    }
+  }
+
+  function renderV3() {
+    if (routeIsLessons()) showLessons(); else showHome();
+  }
+
+  // Capture-phase click so other handlers can't swallow it
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[data-nav]') : null;
+    if (!a) return;
+    var href = a.getAttribute("href") || "";
+    if (href.startsWith("#/")) {
+      e.preventDefault();
+      if (window.location.hash !== href) window.location.hash = href;
+      // Run after hash mutation and layout
+      requestAnimationFrame(renderV3);
+    }
+  }, true);
+
+  window.addEventListener("hashchange", function(){ requestAnimationFrame(renderV3); });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(renderV3); });
+  } else {
+    requestAnimationFrame(renderV3);
+  }
+})();
+ /* ==== END LESS-001 HASH ROUTER V3 ==== */
+
+
+/* ==== BEGIN LESSONS ROUTE FLAG (sets html[data-route]) ==== */
+(function () {
+  function setRouteFlag() {
+    try {
+      var h = window.location.hash || "";
+      var r = (h.replace(/\/+$/,"") === "#/lessons") ? "lessons" : "home";
+      document.documentElement.setAttribute("data-route", r);
+    } catch (e) {}
+  }
+  // Run on load and whenever hash changes
+  window.addEventListener("hashchange", function(){ requestAnimationFrame(setRouteFlag); });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(setRouteFlag); });
+  } else {
+    requestAnimationFrame(setRouteFlag);
+  }
+})();
+ /* ==== END LESSONS ROUTE FLAG ==== */
+
