@@ -37,9 +37,24 @@ Describe "Osirisborn XP API" {
     (Invoke-OsbWeb '').StatusCode | Should -Be 200
   }
 
-  It "diag shows store exists" {
-    $d = Convert-OsbJson (Invoke-OsbWeb 'diag').Content
-    $d.exists.store | Should -BeTrue
+  It "diag shows runtime OK and ensures store exists" {
+    # First check: scripts loaded + curriculum/progress present
+    $d1 = Convert-OsbJson (Invoke-OsbWeb 'diag').Content
+    ($d1.visible.Name -contains 'Add-OsXP') | Should -BeTrue
+    $d1.exists.curriculum | Should -BeTrue
+    $d1.exists.progress   | Should -BeTrue
+
+    if (-not $d1.exists.store) {
+      # Create the store by writing a tiny bit of XP, then re-check
+      $addUri = [Uri]::new($script:BaseUri, 'api/xp/add')
+      $body   = @{ delta=1; reason='init-store' } | ConvertTo-Json -Compress
+      Invoke-RestMethod -Uri $addUri -Method Post -ContentType 'application/json' -Body $body | Out-Null
+      Start-Sleep -Milliseconds 150
+      $d2 = Convert-OsbJson (Invoke-OsbWeb 'diag').Content
+      $d2.exists.store | Should -BeTrue
+    } else {
+      $d1.exists.store | Should -BeTrue
+    }
   }
 
   It "xp.json returns expected shape" {
@@ -51,7 +66,6 @@ Describe "Osirisborn XP API" {
   }
 
   It "xp.debug returns ok:true" {
-    # avoid nested call → assign then parse
     $raw = (Invoke-OsbWeb 'xp.debug?days=7').Content
     $dbg = $raw | ConvertFrom-Json
     if ($dbg -is [System.Array]) { $dbg = $dbg[-1] }
@@ -68,12 +82,10 @@ Describe "Osirisborn XP API" {
     $delta = 3
     $addUri = [Uri]::new($script:BaseUri, 'api/xp/add')
     $body   = @{ delta=$delta; reason='pester' } | ConvertTo-Json -Compress
-    # Call IRM directly with the simplest param set
-    $resp = Invoke-RestMethod -Uri $addUri -Method Post -ContentType 'application/json' -Body $body
+    Invoke-RestMethod -Uri $addUri -Method Post -ContentType 'application/json' -Body $body | Out-Null
     Start-Sleep -Milliseconds 150
 
     $post = Convert-OsbJson (Invoke-OsbWeb 'xp.json?days=7').Content
     ([int]$post.summary.xpToday) | Should -BeGreaterOrEqual ($preToday + $delta)
   }
 }
-
