@@ -9,13 +9,54 @@ on:
 jobs:
   smoke:
     runs-on: windows-latest
+    # give ourselves breathing room; individual steps will fail fast if unhealthy
+    timeout-minutes: 10
+
     steps:
       - uses: actions/checkout@v4
-      - name: Run Smoke.ps1
+
+      - name: Env info
+        shell: pwsh
+        run: |
+          $PSVersionTable
+          Get-Location
+          Get-ChildItem -Path . -Recurse -Depth 2 | Select-Object -First 20 FullName
+
+      - name: Start server (headless)
         shell: pwsh
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
           Remove-Item alias:sc -ErrorAction SilentlyContinue
-          pwsh -NoProfile -ExecutionPolicy Bypass -File .\tools\Run-Server.ps1 -Port 7780 | Out-Null
+          pwsh -NoProfile -ExecutionPolicy Bypass -File .\tools\Run-Server.ps1 -Port 7780 -Debug
+
+      - name: Verify health (127.0.0.1:7780)
+        shell: pwsh
+        run: |
+          $ok=$false
+          foreach($i in 1..20){
+            try{
+              $r = Invoke-WebRequest http://127.0.0.1:7780/ -TimeoutSec 2
+              if($r.StatusCode -eq 200){ $ok=$true; break }
+            }catch{
+              Write-Host "Attempt $i: $($_.Exception.Message)"
+            }
+            Start-Sleep -Seconds 1
+          }
+          if(-not $ok){
+            Write-Host "Listeners on 7780:"
+            try { Get-NetTCPConnection -State Listen | ? LocalPort -eq 7780 | Format-List * } catch {}
+            Write-Host "`nFirst lines of server script (for context):"
+            Get-Content .\MythicCore\scripts\Osirisborn.Server.ps1 -First 60
+            throw "Server did not become healthy"
+          }
+
+      - name: Run Smoke.ps1
+        shell: pwsh
+        run: |
           pwsh -NoProfile -File .\tools\Smoke.ps1 -Port 7780 -AddXP
-          pwsh -NoProfile -File .\tools\Stop-Server.ps1 -Port 7780 | Out-Null
+
+      - name: Stop server
+        if: always()
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File .\tools\Stop-Server.ps1 -Port 7780; exit 0
