@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script type="module" src="/js/sw-register.js?v=4" defer></script>
 <!-- OSB:DEV-TOGGLE-EARLY -->
 <script>
 (function(){
@@ -71,6 +72,14 @@
   }
 </style>
 <!-- END: LESSONS ROUTE CSS SAFETY NET -->
+<!-- OSB:LESSONS-IN-GRID-CSS -->
+<style id="osb-lessons-in-grid-css">
+  /* Hide the original standalone Lessons tile */
+  #bp-lessons-tile-section { display: none !important; }
+
+  /* Hide the card when actually on the lessons route */
+  html[data-route="lessons"] #bp-lessons-card { display: none !important; }
+</style>
 </head>
 <body>
 <!-- OSB:XP-PANEL-START -->
@@ -127,8 +136,9 @@
 
   <div class="wrap">
     <header>
+<script type="module" src="/js/sw-register.js?v=4" defer></script>
       <div class="title">Osirisborn — Control Panel</div>
-      <div class="controls">
+      <div class="controls"><button id="btn-lessons" type="button">Lessons</button>
         <button id="btn-refresh">Refresh</button>
         <button id="btn-add">+ Mission</button>
         <button id="btn-backup">Backup</button>
@@ -147,3 +157,113 @@
           </div>
         </div>
         <div style="margin-top:
+
+
+
+
+
+
+
+<!-- OSB:LESSONS-BLOCK-START -->
+<style>
+  .bp-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin:12px 0}
+  .bp-tile{display:block;padding:14px 16px;border:1px solid rgba(255,255,255,.12);border-radius:12px;text-decoration:none}
+  .bp-tile:hover{transform:translateY(-1px)}
+  .bp-muted{opacity:.8;font-size:.9rem}
+  .bp-badge{display:inline-block;padding:2px 8px;border:1px solid rgba(255,255,255,.18);border-radius:999px;font-size:.75rem;margin-left:8px}
+  @media (max-width:480px){.bp-grid{grid-template-columns:1fr}}
+</style>
+
+<section id="bp-lessons-tile-section">
+  <div class="bp-grid">
+    <a class="bp-tile" href="#/lessons" data-nav>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">Lessons</h3>
+        <span class="bp-badge">MVP</span>
+      </div>
+      <p class="bp-muted" style="margin:.5rem 0 0;">
+        Enter the Curriculum Hub → tracks, progress, and missions-linked XP.
+      </p>
+      <div style="margin-top:.75rem;display:flex;align-items:center;gap:8px;">
+        <div aria-hidden="true" style="width:10px;height:10px;border-radius:50%;border:2px solid currentColor;"></div>
+        <span class="bp-muted"><span id="bp-lessons-tile-progress">Python Mastery • 0%</span></span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section id="bp-lessons-view" hidden>
+  <header style="margin:12px 0 8px;">
+    <h2 style="margin:0;">Curriculum Hub</h2>
+    <p class="bp-muted" style="margin:.25rem 0 0;">
+      Tracks will sync with local <code>MythicCore/data/curriculum.json</code>.
+    </p>
+  </header>
+
+  <div class="bp-grid" id="bp-tracks">
+    <article class="bp-tile" tabindex="0">
+      <h3 style="margin:0;">Python Mastery</h3>
+      <p class="bp-muted" style="margin:.25rem 0 .5rem;">Beginner → Job-ready • Lessons, challenges, capstones</p>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div aria-hidden="true" style="width:36px;height:36px;border-radius:50%;border:3px solid currentColor;"></div>
+        <div>
+          <div class="bp-muted"><span class="bp-muted">Progress: <strong id="bp-lessons-progress">0%</strong></span> (stub)</div>
+          <div class="bp-muted">Rank-aware XP hooks</div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+<!-- OSB:LESSONS-BLOCK-END -->
+<!-- OSB:INLINE-ROUTER -->
+<script id="bp-inline-router">
+(function(){
+  function isLessons(){
+    try{
+      var h=window.location.hash||"";
+      if(h.replace(/\/+$/,"")==="#/lessons") return true;
+      var p=window.location.pathname||"";
+      if(p.replace(/\/+$/,"")==="/lessons") return true;
+    }catch(e){}
+    return false;
+  }
+  function apply(){
+    var route = isLessons() ? "lessons" : "home";
+    try { document.documentElement.setAttribute("data-route", route); } catch(e){}
+    var v=document.getElementById("bp-lessons-view");
+    var t=document.getElementById("bp-lessons-tile-section");
+    if(v){
+      if(route==="lessons"){ v.hidden=false; try{v.removeAttribute("hidden");}catch(e){}; v.style.display="block"; }
+      else { v.hidden=true; try{v.setAttribute("hidden","");}catch(e){}; v.style.display="none"; }
+    }
+    if(t){
+      if(route==="lessons"){ t.hidden=true; try{t.setAttribute("hidden","");}catch(e){}; t.style.display="none"; }
+      else { t.hidden=false; try{t.removeAttribute("hidden");}catch(e){}; t.style.display="block"; }
+    }
+  }
+  window.addEventListener("hashchange", function(){ requestAnimationFrame(apply); });
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(apply); });
+  } else {
+    requestAnimationFrame(apply);
+  }
+})();
+</script>
+<script type="module">import "/lessons.js";</script>
+
+
+<!-- OSB:LESSONS-BUTTON -->
+<script id="osb-lessons-button">
+  (function(){
+    var b = document.getElementById("btn-lessons");
+    if (b) {
+      b.addEventListener("click", function(){
+        try { location.hash = "#/lessons"; } catch(e) {}
+      });
+    }
+  })();
+</script>
+
+
+<script type="module">import "/js/backup.js";</script>
+
