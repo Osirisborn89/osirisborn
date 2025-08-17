@@ -1,327 +1,190 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <script type="module" src="/js/sw-register.js?v=21" defer></script>
+/* osb service worker — v24 */
+const VERSION = "osb-sw-v24";
+const STATIC_CACHE = VERSION;
+const OFFLINE_URL = "/index.html";
 
-  <!-- OSB:DEV-TOGGLE-EARLY -->
-  <script>
-  (function(){
-    var url = new URL(location.href);
-    var q = url.searchParams.get('dev');
-    if (q === '1') localStorage.setItem('osb.dev','1');
-    if (q === '0') localStorage.setItem('osb.dev','0');
+const PRECACHE_URLS = [
+  "/",                // root
+  "/index.html",
 
-    var host = location.hostname || '';
-    var isLocal = (host === '127.0.0.1' || host === 'localhost');
-    var stored = localStorage.getItem('osb.dev');
-    var devOn = stored ? (stored === '1') : isLocal;
+  // Styles
+  "/lessons.css",
+  "/runner.css",
+  "/xp-panel.css",
 
-    if (devOn) document.documentElement.setAttribute('data-dev','1');
-  })();
-  </script>
+  // Scripts (site root)
+  "/xp-panel.js",
+  "/client.js",
+  "/lessons.js",
 
-  <meta charset="utf-8" />
-  <title>Osirisborn — Control Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  // Scripts (under /js)
+  "/js/db.js",
+  "/js/outbox.js",
+  "/js/backup.js",
+  "/js/runner.js",
+  "/js/live-xp.js",
+  "/js/sw-register.js?v=24",
 
-  <link rel="stylesheet" href="/lessons.css" />
-  <link rel="stylesheet" href="/runner.css" />
+  // Assets
+  "/favicon.svg"
+];
 
-  <style>
-    :root{
-      --bg:#0f1220; --panel:#171a2b; --muted:#7986a3; --text:#e7ecf5; --acc:#63f2a5; --warn:#f2b263; --danger:#ff6b6b;
-      --ringbg:#2a314a; --ring:#63f2a5;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-    html,body{height:100%;}
-    body{margin:0;background:var(--bg);color:var(--text);}
-    .wrap{max-width:1000px;margin:0 auto;padding:20px;}
-    header{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px;}
-    .title{font-size:20px;font-weight:600;letter-spacing:.4px;}
-    .controls{display:flex;gap:8px;flex-wrap:wrap}
-    button{background:#222844;color:var(--text);border:1px solid #2e3757;border-radius:10px;padding:8px 12px;cursor:pointer}
-    button:hover{border-color:#3c4770}
-    button.primary{background:#1f2b3f;border-color:#3a5b4a}
-    button.destructive{border-color:#5b2d2d;background:#1f1414}
-    .grid{display:grid;grid-template-columns:360px 1fr; gap:16px;}
-    .card{background:var(--panel);border:1px solid #252c47;border-radius:16px;padding:14px}
-    .muted{color:var(--muted)}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
-    .ring-wrap{display:flex;align-items:center;gap:16px}
-    .ring{width:120px;height:120px;display:grid;place-items:center;background:
-      conic-gradient(var(--ring) calc(360deg * var(--pct)), var(--ringbg) 0);
-      border-radius:50%}
-    .ring::before{content:"";width:92px;height:92px;border-radius:50%;background:var(--panel);display:block}
-    .ring span{position:absolute;font-weight:700}
-    table{width:100%;border-collapse: collapse}
-    th,td{padding:8px;border-bottom:1px solid #242b46}
-    th{text-align:left;color:var(--muted);font-weight:600}
-    .status-completed{color:var(--acc);font-weight:600}
-    .status-progress{color:#c9cbe0}
-    .footer{margin-top:12px;color:var(--muted);font-size:12px}
-    svg{width:100%;height:120px}
-  </style>
+self.addEventListener("install", (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(STATIC_CACHE);
 
-  <!-- BEGIN: LESSONS ROUTE CSS SAFETY NET -->
-  <style id="bp-route-safety">
-    html[data-route="lessons"] #bp-lessons-view {
-      display: block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-    html[data-route="lessons"] #bp-lessons-tile-section {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-    }
-  </style>
-  <!-- END: LESSONS ROUTE CSS SAFETY NET -->
-
-  <!-- OSB:LESSONS-IN-GRID-CSS -->
-  <style id="osb-lessons-in-grid-css">
-    /* Hide the original Lessons card when on the lessons route */
-    html[data-route="lessons"] #bp-lessons-card { display: none !important; }
-  </style>
-
-  <!-- OSB:TOAST-STYLE-START -->
-  <style id="osb-toast-css">
-    #toast{
-      position:fixed; top:20px; right:20px; transform:none;
-      min-width:260px; max-width:420px;
-      background:rgba(20,24,40,.96); color:#e7ecf5;
-      border:1px solid #2e3757; padding:12px 16px; border-radius:12px;
-      box-shadow:0 8px 28px rgba(0,0,0,.45);
-      opacity:0; transition:opacity .25s ease;
-      z-index:9999; pointer-events:none;
-      font-weight:700; font-size:14px; line-height:1.25;
-    }
-    #toast.show{ opacity:1; }
-  </style>
-  <!-- OSB:TOAST-STYLE-END -->
-</head>
-<body>
-
-  <!-- OSB:XP-PANEL-START -->
-  <section id="xp-panel" class="card">
-    <div class="xp-header">
-      <h2>XP — Today</h2>
-      <div class="xp-rank" id="xp-rank" hidden>Rank: <span id="xp-rank-value">—</span></div>
-    </div>
-
-    <div class="xp-stats">
-      <div class="xp-today"><span id="xp-today">0</span> XP</div>
-      <div class="xp-goal">
-        <label for="daily-goal">Goal</label>
-        <input id="daily-goal" type="number" min="1" step="10" />
-        <button id="save-goal" type="button">Save</button>
-      </div>
-    </div>
-
-    <div class="xp-bar">
-      <div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div>
-    </div>
-
-    <div class="xp-note" id="xp-note"></div>
-  </section>
-
-  <link rel="stylesheet" href="./xp-panel.css" />
-  <script src="./xp-panel.js" defer></script>
-  <!-- OSB:XP-PANEL-END -->
-
-  <!-- OSB:XP-DEV-START -->
-  <section class="card" id="xp-dev" style="display:block">
-    <h3>XP Dev Controls</h3>
-    <button id="xp-plus10" type="button">+10 XP (queue if offline)</button>
-    <span id="xp-pending" style="margin-left:.5rem;"></span>
-  </section>
-  <script type="module">
-    import { addXP, tryFlush, pending } from "./js/outbox.js";
-    async function refreshPending(){
-      const p = await pending();
-      const el = document.getElementById("xp-pending");
-      if (el) el.textContent = "Pending: " + p.length;
-    }
-    const btn = document.getElementById("xp-plus10");
-    if (btn) {
-      btn.addEventListener("click", async ()=>{
-        await addXP(10, "dev-test");
-        await refreshPending();
-      });
-    }
-    window.addEventListener("online", async ()=>{ await tryFlush(); await refreshPending(); });
-    window.addEventListener("load", refreshPending);
-  </script>
-  <!-- OSB:XP-DEV-END -->
-
-  <div class="wrap">
-    <header>
-      <div class="title">Osirisborn — Control Panel</div>
-      <div class="controls">
-        <button id="btn-lessons" type="button">Lessons</button>
-        <button id="btn-refresh">Refresh</button>
-        <button id="btn-add">+ Mission</button>
-        <button id="btn-backup">Backup</button>
-        <button id="btn-restore">Restore (latest)</button>
-      </div>
-    </header>
-
-    <div class="grid">
-      <section class="card">
-        <div class="ring-wrap">
-          <div id="ring" class="ring" style="--pct:.0"><span id="pct" class="mono">0%</span></div>
-          <div>
-            <div id="rank" style="font-weight:700;margin-bottom:2px">Rank: —</div>
-            <div class="muted">XP: <span id="xp" class="mono">0</span></div>
-            <div class="muted">Goal: <span id="goal" class="mono">—</span> · Today: <span id="today" class="mono">0</span> · Remaining: <span id="remain" class="mono">—</span></div>
-          </div>
-        </div>
-        <div style="margin-top:10px" class="card">
-          <svg id="chart" viewBox="0 0 600 120" preserveAspectRatio="none">
-            <polyline id="series" fill="none" stroke="currentColor" stroke-width="2" points=""></polyline>
-          </svg>
-          <div class="muted footer">Last <span id="days">0</span> days</div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-weight:700">Missions</div>
-        </div>
-        <table>
-          <thead><tr><th>ID</th><th>Title</th><th>XP</th><th>Status</th><th></th></tr></thead>
-          <tbody id="missions"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
-        </table>
-      </section>
-
-      <!-- Lessons tile shown as its own dashboard card -->
-      <section class="card" id="bp-lessons-card">
-        <div class="bp-grid">
-          <a class="bp-tile" href="#/lessons" data-nav>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <h3 style="margin:0;">Lessons</h3>
-              <span class="bp-badge">MVP</span>
-            </div>
-            <p class="bp-muted" style="margin:.5rem 0 0;">
-              Enter the Curriculum Hub → tracks, progress, and missions-linked XP.
-            </p>
-            <div style="margin-top:.75rem;display:flex;align-items:center;gap:8px;">
-              <div aria-hidden="true" style="width:10px;height:10px;border-radius:50%;border:2px solid currentColor;"></div>
-              <span class="bp-muted"><span id="bp-lessons-tile-progress">Python Mastery • 0%</span></span>
-            </div>
-          </a>
-        </div>
-      </section>
-    </div> <!-- /.grid -->
-
-    <div id="toast"></div>
-  </div> <!-- /.wrap -->
-
-  <script src="/client.js" defer></script>
-
-  <!-- =======================
-    LESSONS TILE (standalone section for non-grid) — hidden on lessons route
-    ======================= -->
-  <section id="bp-lessons-tile-section">
-    <div class="bp-grid">
-      <a class="bp-tile" href="#/lessons" data-nav>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <h3 style="margin:0;">Lessons</h3>
-          <span class="bp-badge">MVP</span>
-        </div>
-        <p class="bp-muted" style="margin:.5rem 0 0;">
-          Enter the Curriculum Hub → tracks, progress, and missions-linked XP.
-        </p>
-        <div style="margin-top:.75rem;display:flex;align-items:center;gap:8px;">
-          <div aria-hidden="true" style="width:10px;height:10px;border-radius:50%;border:2px solid currentColor;"></div>
-          <span class="bp-muted"><span id="bp-lessons-tile-progress-2">Python Mastery • 0%</span></span>
-        </div>
-      </a>
-    </div>
-  </section>
-
-  <!-- =======================
-    LESSONS VIEW + ROUTER
-    ======================= -->
-  <section id="bp-lessons-view" hidden style="max-width:1000px;margin:0 auto 16px;">
-    <header style="margin:12px 0 8px;">
-      <h2 style="margin:0;">Curriculum Hub</h2>
-      <p class="bp-muted" style="margin:.25rem 0 0;">
-        Tracks will sync with local <code>MythicCore/data/curriculum.json</code>.
-      </p>
-    </header>
-
-    <div class="bp-grid" id="bp-tracks">
-      <article class="bp-tile" tabindex="0">
-        <h3 style="margin:0;">Python Mastery</h3>
-        <p class="bp-muted" style="margin:.25rem 0 .5rem;">Beginner → Job-ready • Lessons, challenges, capstones</p>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div aria-hidden="true" style="width:36px;height:36px;border-radius:50%;border:3px solid currentColor;"></div>
-          <div>
-            <div class="bp-muted"><span class="bp-muted">Progress: <strong id="bp-lessons-progress">0%</strong></span> (stub)</div>
-            <div class="bp-muted">Rank-aware XP hooks</div>
-          </div>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <!-- Inline router -->
-  <script id="bp-inline-router">
-  (function(){
-    function isLessons(){
-      try{
-        var h=window.location.hash||"";
-        if(h.replace(/\/+$/,"")==="#/lessons") return true;
-        var p=window.location.pathname||"";
-        if(p.replace(/\/+$/,"")==="/lessons") return true;
-      }catch(e){}
-      return false;
-    }
-    function apply(){
-      var route = isLessons() ? "lessons" : "home";
-      try { document.documentElement.setAttribute("data-route", route); } catch(e){}
-      var v=document.getElementById("bp-lessons-view");
-      var card=document.getElementById("bp-lessons-card");
-      var t=document.getElementById("bp-lessons-tile-section");
-      if(v){
-        if(route==="lessons"){ v.hidden=false; try{v.removeAttribute("hidden");}catch(e){}; v.style.display="block"; }
-        else { v.hidden=true; try{v.setAttribute("hidden","");}catch(e){}; v.style.display="none"; }
+    // Precache each URL individually so a 404 doesn't fail the whole install
+    await Promise.all(PRECACHE_URLS.map(async (url) => {
+      try {
+        // cache:'reload' to bypass HTTP cache
+        await cache.add(new Request(url, { cache: "reload" }));
+      } catch (e) {
+        // Non-fatal: log and continue
+        console.warn("[SW] precache skipped:", url, e && e.message);
       }
-      if(card){
-        if(route==="lessons"){ card.style.display="none"; }
-        else { card.style.display="block"; }
-      }
-      if(t){
-        if(route==="lessons"){ t.style.display="none"; t.hidden=true; }
-        else { t.style.display="block"; t.hidden=false; }
-      }
-    }
-    window.addEventListener("hashchange", function(){ requestAnimationFrame(apply); });
-    if(document.readyState==="loading"){
-      document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(apply); });
-    } else {
-      requestAnimationFrame(apply);
-    }
-  })();
-  </script>
+    }));
+  })());
+});
 
-  <!-- Header Lessons button wiring -->
-  <script id="osb-lessons-button">
-    (function(){
-      var b = document.getElementById("btn-lessons");
-      if (b) {
-        b.addEventListener("click", function(){
-          try { location.hash = "#/lessons"; } catch(e) {}
-        });
-      }
-    })();
-  </script>
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
+    // Clean up old caches
+    const names = await caches.keys();
+    await Promise.all(
+      names
+        .filter((n) => n !== STATIC_CACHE)
+        .map((n) => caches.delete(n))
+    );
 
-  <!-- Modules -->
-  <script type="module">import "/lessons.js";</script>
-  <script type="module">import "/js/backup.js";</script>
-  <script type="module">import "/js/runner.js";</script>
-  <script type="module">import "/js/live-xp.js";</script>
-</body>
-</html>
+    try { await self.clients.claim(); } catch {}
+  })());
+});
+
+// Messages from the page (e.g., SKIP_WAITING)
+self.addEventListener("message", (event) => {
+  const data = event && event.data;
+  if (!data) return;
+
+  if (data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+
+  // Only handle GET
+  if (req.method !== "GET") return;
+
+  const url = new URL(req.url);
+
+  // Ignore cross-origin
+  if (url.origin !== location.origin) return;
+
+  // Decide strategy
+  if (isHTMLRequest(req)) {
+    // Navigation requests: network-first, fallback to cache, then offline
+    event.respondWith(networkFirstHTML(req));
+    return;
+  }
+
+  if (isAPIorJSON(url)) {
+    // API/JSON: network-first with stale fallback
+    event.respondWith(networkFirstJSON(req));
+    return;
+  }
+
+  // Static assets: cache-first with background update
+  event.respondWith(cacheFirstStatic(req));
+});
+
+/* ----------------- helpers ----------------- */
+
+function isHTMLRequest(req) {
+  return req.mode === "navigate" ||
+    (req.headers.get("accept") || "").includes("text/html");
+}
+
+function isAPIorJSON(url) {
+  const p = url.pathname;
+  return (
+    p.startsWith("/api/") ||
+    p.endsWith(".json") ||
+    p === "/xp.json" ||
+    p === "/diag"
+  );
+}
+
+async function networkFirstHTML(req) {
+  try {
+    const fresh = await fetch(req);
+    // Optionally update cache in background
+    const cache = await caches.open(STATIC_CACHE);
+    cache.put(OFFLINE_URL, fresh.clone()).catch(()=>{});
+    return fresh;
+  } catch {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+
+    const offline = await caches.match(OFFLINE_URL);
+    if (offline) return offline;
+
+    // Ultimate fallback
+    return new Response("<h1>Offline</h1>", {
+      headers: { "Content-Type": "text/html; charset=UTF-8" },
+      status: 503
+    });
+  }
+}
+
+async function networkFirstJSON(req) {
+  const cache = await caches.open(STATIC_CACHE);
+  try {
+    const fresh = await fetch(req, { cache: "no-store" });
+    // Only cache 200s to avoid persisting errors
+    if (fresh && fresh.ok) cache.put(req, fresh.clone()).catch(()=>{});
+    return fresh;
+  } catch {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+    return new Response(JSON.stringify({ error: "offline" }), {
+      headers: { "Content-Type": "application/json" },
+      status: 503
+    });
+  }
+}
+
+async function cacheFirstStatic(req) {
+  const cache = await caches.open(STATIC_CACHE);
+  const cached = await caches.match(req);
+  if (cached) {
+    // Try to refresh in background (best-effort)
+    fetch(req).then((fresh) => {
+      if (fresh && fresh.ok) cache.put(req, fresh).catch(()=>{});
+    }).catch(()=>{});
+    return cached;
+  }
+  try {
+    const fresh = await fetch(req);
+    if (fresh && fresh.ok) cache.put(req, fresh.clone()).catch(()=>{});
+    return fresh;
+  } catch {
+    // Last resort: offline page for html-like paths
+    if (isLikelyHTMLPath(req.url)) {
+      const offline = await caches.match(OFFLINE_URL);
+      if (offline) return offline;
+    }
+    return new Response("Offline", { status: 503 });
+  }
+}
+
+function isLikelyHTMLPath(u) {
+  try {
+    const url = new URL(u);
+    // Heuristic: no file extension or looks like .html
+    const hasDot = url.pathname.split("/").pop().includes(".");
+    return !hasDot || url.pathname.endsWith(".html");
+  } catch {
+    return false;
+  }
+}

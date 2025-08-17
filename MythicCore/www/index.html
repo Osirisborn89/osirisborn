@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <script type="module" src="/js/sw-register.js?v=21" defer></script>
+  <script type="module" src="/js/sw-register.js?v=24" defer></script>
 
   <!-- OSB:DEV-TOGGLE-EARLY -->
   <script>
@@ -70,7 +70,8 @@
       visibility: visible !important;
       opacity: 1 !important;
     }
-    html[data-route="lessons"] #bp-lessons-tile-section {
+    /* Hide the dashboard Lessons card when on lessons route */
+    html[data-route="lessons"] #bp-lessons-card {
       display: none !important;
       visibility: hidden !important;
       opacity: 0 !important;
@@ -78,13 +79,7 @@
   </style>
   <!-- END: LESSONS ROUTE CSS SAFETY NET -->
 
-  <!-- OSB:LESSONS-IN-GRID-CSS -->
-  <style id="osb-lessons-in-grid-css">
-    /* Hide the original Lessons card when on the lessons route */
-    html[data-route="lessons"] #bp-lessons-card { display: none !important; }
-  </style>
-
-  <!-- OSB:TOAST-STYLE-START -->
+  <!-- OSB:TOAST-STYLE -->
   <style id="osb-toast-css">
     #toast{
       position:fixed; top:20px; right:20px; transform:none;
@@ -98,7 +93,6 @@
     }
     #toast.show{ opacity:1; }
   </style>
-  <!-- OSB:TOAST-STYLE-END -->
 </head>
 <body>
 
@@ -213,32 +207,9 @@
         </div>
       </section>
     </div> <!-- /.grid -->
-
-    <div id="toast"></div>
   </div> <!-- /.wrap -->
 
   <script src="/client.js" defer></script>
-
-  <!-- =======================
-    LESSONS TILE (standalone section for non-grid) — hidden on lessons route
-    ======================= -->
-  <section id="bp-lessons-tile-section">
-    <div class="bp-grid">
-      <a class="bp-tile" href="#/lessons" data-nav>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <h3 style="margin:0;">Lessons</h3>
-          <span class="bp-badge">MVP</span>
-        </div>
-        <p class="bp-muted" style="margin:.5rem 0 0;">
-          Enter the Curriculum Hub → tracks, progress, and missions-linked XP.
-        </p>
-        <div style="margin-top:.75rem;display:flex;align-items:center;gap:8px;">
-          <div aria-hidden="true" style="width:10px;height:10px;border-radius:50%;border:2px solid currentColor;"></div>
-          <span class="bp-muted"><span id="bp-lessons-tile-progress-2">Python Mastery • 0%</span></span>
-        </div>
-      </a>
-    </div>
-  </section>
 
   <!-- =======================
     LESSONS VIEW + ROUTER
@@ -283,7 +254,6 @@
       try { document.documentElement.setAttribute("data-route", route); } catch(e){}
       var v=document.getElementById("bp-lessons-view");
       var card=document.getElementById("bp-lessons-card");
-      var t=document.getElementById("bp-lessons-tile-section");
       if(v){
         if(route==="lessons"){ v.hidden=false; try{v.removeAttribute("hidden");}catch(e){}; v.style.display="block"; }
         else { v.hidden=true; try{v.setAttribute("hidden","");}catch(e){}; v.style.display="none"; }
@@ -291,10 +261,6 @@
       if(card){
         if(route==="lessons"){ card.style.display="none"; }
         else { card.style.display="block"; }
-      }
-      if(t){
-        if(route==="lessons"){ t.style.display="none"; t.hidden=true; }
-        else { t.style.display="block"; t.hidden=false; }
       }
     }
     window.addEventListener("hashchange", function(){ requestAnimationFrame(apply); });
@@ -317,6 +283,9 @@
       }
     })();
   </script>
+
+  <!-- One global toast node -->
+  <div id="toast"></div>
 
   <!-- Modules -->
   <script type="module">import "/lessons.js";</script>
