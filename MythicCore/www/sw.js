@@ -80,7 +80,7 @@
 
   <!-- OSB:LESSONS-IN-GRID-CSS -->
   <style id="osb-lessons-in-grid-css">
-    /* Hide the original standalone Lessons tile on lessons route */
+    /* Hide the original Lessons card when on the lessons route */
     html[data-route="lessons"] #bp-lessons-card { display: none !important; }
   </style>
 
