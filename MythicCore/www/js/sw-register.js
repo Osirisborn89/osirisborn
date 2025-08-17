@@ -2,7 +2,7 @@
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
-      const reg = await navigator.serviceWorker.register("/sw.js?v=22");
+      const reg = await navigator.serviceWorker.register("/sw.js?v=24");
       console.log("[SW] registered ok; scope=", reg.scope);
       try { await reg.update(); } catch {}
       if (reg.waiting) { reg.waiting.postMessage({ type:"SKIP_WAITING" }); }
@@ -14,4 +14,5 @@ if ("serviceWorker" in navigator) {
     }
   });
 }
+
 

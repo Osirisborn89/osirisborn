@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script type="module" src="/js/sw-register.js?v=22" defer></script>
+<script type="module" src="/js/sw-register.js?v=24" defer></script>
 <!-- OSB:DEV-TOGGLE-EARLY -->
 <script>
 (function(){
@@ -99,17 +99,15 @@
 <style id="osb-toast-css">
   #toast{
     position:fixed; right:16px; top:16px;
-    max-width:440px;
-    background:rgba(17,24,39,.92);
-    border:1px solid #2e3757;
-    border-radius:12px;
+    max-width:480px;
+    background:rgba(17,24,39,.96);
+    border:1px solid #2e3757; border-radius:12px;
     padding:12px 14px;
-    font-weight:700;
-    line-height:1.25;
-    z-index:10000;
+    font-weight:700; line-height:1.25; z-index:10000;
     box-shadow:0 8px 30px rgba(0,0,0,.35);
     opacity:0; transform: translateY(-6px);
-    transition: opacity .2s ease, transform .2s ease;
+    transition: opacity .18s ease, transform .18s ease;
+    pointer-events:none;
   }
   #toast.show{ opacity:1; transform: translateY(0); }
 </style>
@@ -169,7 +167,7 @@
 
   <div class="wrap">
     <header>
-<script type="module" src="/js/sw-register.js?v=22" defer></script>
+<script type="module" src="/js/sw-register.js?v=24" defer></script>
       <div class="title">Osirisborn — Control Panel</div>
       <div class="controls"><button id="btn-lessons" type="button">Lessons</button>
         <button id="btn-refresh">Refresh</button>
@@ -281,11 +279,7 @@
     requestAnimationFrame(apply);
   }
 })();
-</script>
-<script type="module">import "/lessons.js";</script>
-
-
-<!-- OSB:LESSONS-BUTTON -->
+</script><!-- OSB:LESSONS-BUTTON -->
 <script id="osb-lessons-button">
   (function(){
     var b = document.getElementById("btn-lessons");
@@ -303,4 +297,9 @@
 
 
 <script type="module">import "/js/runner.js";</script><div id="toast" class="footer muted"></div>
+
+
+<script type="module">import "/lessons.js";</script>
+<script type="module">import "/js/live-xp.js";</script>
+
 
