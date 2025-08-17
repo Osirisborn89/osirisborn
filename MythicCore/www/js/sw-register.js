@@ -1,29 +1,16 @@
-/* MythicCore/www/js/sw-register.js */
-(function(){
-  if (!("serviceWorker" in navigator)) {
-    console.warn("[SW] not supported in this browser/env");
-    return;
-  }
-  // Try immediately (DOMContentLoaded happens before load)
-  const doRegister = async () => {
+// sw-register v21
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
     try {
-      const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      const reg = await navigator.serviceWorker.register("/sw.js?v=21");
       console.log("[SW] registered ok; scope=", reg.scope);
-      // Ask the browser to check for updates shortly after
-      setTimeout(() => reg.update?.(), 1500);
-    } catch (err) {
-      console.warn("[SW] register failed:", err);
+      try { await reg.update(); } catch {}
+      if (reg.waiting) { reg.waiting.postMessage({ type:"SKIP_WAITING" }); }
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        console.log("[SW] controller changed");
+      });
+    } catch (e) {
+      console.warn("[SW] registration failed", e);
     }
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", doRegister, { once:true });
-  } else {
-    doRegister();
-  }
-
-  // Debug: list existing registrations
-  navigator.serviceWorker.getRegistrations?.().then(rs => {
-    console.log("[SW] existing registrations:", rs.map(r => r.scope));
-  }).catch(()=>{});
-})();
+  });
+}

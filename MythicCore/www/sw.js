@@ -1,73 +1,65 @@
-/* MythicCore/www/sw.js */
-const CACHE = "osb-v3-2025-08-17-03";
-const ORIGIN = self.location.origin;
+// osb-sw v21
+const CACHE = "osb-sw-v21";
 
-const PRECACHE = [
-  "/",
-  "/client.js",
-  "/lessons.js",
-  "/js/outbox.js",
-  "/js/backup.js",
-  "/js/sw-register.js",
-  "/xp-panel.css",
-  "/xp-panel.js",
-  "/lessons.css",
-  "/favicon.svg",
-];
-
-self.addEventListener("install", (event) => {
+self.addEventListener("install", (e) => {
   self.skipWaiting();
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE);
-    for (const url of PRECACHE) {
-      try { await cache.add(new Request(url, { cache: "reload" })); } catch {}
-    }
-  })());
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(["/", "/index.html"]).catch(()=>{})));
 });
 
-self.addEventListener("activate", (event) => {
-  clients.claim();
-  event.waitUntil((async () => {
-    const names = await caches.keys();
-    await Promise.all(names.filter(n => n.startsWith("osb-") && n !== CACHE).map(n => caches.delete(n)));
-  })());
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
 });
 
-self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  if (req.method !== "GET") return;
+self.addEventListener("message", (e) => {
+  if (e?.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+self.addEventListener("fetch", (e) => {
+  const req = e.request;
   const url = new URL(req.url);
 
-  // Navigations -> network-first, fallback to cached "/"
-  if (req.mode === "navigate") {
-    event.respondWith((async () => {
-      try { return await fetch(req); }
-      catch {
-        const cache = await caches.open(CACHE);
-        return (await cache.match("/")) || Response.error();
-      }
-    })());
+  if (req.method !== "GET") return;
+
+  // Only handle same-origin
+  if (url.origin !== location.origin) return;
+
+  // HTML/doc navigations: network-first (fall back to cache)
+  const isHTML = req.mode === "navigate" || req.destination === "document" || url.pathname.endsWith("/");
+  if (isHTML) {
+    e.respondWith(
+      fetch(req).then(r => {
+        const copy = r.clone();
+        caches.open(CACHE).then(c => c.put(req, copy)).catch(()=>{});
+        return r;
+      }).catch(() => caches.match(req))
+    );
     return;
   }
 
-  if (url.origin !== ORIGIN) return;
-
-  // API -> network-first; Outbox handles offline writes
-  const isAPI = url.pathname.startsWith("/api/") || url.pathname === "/xp.json";
-  if (isAPI) {
-    event.respondWith(fetch(req).catch(() => Response.error()));
+  // Always-fresh modules that change often
+  const path = url.pathname;
+  const alwaysFresh = (
+    path.startsWith("/js/runner") ||
+    path === "/lessons.js" ||
+    path === "/client.js"
+  );
+  if (alwaysFresh) {
+    e.respondWith(fetch(req).catch(() => caches.match(req)));
     return;
   }
 
-  // Static -> cache-first
-  event.respondWith((async () => {
-    const cache = await caches.open(CACHE);
-    const hit = await cache.match(req);
-    if (hit) return hit;
-    try {
-      const res = await fetch(req);
-      if (res && res.ok && res.type === "basic") cache.put(req, res.clone());
-      return res;
-    } catch { return Response.error(); }
-  })());
+  // Static assets: cache-first, then update in background
+  e.respondWith(
+    caches.match(req).then(cached => {
+      const fetchPromise = fetch(req).then(r => {
+        const copy = r.clone();
+        caches.open(CACHE).then(c => c.put(req, copy)).catch(()=>{});
+        return r;
+      }).catch(()=>cached || Promise.reject("offline"));
+      return cached || fetchPromise;
+    })
+  );
 });

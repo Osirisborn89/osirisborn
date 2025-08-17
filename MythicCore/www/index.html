@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script type="module" src="/js/sw-register.js?v=8" defer></script>
+<script type="module" src="/js/sw-register.js?v=21" defer></script>
 <!-- OSB:DEV-TOGGLE-EARLY -->
 <script>
 (function(){
@@ -81,6 +81,20 @@
   /* Hide the card when actually on the lessons route */
   html[data-route="lessons"] #bp-lessons-card { display: none !important; }
 </style>
+<!-- OSB:TOAST-STYLE-START -->
+<style>
+#toast{
+  position:fixed; top:20px; right:20px; transform:none;
+  min-width:260px; max-width:420px;
+  background:rgba(20,24,40,.96); color:#e7ecf5;
+  border:1px solid #2e3757; padding:12px 16px; border-radius:12px;
+  box-shadow:0 8px 28px rgba(0,0,0,.45);
+  opacity:0; transition:opacity .25s ease;
+  z-index:9999; pointer-events:none;
+  font-weight:700; font-size:14px; line-height:1.25;
+}
+</style>
+<!-- OSB:TOAST-STYLE-END -->
 </head>
 <body>
 <!-- OSB:XP-PANEL-START -->
@@ -137,7 +151,7 @@
 
   <div class="wrap">
     <header>
-<script type="module" src="/js/sw-register.js?v=8" defer></script>
+<script type="module" src="/js/sw-register.js?v=21" defer></script>
       <div class="title">Osirisborn — Control Panel</div>
       <div class="controls"><button id="btn-lessons" type="button">Lessons</button>
         <button id="btn-refresh">Refresh</button>
@@ -270,6 +284,9 @@
 
 
 
-<script type="module">import "/js/runner.js";</script>
+<script type="module">import "/js/runner.js";</script><div id="toast" class="footer muted"></div>
+
+
 <script type="module">import "/js/live-xp.js";</script>
+
 
