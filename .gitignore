@@ -24,3 +24,4 @@ server.log
 server.err.log
 server.pid
 testResults.xml
+!MythicCore/www/data/curriculum.json
