@@ -1,28 +1,31 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script type="module" src="/js/sw-register.js?v=4" defer></script>
-<!-- OSB:DEV-TOGGLE-EARLY -->
-<script>
-(function(){
-  var url = new URL(location.href);
-  var q = url.searchParams.get('dev');
-  if (q === '1') localStorage.setItem('osb.dev','1');
-  if (q === '0') localStorage.setItem('osb.dev','0');
+  <script type="module" src="/js/sw-register.js?v=4" defer></script>
 
-  var host = location.hostname || '';
-  var isLocal = (host === '127.0.0.1' || host === 'localhost');
-  var stored = localStorage.getItem('osb.dev');
-  var devOn = stored ? (stored === '1') : isLocal;
+  <!-- OSB:DEV-TOGGLE-EARLY -->
+  <script>
+  (function(){
+    var url = new URL(location.href);
+    var q = url.searchParams.get('dev');
+    if (q === '1') localStorage.setItem('osb.dev','1');
+    if (q === '0') localStorage.setItem('osb.dev','0');
 
-  if (devOn) document.documentElement.setAttribute('data-dev','1');
-})();
-</script>
+    var host = location.hostname || '';
+    var isLocal = (host === '127.0.0.1' || host === 'localhost');
+    var stored = localStorage.getItem('osb.dev');
+    var devOn = stored ? (stored === '1') : isLocal;
+
+    if (devOn) document.documentElement.setAttribute('data-dev','1');
+  })();
+  </script>
+
   <meta charset="utf-8" />
   <title>Osirisborn — Control Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/lessons.css" />
+
   <style>
     :root{
       --bg:#0f1220; --panel:#171a2b; --muted:#7986a3; --text:#e7ecf5; --acc:#63f2a5; --warn:#f2b263; --danger:#ff6b6b;
@@ -58,87 +61,80 @@
     svg{width:100%;height:120px}
   </style>
 
-<!-- BEGIN: LESSONS ROUTE CSS SAFETY NET -->
-<style id="bp-route-safety">
-  html[data-route="lessons"] #bp-lessons-view {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-  html[data-route="lessons"] #bp-lessons-tile-section {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-  }
-</style>
-<!-- END: LESSONS ROUTE CSS SAFETY NET -->
-<!-- OSB:LESSONS-IN-GRID-CSS -->
-<style id="osb-lessons-in-grid-css">
-  /* Hide the original standalone Lessons tile */
-  #bp-lessons-tile-section { display: none !important; }
-
-  /* Hide the card when actually on the lessons route */
-  html[data-route="lessons"] #bp-lessons-card { display: none !important; }
-</style>
+  <!-- BEGIN: LESSONS ROUTE CSS SAFETY NET -->
+  <style id="bp-route-safety">
+    html[data-route="lessons"] #bp-lessons-view {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    html[data-route="lessons"] #bp-lessons-card {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+  </style>
+  <!-- END: LESSONS ROUTE CSS SAFETY NET -->
 </head>
 <body>
-<!-- OSB:XP-PANEL-START -->
-<section id="xp-panel" class="card">
-  <div class="xp-header">
-    <h2>XP — Today</h2>
-    <div class="xp-rank" id="xp-rank" hidden>Rank: <span id="xp-rank-value">—</span></div>
-  </div>
 
-  <div class="xp-stats">
-    <div class="xp-today"><span id="xp-today">0</span> XP</div>
-    <div class="xp-goal">
-      <label for="daily-goal">Goal</label>
-      <input id="daily-goal" type="number" min="1" step="10" />
-      <button id="save-goal" type="button">Save</button>
+  <!-- OSB:XP-PANEL-START -->
+  <section id="xp-panel" class="card">
+    <div class="xp-header">
+      <h2>XP — Today</h2>
+      <div class="xp-rank" id="xp-rank" hidden>Rank: <span id="xp-rank-value">—</span></div>
     </div>
-  </div>
 
-  <div class="xp-bar">
-    <div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div>
-  </div>
+    <div class="xp-stats">
+      <div class="xp-today"><span id="xp-today">0</span> XP</div>
+      <div class="xp-goal">
+        <label for="daily-goal">Goal</label>
+        <input id="daily-goal" type="number" min="1" step="10" />
+        <button id="save-goal" type="button">Save</button>
+      </div>
+    </div>
 
-  <div class="xp-note" id="xp-note"></div>
-</section>
+    <div class="xp-bar">
+      <div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div>
+    </div>
 
-<link rel="stylesheet" href="./xp-panel.css" />
-<script src="./xp-panel.js" defer></script>
-<!-- OSB:XP-PANEL-END -->
+    <div class="xp-note" id="xp-note"></div>
+  </section>
 
-<!-- OSB:XP-DEV-START -->
-<section class="card" id="xp-dev" style="display:block">
-  <h3>XP Dev Controls</h3>
-  <button id="xp-plus10" type="button">+10 XP (queue if offline)</button>
-  <span id="xp-pending" style="margin-left:.5rem;"></span>
-</section>
-<script type="module">
-  import { addXP, tryFlush, pending } from "./js/outbox.js";
-  async function refreshPending(){
-    const p = await pending();
-    const el = document.getElementById("xp-pending");
-    if (el) el.textContent = "Pending: " + p.length;
-  }
-  const btn = document.getElementById("xp-plus10");
-  if (btn) {
-    btn.addEventListener("click", async ()=>{
-      await addXP(10, "dev-test");
-      await refreshPending();
-    });
-  }
-  window.addEventListener("online", async ()=>{ await tryFlush(); await refreshPending(); });
-  window.addEventListener("load", refreshPending);
-</script>
-<!-- OSB:XP-DEV-END -->
+  <link rel="stylesheet" href="./xp-panel.css" />
+  <script src="./xp-panel.js" defer></script>
+  <!-- OSB:XP-PANEL-END -->
+
+  <!-- OSB:XP-DEV-START -->
+  <section class="card" id="xp-dev" style="display:block">
+    <h3>XP Dev Controls</h3>
+    <button id="xp-plus10" type="button">+10 XP (queue if offline)</button>
+    <span id="xp-pending" style="margin-left:.5rem;"></span>
+  </section>
+  <script type="module">
+    import { addXP, tryFlush, pending } from "./js/outbox.js";
+    async function refreshPending(){
+      const p = await pending();
+      const el = document.getElementById("xp-pending");
+      if (el) el.textContent = "Pending: " + p.length;
+    }
+    const btn = document.getElementById("xp-plus10");
+    if (btn) {
+      btn.addEventListener("click", async ()=>{
+        await addXP(10, "dev-test");
+        await refreshPending();
+      });
+    }
+    window.addEventListener("online", async ()=>{ await tryFlush(); await refreshPending(); });
+    window.addEventListener("load", refreshPending);
+  </script>
+  <!-- OSB:XP-DEV-END -->
 
   <div class="wrap">
     <header>
-<script type="module" src="/js/sw-register.js?v=4" defer></script>
       <div class="title">Osirisborn — Control Panel</div>
-      <div class="controls"><button id="btn-lessons" type="button">Lessons</button>
+      <div class="controls">
+        <button id="btn-lessons" type="button">Lessons</button>
         <button id="btn-refresh">Refresh</button>
         <button id="btn-add">+ Mission</button>
         <button id="btn-backup">Backup</button>
@@ -156,114 +152,124 @@
             <div class="muted">Goal: <span id="goal" class="mono">—</span> · Today: <span id="today" class="mono">0</span> · Remaining: <span id="remain" class="mono">—</span></div>
           </div>
         </div>
-        <div style="margin-top:
-
-
-
-
-
-
-
-<!-- OSB:LESSONS-BLOCK-START -->
-<style>
-  .bp-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin:12px 0}
-  .bp-tile{display:block;padding:14px 16px;border:1px solid rgba(255,255,255,.12);border-radius:12px;text-decoration:none}
-  .bp-tile:hover{transform:translateY(-1px)}
-  .bp-muted{opacity:.8;font-size:.9rem}
-  .bp-badge{display:inline-block;padding:2px 8px;border:1px solid rgba(255,255,255,.18);border-radius:999px;font-size:.75rem;margin-left:8px}
-  @media (max-width:480px){.bp-grid{grid-template-columns:1fr}}
-</style>
-
-<section id="bp-lessons-tile-section">
-  <div class="bp-grid">
-    <a class="bp-tile" href="#/lessons" data-nav>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;">Lessons</h3>
-        <span class="bp-badge">MVP</span>
-      </div>
-      <p class="bp-muted" style="margin:.5rem 0 0;">
-        Enter the Curriculum Hub → tracks, progress, and missions-linked XP.
-      </p>
-      <div style="margin-top:.75rem;display:flex;align-items:center;gap:8px;">
-        <div aria-hidden="true" style="width:10px;height:10px;border-radius:50%;border:2px solid currentColor;"></div>
-        <span class="bp-muted"><span id="bp-lessons-tile-progress">Python Mastery • 0%</span></span>
-      </div>
-    </a>
-  </div>
-</section>
-
-<section id="bp-lessons-view" hidden>
-  <header style="margin:12px 0 8px;">
-    <h2 style="margin:0;">Curriculum Hub</h2>
-    <p class="bp-muted" style="margin:.25rem 0 0;">
-      Tracks will sync with local <code>MythicCore/data/curriculum.json</code>.
-    </p>
-  </header>
-
-  <div class="bp-grid" id="bp-tracks">
-    <article class="bp-tile" tabindex="0">
-      <h3 style="margin:0;">Python Mastery</h3>
-      <p class="bp-muted" style="margin:.25rem 0 .5rem;">Beginner → Job-ready • Lessons, challenges, capstones</p>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div aria-hidden="true" style="width:36px;height:36px;border-radius:50%;border:3px solid currentColor;"></div>
-        <div>
-          <div class="bp-muted"><span class="bp-muted">Progress: <strong id="bp-lessons-progress">0%</strong></span> (stub)</div>
-          <div class="bp-muted">Rank-aware XP hooks</div>
+        <div style="margin-top:10px" class="card">
+          <svg id="chart" viewBox="0 0 600 120" preserveAspectRatio="none">
+            <polyline id="series" fill="none" stroke="currentColor" stroke-width="2" points=""></polyline>
+          </svg>
+          <div class="muted footer">Last <span id="days">0</span> days</div>
         </div>
-      </div>
-    </article>
-  </div>
-</section>
-<!-- OSB:LESSONS-BLOCK-END -->
-<!-- OSB:INLINE-ROUTER -->
-<script id="bp-inline-router">
-(function(){
-  function isLessons(){
-    try{
-      var h=window.location.hash||"";
-      if(h.replace(/\/+$/,"")==="#/lessons") return true;
-      var p=window.location.pathname||"";
-      if(p.replace(/\/+$/,"")==="/lessons") return true;
-    }catch(e){}
-    return false;
-  }
-  function apply(){
-    var route = isLessons() ? "lessons" : "home";
-    try { document.documentElement.setAttribute("data-route", route); } catch(e){}
-    var v=document.getElementById("bp-lessons-view");
-    var t=document.getElementById("bp-lessons-tile-section");
-    if(v){
-      if(route==="lessons"){ v.hidden=false; try{v.removeAttribute("hidden");}catch(e){}; v.style.display="block"; }
-      else { v.hidden=true; try{v.setAttribute("hidden","");}catch(e){}; v.style.display="none"; }
-    }
-    if(t){
-      if(route==="lessons"){ t.hidden=true; try{t.setAttribute("hidden","");}catch(e){}; t.style.display="none"; }
-      else { t.hidden=false; try{t.removeAttribute("hidden");}catch(e){}; t.style.display="block"; }
-    }
-  }
-  window.addEventListener("hashchange", function(){ requestAnimationFrame(apply); });
-  if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(apply); });
-  } else {
-    requestAnimationFrame(apply);
-  }
-})();
-</script>
-<script type="module">import "/lessons.js";</script>
+      </section>
 
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:700">Missions</div>
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>Title</th><th>XP</th><th>Status</th><th></th></tr></thead>
+        <tbody id="missions"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </section>
 
-<!-- OSB:LESSONS-BUTTON -->
-<script id="osb-lessons-button">
+      <!-- Lessons tile shown as its own dashboard card -->
+      <section class="card" id="bp-lessons-card">
+        <div class="bp-grid">
+          <a class="bp-tile" href="#/lessons" data-nav>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <h3 style="margin:0;">Lessons</h3>
+              <span class="bp-badge">MVP</span>
+            </div>
+            <p class="bp-muted" style="margin:.5rem 0 0;">
+              Enter the Curriculum Hub → tracks, progress, and missions-linked XP.
+            </p>
+            <div style="margin-top:.75rem;display:flex;align-items:center;gap:8px;">
+              <div aria-hidden="true" style="width:10px;height:10px;border-radius:50%;border:2px solid currentColor;"></div>
+              <span class="bp-muted"><span id="bp-lessons-tile-progress">Python Mastery • 0%</span></span>
+            </div>
+          </a>
+        </div>
+      </section>
+    </div> <!-- /.grid -->
+
+    <div id="toast" class="footer muted"></div>
+  </div> <!-- /.wrap -->
+
+  <script src="/client.js" defer></script>
+
+  <!-- =======================
+    LESSONS VIEW + ROUTER
+    ======================= -->
+  <section id="bp-lessons-view" hidden style="max-width:1000px;margin:0 auto 16px;">
+    <header style="margin:12px 0 8px;">
+      <h2 style="margin:0;">Curriculum Hub</h2>
+      <p class="bp-muted" style="margin:.25rem 0 0;">
+        Tracks will sync with local <code>MythicCore/data/curriculum.json</code>.
+      </p>
+    </header>
+
+    <div class="bp-grid" id="bp-tracks">
+      <article class="bp-tile" tabindex="0">
+        <h3 style="margin:0;">Python Mastery</h3>
+        <p class="bp-muted" style="margin:.25rem 0 .5rem;">Beginner → Job-ready • Lessons, challenges, capstones</p>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div aria-hidden="true" style="width:36px;height:36px;border-radius:50%;border:3px solid currentColor;"></div>
+          <div>
+            <div class="bp-muted"><span class="bp-muted">Progress: <strong id="bp-lessons-progress">0%</strong></span> (stub)</div>
+            <div class="bp-muted">Rank-aware XP hooks</div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Inline router -->
+  <script id="bp-inline-router">
   (function(){
-    var b = document.getElementById("btn-lessons");
-    if (b) {
-      b.addEventListener("click", function(){
-        try { location.hash = "#/lessons"; } catch(e) {}
-      });
+    function isLessons(){
+      try{
+        var h=window.location.hash||"";
+        if(h.replace(/\/+$/,"")==="#/lessons") return true;
+        var p=window.location.pathname||"";
+        if(p.replace(/\/+$/,"")==="/lessons") return true;
+      }catch(e){}
+      return false;
+    }
+    function apply(){
+      var route = isLessons() ? "lessons" : "home";
+      try { document.documentElement.setAttribute("data-route", route); } catch(e){}
+      var v=document.getElementById("bp-lessons-view");
+      var card=document.getElementById("bp-lessons-card");
+      if(v){
+        if(route==="lessons"){ v.hidden=false; try{v.removeAttribute("hidden");}catch(e){}; v.style.display="block"; }
+        else { v.hidden=true; try{v.setAttribute("hidden","");}catch(e){}; v.style.display="none"; }
+      }
+      if(card){
+        if(route==="lessons"){ card.style.display="none"; }
+        else { card.style.display="block"; }
+      }
+    }
+    window.addEventListener("hashchange", function(){ requestAnimationFrame(apply); });
+    if(document.readyState==="loading"){
+      document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(apply); });
+    } else {
+      requestAnimationFrame(apply);
     }
   })();
-</script>
+  </script>
 
+  <!-- Header Lessons button wiring -->
+  <script id="osb-lessons-button">
+    (function(){
+      var b = document.getElementById("btn-lessons");
+      if (b) {
+        b.addEventListener("click", function(){
+          try { location.hash = "#/lessons"; } catch(e) {}
+        });
+      }
+    })();
+  </script>
 
-<script type="module">import "/js/backup.js";</script>
-
+  <!-- Modules -->
+  <script type="module">import "/lessons.js";</script>
+  <script type="module">import "/js/backup.js";</script>
+</body>
+</html>
