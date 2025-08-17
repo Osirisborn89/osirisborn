@@ -17,3 +17,10 @@ backup-*/
 backup-less-*/
 backup-*/
 backup-less-*/
+# Local backups & logs
+backup-*.ps1
+*.bak-*
+server.log
+server.err.log
+server.pid
+testResults.xml

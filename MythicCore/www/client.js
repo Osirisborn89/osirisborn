@@ -417,3 +417,86 @@ async function addXp(delta, reason) {
 })();
  /* ==== END LESS-002 ==== */
 
+
+/* ==== BEGIN LESS-003: lessons completion wiring ==== */
+(function(){
+  function ensureCompleteButton(){
+    var host = document.querySelector("#bp-lessons-view .bp-grid");
+    if (!host || document.getElementById("bp-complete-py-01-01")) return;
+
+    var btn = document.createElement("button");
+    btn.id = "bp-complete-py-01-01";
+    btn.textContent = "Complete: Hello, Pyramid";
+    btn.style.marginTop = "8px";
+    btn.className = "bp-btn";
+    // minimal button styling
+    btn.style.padding = "8px 12px";
+    btn.style.border = "1px solid rgba(255,255,255,.2)";
+    btn.style.borderRadius = "8px";
+    btn.style.background = "transparent";
+    btn.style.cursor = "pointer";
+
+    // Put it inside the first track card
+    var firstCard = document.querySelector("#bp-tracks .bp-tile");
+    (firstCard || host).appendChild(btn);
+
+    btn.addEventListener("click", async function(){
+      btn.disabled = true; btn.textContent = "Completing…";
+      try{
+        // 1) Mark lesson complete
+        let r = await fetch("/api/lessons/complete", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ trackId:"python", lessonId:"py-01-01" })
+        });
+        let c = await r.json();
+        if (!r.ok || !c || (c.error && c.error.length)) throw new Error(c.error || "complete failed");
+
+        // 2) If just completed, award XP via the existing endpoint
+        if (c.status === "ok" && Number.isFinite(c.awarded) && c.awarded > 0) {
+          let xp = await fetch("/api/xp/add", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ delta: c.awarded, reason: `Lesson ${c.lessonId} complete` })
+          });
+          if (!xp.ok) console.warn("XP add failed");
+        }
+
+        // 3) Update the visible counts quickly
+        try{
+          const res = await fetch("/api/lessons/summary",{cache:"no-store"});
+          const data = await res.json();
+          const t = data.tracks.find(x => x.id === "python") || data.tracks[0];
+          const pct = Number.isFinite(t.progress) ? t.progress : 0;
+          const tile = document.getElementById("bp-lessons-tile-progress");
+          if (tile) tile.textContent = `${t.title} • ${pct}%`;
+          const pv = document.getElementById("bp-lessons-progress");
+          if (pv)  pv.textContent = `${pct}%`;
+        }catch(_){}
+
+        // 4) Nudge the XP ring to refresh: quick reload (keeps the #/lessons hash)
+        setTimeout(function(){ location.reload(); }, 600);
+      }catch(err){
+        console.error(err);
+        btn.textContent = "Try again";
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // Run when Lessons view is shown
+  function maybeAttach(){
+    var showLessons = (location.hash.replace(/\/+$/,"") === "#/lessons") ||
+                      (location.pathname.replace(/\/+$/,"") === "/lessons");
+    if (showLessons) ensureCompleteButton();
+  }
+
+  window.addEventListener("hashchange", function(){ setTimeout(maybeAttach, 0); });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function(){ setTimeout(maybeAttach, 0); });
+  } else {
+    setTimeout(maybeAttach, 0);
+  }
+})();
+ /* ==== END LESS-003 ==== */
+
