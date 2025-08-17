@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script type="module" src="/js/sw-register.js?v=4" defer></script>
+<script type="module" src="/js/sw-register.js?v=8" defer></script>
 <!-- OSB:DEV-TOGGLE-EARLY -->
 <script>
 (function(){
@@ -23,7 +23,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/lessons.css" />
-  <style>
+  
+<link rel="stylesheet" href="/runner.css" /><style>
     :root{
       --bg:#0f1220; --panel:#171a2b; --muted:#7986a3; --text:#e7ecf5; --acc:#63f2a5; --warn:#f2b263; --danger:#ff6b6b;
       --ringbg:#2a314a; --ring:#63f2a5;
@@ -136,7 +137,7 @@
 
   <div class="wrap">
     <header>
-<script type="module" src="/js/sw-register.js?v=4" defer></script>
+<script type="module" src="/js/sw-register.js?v=8" defer></script>
       <div class="title">Osirisborn — Control Panel</div>
       <div class="controls"><button id="btn-lessons" type="button">Lessons</button>
         <button id="btn-refresh">Refresh</button>
@@ -266,4 +267,9 @@
 
 
 <script type="module">import "/js/backup.js";</script>
+
+
+
+<script type="module">import "/js/runner.js";</script>
+<script type="module">import "/js/live-xp.js";</script>
 
