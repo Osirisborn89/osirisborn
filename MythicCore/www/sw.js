@@ -1,5 +1,5 @@
 // osb-sw v21
-const CACHE = "osb-sw-v21";
+const CACHE = "osb-sw-v22";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
@@ -63,3 +63,4 @@ self.addEventListener("fetch", (e) => {
     })
   );
 });
+
