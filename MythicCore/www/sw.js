@@ -1,5 +1,5 @@
 /* osb service worker — v24 */
-const VERSION = "osb-sw-v24";
+const VERSION = "osb-sw-v25";
 const STATIC_CACHE = VERSION;
 const OFFLINE_URL = "/index.html";
 

@@ -2,7 +2,7 @@
 (() => {
   if (!("serviceWorker" in navigator)) return;
 
-  const SW_URL = "/sw.js?v=24";
+  const SW_URL = "/sw.js?v=25";
   let hasHandledControllerChange = false;
 
   async function registerSW() {

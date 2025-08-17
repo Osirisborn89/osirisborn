@@ -285,12 +285,16 @@
   </script>
 
   <!-- One global toast node -->
-  <div id="toast"></div>
+  <div id="lessons-root"></div>
+<div id="toast"></div>
 
   <!-- Modules -->
-  <script type="module">import "/lessons.js";</script>
-  <script type="module">import "/js/backup.js";</script>
-  <script type="module">import "/js/runner.js";</script>
-  <script type="module">import "/js/live-xp.js";</script>
+<script src="/js/live-xp.js" defer></script>
+<script src="/js/backup.js" defer></script>
+<script src="/js/runner.js" defer></script>
+<script src="/js/lessons.js?v=25" defer></script>
 </body>
 </html>
+
+
+<!-- LESS-008 marker: curriculum-plumbing wired -->
