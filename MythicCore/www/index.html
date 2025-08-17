@@ -402,7 +402,7 @@
   const host = location.hostname || '';
   const isLocal = (host === '127.0.0.1' || host === 'localhost');
 
-  // Default: ON for localhost unless explicitly turned off (osb.dev === '0')
+  // Default: ON for localhost unless explicitly disabled (osb.dev === '0')
   const stored = localStorage.getItem('osb.dev');
   const devOn = stored ? (stored === '1') : isLocal;
 
@@ -410,6 +410,7 @@
 })();
 </script>
 <!-- OSB:DEV-TOGGLE-END -->
+
 
 
 

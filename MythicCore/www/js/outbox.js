@@ -6,7 +6,7 @@ async function loadQ(){
   const q = await db.get(KEY);
   return Array.isArray(q) ? q : [];
 }
-async function saveQ(q){ await db.set(KEY, q) }
+async function saveQ(q){ await db.set(KEY, q); }
 
 function newId(){
   return (crypto.randomUUID?.() ?? (Date.now()+"-"+Math.random().toString(16).slice(2)));
@@ -33,12 +33,17 @@ export async function tryFlush(){
         body: JSON.stringify({ delta: item.delta, reason: item.reason })
       });
       if (!res.ok) throw new Error(String(res.status));
-      // success → drop from queue
+      // success -> drop from queue
     } catch {
       remain.push(item); // keep for later
     }
   }
   await saveQ(remain);
+  // NEW: notify listeners (e.g., XP panel) that flush completed
+  try {
+    const ev = new CustomEvent("osb:outbox:flushed", { detail: { remaining: remain.length } });
+    window.dispatchEvent(ev);
+  } catch (_) {}
 }
 
 export async function pending(){ return loadQ() }
