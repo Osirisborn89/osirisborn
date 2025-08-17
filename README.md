@@ -28,4 +28,8 @@ $cli = Join-Path $env:USERPROFILE 'Osirisborn\MythicCore\scripts\osirisborn.ps1'
 pwsh -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\Osirisborn\MythicCore\scripts\Osirisborn.Server.ps1"
 # then open http://localhost:7777/
 
+## Documentation
 
+- **Quickstart**: [docs/Quickstart.md](docs/Quickstart.md)
+- **Handover (2025-08-16)**: [docs/black-pyramid/Handover-2025-08-16.md](docs/black-pyramid/Handover-2025-08-16.md)
+- **Architecture Decisions**: [docs/adr](docs/adr)
