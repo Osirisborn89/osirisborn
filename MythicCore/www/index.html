@@ -20,6 +20,8 @@
   <meta charset="utf-8" />
   <title>Osirisborn — Control Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/lessons.css" />
   <style>
     :root{
       --bg:#0f1220; --panel:#171a2b; --muted:#7986a3; --text:#e7ecf5; --acc:#63f2a5; --warn:#f2b263; --danger:#ff6b6b;
@@ -125,22 +127,6 @@
 
   <div class="wrap">
     <header>
-<!-- OSB:DEV-TOGGLE-EARLY -->
-<script>
-(function(){
-  var url = new URL(location.href);
-  var q = url.searchParams.get('dev');
-  if (q === '1') localStorage.setItem('osb.dev','1');
-  if (q === '0') localStorage.setItem('osb.dev','0');
-
-  var host = location.hostname || '';
-  var isLocal = (host === '127.0.0.1' || host === 'localhost');
-  var stored = localStorage.getItem('osb.dev');
-  var devOn = stored ? (stored === '1') : isLocal;
-
-  if (devOn) document.documentElement.setAttribute('data-dev','1');
-})();
-</script>
       <div class="title">Osirisborn — Control Panel</div>
       <div class="controls">
         <button id="btn-refresh">Refresh</button>
@@ -181,6 +167,7 @@
 
     <div id="toast" class="footer muted"></div>
   </div>
+
   <script src="/client.js" defer></script>
 
 <!-- =======================
@@ -215,22 +202,6 @@
 
 <section id="bp-lessons-view" hidden>
   <header style="margin:12px 0 8px;">
-<!-- OSB:DEV-TOGGLE-EARLY -->
-<script>
-(function(){
-  var url = new URL(location.href);
-  var q = url.searchParams.get('dev');
-  if (q === '1') localStorage.setItem('osb.dev','1');
-  if (q === '0') localStorage.setItem('osb.dev','0');
-
-  var host = location.hostname || '';
-  var isLocal = (host === '127.0.0.1' || host === 'localhost');
-  var stored = localStorage.getItem('osb.dev');
-  var devOn = stored ? (stored === '1') : isLocal;
-
-  if (devOn) document.documentElement.setAttribute('data-dev','1');
-})();
-</script>
     <h2 style="margin:0;">Curriculum Hub</h2>
     <p class="bp-muted" style="margin:.25rem 0 0;">
       Tracks will sync with local <code>MythicCore/data/curriculum.json</code> in LESS-002.
@@ -370,5 +341,8 @@
 })();
 </script>
 <!-- END LESS-003 INLINE COMPLETE -->
+
+<!-- Force-load lessons.js at the end -->
+<script type="module">import "/lessons.js";</script>
 </body>
 </html>
