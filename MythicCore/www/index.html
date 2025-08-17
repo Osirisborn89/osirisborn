@@ -285,3 +285,21 @@
 
 
 
+<!-- OSB:DEV-STYLE-START -->
+<style>
+  #xp-dev { display:none; }
+  html[data-dev="1"] #xp-dev { display:block; }
+</style>
+<!-- OSB:DEV-STYLE-END -->
+<!-- OSB:DEV-TOGGLE-START -->
+<script>
+(function(){
+  const url = new URL(location.href);
+  if (url.searchParams.get('dev') === '1') {
+    localStorage.setItem('osb.dev','1');
+  }
+  const devOn = localStorage.getItem('osb.dev') === '1';
+  if (devOn) document.documentElement.setAttribute('data-dev','1');
+})();
+</script>
+<!-- OSB:DEV-TOGGLE-END -->
