@@ -97,6 +97,7 @@
 <link rel="stylesheet" href="./xp-panel.css" />
 <script src="./xp-panel.js" defer></script>
 <!-- OSB:XP-PANEL-END -->
+
 <!-- OSB:XP-DEV-START -->
 <section class="card" id="xp-dev" style="display:block">
   <h3>XP Dev Controls</h3>
@@ -121,7 +122,6 @@
   window.addEventListener("load", refreshPending);
 </script>
 <!-- OSB:XP-DEV-END -->
-
 
   <div class="wrap">
     <header>
@@ -372,48 +372,3 @@
 <!-- END LESS-003 INLINE COMPLETE -->
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- OSB:DEV-STYLE-START -->
-<style>
-  #xp-dev { display:none; }
-  html[data-dev="1"] #xp-dev { display:block !important; }
-</style>
-<!-- OSB:DEV-STYLE-END -->
-<!-- OSB:DEV-TOGGLE-START -->
-<script>
-(function(){
-  const url = new URL(location.href);
-  // Manual overrides via query
-  if (url.searchParams.get('dev') === '1') localStorage.setItem('osb.dev','1');
-  if (url.searchParams.get('dev') === '0') localStorage.setItem('osb.dev','0');
-
-  const host = location.hostname || '';
-  const isLocal = (host === '127.0.0.1' || host === 'localhost');
-
-  // Default: ON for localhost unless explicitly turned off (osb.dev === '0')
-  const stored = localStorage.getItem('osb.dev');
-  const devOn = stored ? (stored === '1') : isLocal;
-
-  if (devOn) document.documentElement.setAttribute('data-dev','1');
-})();
-</script>
-<!-- OSB:DEV-TOGGLE-END -->
-
-
-
-
-
-
-
