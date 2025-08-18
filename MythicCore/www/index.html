@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <script type="module" src="/js/sw-register.js?v=24" defer></script>
+ <script src="/js/sw-register.js?v=26" defer></script>
 
   <!-- OSB:DEV-TOGGLE-EARLY -->
   <script>
@@ -25,7 +25,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
-  <link rel="stylesheet" href="/lessons.css" />
+  
   <link rel="stylesheet" href="/runner.css" />
 
   <style>
@@ -209,7 +209,7 @@
     </div> <!-- /.grid -->
   </div> <!-- /.wrap -->
 
-  <script src="/client.js" defer></script>
+  <!-- <script src="/client.js" defer></script> -->
 
   <!-- =======================
     LESSONS VIEW + ROUTER
@@ -290,11 +290,43 @@
 
   <!-- Modules -->
 <script src="/js/live-xp.js" defer></script>
-<script src="/js/backup.js" defer></script>
-<script src="/js/runner.js" defer></script>
-<script src="/js/lessons.js?v=25" defer></script>
+
+<!-- Backup/Restore as module; wire buttons dynamically with a safe import -->
+<script type="module">
+  (async () => {
+    try {
+      const mod = await import('/js/backup.js');
+      const backupBtn  = document.getElementById('btn-backup');
+      const restoreBtn = document.getElementById('btn-restore');
+
+      const doBackup  = mod.backupAll    || mod.backup || mod.default?.backupAll    || mod.default?.backup;
+      const doRestore = mod.restoreLatest|| mod.restore|| mod.default?.restoreLatest || mod.default?.restore;
+
+      if (backupBtn && typeof doBackup === 'function') {
+        backupBtn.addEventListener('click', () => doBackup());
+      }
+      if (restoreBtn && typeof doRestore === 'function') {
+        restoreBtn.addEventListener('click', () => doRestore());
+      }
+    } catch (e) {
+      console.warn('Backup module not available:', e);
+    }
+  })();
+</script>
+
+
+
+  <link rel="stylesheet" href="/lessons.css">
+  <script src="/js/runner.js" defer></script>
+  <script src="/js/lessons.js?v=27" defer></script>
 </body>
 </html>
 
+<link rel="stylesheet" href="/runner.css">
+<link rel="stylesheet" href="/xp-panel.css">
+<script src="/xp-panel.js" defer></script>
 
 <!-- LESS-008 marker: curriculum-plumbing wired -->
+
+
+
