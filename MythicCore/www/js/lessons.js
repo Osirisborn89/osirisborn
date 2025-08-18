@@ -105,3 +105,172 @@
   });
   if (location.hash.startsWith("#/lessons")) render();
 })();
+// === OSB LESS-011 BEGIN ===
+(function(){
+  if (window.__OSB_LESSON_UX__) return; 
+  window.__OSB_LESSON_UX__ = true;
+
+  const state = {
+    trackId: 'python-beginner',
+    toastLock: new Set(),
+  };
+
+  async function getCurriculum() {
+    try {
+      if (window.CURRICULUM?.getTrack) {
+        return { getTrack: window.CURRICULUM.getTrack.bind(window.CURRICULUM) };
+      }
+      const res = await fetch("/data/curriculum.json", { cache: "no-store" }).catch(()=>null);
+      if (!res || !res.ok) return null;
+      const data = await res.json();
+      return {
+        getTrack: (id)=> (data.tracks || []).find(t=>t.id===id)
+      };
+    } catch(e){ return null; }
+  }
+
+  function xpPill(xp) { return `<span class="xp-pill">${xp} XP</span>`; }
+  function actionButtons(lesson){
+    const acts = lesson.actions || [];
+    const btns = [];
+    if (acts.includes('run')) btns.push(`<button class="btn small btn-run" data-lesson="${lesson.id}">Run</button>`);
+    if (acts.includes('check')) btns.push(`<button class="btn small btn-check" data-lesson="${lesson.id}">Check</button>`);
+    return btns.join('');
+  }
+
+  function lessonRow(lesson, completedSet) {
+    const completed = completedSet.has(lesson.id);
+    const completedClass = completed ? 'completed' : '';
+    const statusBadge = completed ? `<span class="badge-ok">✓ Completed</span>` : '';
+    return `
+      <div class="lesson-row ${completedClass}" data-lesson="${lesson.id}">
+        <div class="lesson-main">
+          <div class="lesson-title">${lesson.title}</div>
+          <div class="lesson-brief">${lesson.brief || ''}</div>
+        </div>
+        <div class="lesson-side">
+          ${xpPill(lesson.xp || 0)}
+          ${statusBadge}
+          <div class="lesson-actions">${actionButtons(lesson)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function fetchTrackProgress(trackId) {
+    try {
+      const res = await fetch(`/api/lessons/track/${trackId}`, { cache: 'no-store' });
+      if (!res.ok) return { completed: new Set(), totals: { done:0, total:0, pct:0 } };
+      const data = await res.json();
+      return { completed: new Set(data.completed || []), totals: data.totals || { done:0, total:0, pct:0 } };
+    } catch(e){
+      return { completed: new Set(), totals: { done:0, total:0, pct:0 } };
+    }
+  }
+
+  function setTrackBadgeProgress(totals) {
+    const badge = document.querySelector(`[data-track="${state.trackId}"] .track-progress`);
+    if (badge) {
+      badge.textContent = `${totals.pct || 0}%`;
+      badge.setAttribute('data-done', totals.done || 0);
+      badge.setAttribute('data-total', totals.total || 0);
+    }
+  }
+
+  async function renderLessons(track, container) {
+    const { completed, totals } = await fetchTrackProgress(state.trackId);
+    setTrackBadgeProgress(totals);
+    const rows = [];
+    if (track?.modules) {
+      for (const m of track.modules) {
+        rows.push(`<div class="module-title">${m.title}</div>`);
+        for (const lesson of m.lessons) rows.push(lessonRow(lesson, completed));
+      }
+    }
+    container.innerHTML = rows.join('');
+    container.addEventListener('click', async (ev) => {
+      const btn = ev.target.closest('button');
+      if (!btn) return;
+      const lessonId = btn.getAttribute('data-lesson');
+      if (btn.classList.contains('btn-run')) await onRun(lessonId);
+      if (btn.classList.contains('btn-check')) await onCheck(lessonId);
+    }, { once: true });
+  }
+
+  async function onRun(lessonId) {
+    const result = await window.runSample?.(lessonId);
+    if (result?.ok && result?.awarded) {
+      singleToast(result.lessonId, `✓ +${result.xp} XP — Lesson ${result.lessonId} complete`);
+      await refreshAfterChange();
+    }
+  }
+
+  async function onCheck(lessonId) {
+    const payload = { trackId: state.trackId, lessonId };
+    const res = await fetch('/api/lessons/complete', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      singleToast(lessonId, `✓ Lesson ${lessonId} marked complete`);
+      await refreshAfterChange();
+    }
+  }
+
+  async function refreshAfterChange() {
+    const container = document.querySelector('#lessons-container');
+    const cur = await getCurriculum();
+    const track = cur?.getTrack(state.trackId);
+    if (container && track) await renderLessons(track, container);
+  }
+
+  function singleToast(key, msg) {
+    if (state.toastLock.has(key)) return;
+    state.toastLock.add(key);
+    (window.toast && typeof window.toast === 'function') && window.toast(msg);
+    setTimeout(()=>state.toastLock.delete(key), 1500);
+  }
+
+  async function bootIfLessonsRoute(){
+    const isLessons = (location.hash || '').includes('/lessons');
+    if (!isLessons) return;
+    const container = document.querySelector('#lessons-container');
+    const cur = await getCurriculum();
+    const track = cur?.getTrack(state.trackId);
+    if (container && track) {
+      await renderLessons(track, container);
+    } else {
+      // fallback: decorate any existing rows if present
+      const rows = document.querySelectorAll('.lesson-row[data-lesson]');
+      if (rows.length && cur) {
+        // minimal decoration
+        rows.forEach(r=>{
+          const id = r.getAttribute('data-lesson');
+          const trackObj = cur.getTrack(state.trackId);
+          const allLessons = trackObj?.modules?.flatMap(m=>m.lessons)||[];
+          const meta = allLessons.find(l=>l.id===id);
+          if (!meta) return;
+          const side = r.querySelector('.lesson-side') || r.appendChild(Object.assign(document.createElement('div'),{className:'lesson-side'}));
+          if (!side.querySelector('.xp-pill')) side.insertAdjacentHTML('afterbegin', xpPill(meta.xp||0));
+          const act = side.querySelector('.lesson-actions') || side.appendChild(Object.assign(document.createElement('div'),{className:'lesson-actions'}));
+          if (!act.querySelector('.btn-run') && (meta.actions||[]).includes('run')) act.insertAdjacentHTML('beforeend', `<button class="btn small btn-run" data-lesson="${id}">Run</button>`);
+          if (!act.querySelector('.btn-check') && (meta.actions||[]).includes('check')) act.insertAdjacentHTML('beforeend', `<button class="btn small btn-check" data-lesson="${id}">Check</button>`);
+        });
+        // attach one-time click handler at container level if exists
+        (rows[0]?.parentElement||document).addEventListener('click', async (ev)=>{
+          const btn = ev.target.closest('button[data-lesson]');
+          if (!btn) return;
+          if (btn.classList.contains('btn-run')) await onRun(btn.getAttribute('data-lesson'));
+          if (btn.classList.contains('btn-check')) await onCheck(btn.getAttribute('data-lesson'));
+        }, { once:true });
+      }
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', bootIfLessonsRoute);
+  window.addEventListener('hashchange', bootIfLessonsRoute);
+})();
+// === OSB LESS-011 END ===
+
+

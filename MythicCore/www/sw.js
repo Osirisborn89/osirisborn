@@ -1,6 +1,6 @@
 /* osb service worker — v24 */
-const VERSION = "osb-sw-v25";
-const STATIC_CACHE = VERSION;
+const VERSION = "osb-sw-v27";
+const CACHE_NAME = 'osb-sw-v27';
 const OFFLINE_URL = "/index.html";
 
 const PRECACHE_URLS = [
@@ -188,3 +188,4 @@ function isLikelyHTMLPath(u) {
     return false;
   }
 }
+
