@@ -26,6 +26,7 @@ if (-not (Get-Module Pester -ListAvailable | Where-Object { $_.Version -ge [Vers
 $test = Invoke-Pester -Path .\tests -CI -PassThru
 if ($test.FailedCount -gt 0) { "❌ Tests failed"; exit 8 }
 "✅ Precommit tests passed."
+less-003-server-cleanup
 # OSB:GUARD-INDEX-DUPES
 try {
   $index = Join-Path $PSScriptRoot "..\MythicCore\www\index.html"
@@ -66,3 +67,4 @@ try {
   Write-Warning "Index guard check threw: $($_.Exception.Message)"
 }
 # END OSB:GUARD-INDEX-DUPES
+main
