@@ -233,6 +233,45 @@
             <div class="bp-muted">Rank-aware XP hooks</div>
           </div>
         </div>
+less-003-server-cleanup
+      </div>
+    </article>
+
+    <article class="bp-tile" aria-disabled="true">
+      <h3 style="margin:0;">Web & JS/TS</h3>
+      <p class="bp-muted" style="margin:.25rem 0 0;">Available (via API)</p>
+    </article>
+  </div>
+</section>
+<!-- =======================
+  END LESS-001
+  ======================= -->
+
+<!-- BEGIN: INLINE ROUTER (LESS-001 hard toggle) -->
+<script id="bp-inline-router">
+(function(){
+  function isLessons(){
+    try{
+      var h=window.location.hash||"";
+      if(h.replace(/\/+$/,"")==="#/lessons") return true;
+      var p=window.location.pathname||"";
+      if(p.replace(/\/+$/,"")==="/lessons") return true;
+    }catch(e){}
+    return false;
+  }
+  function apply(){
+    var route = isLessons() ? "lessons" : "home";
+    try { document.documentElement.setAttribute("data-route", route); } catch(e){}
+    var v=document.getElementById("bp-lessons-view");
+    var t=document.getElementById("bp-lessons-tile-section");
+    if(v){
+      if(route==="lessons"){
+        v.hidden=false; try{v.removeAttribute("hidden");}catch(e){}
+        v.style.display="block";
+      } else {
+        v.hidden=true; try{v.setAttribute("hidden","");}catch(e){}
+        v.style.display="none";
+      }
       </article>
     </div>
   </section>
@@ -248,6 +287,7 @@
         if(p.replace(/\/+$/,"")==="/lessons") return true;
       }catch(e){}
       return false;
+ main
     }
     function apply(){
       var route = isLessons() ? "lessons" : "home";
@@ -263,6 +303,90 @@
         else { card.style.display="block"; }
       }
     }
+less-003-server-cleanup
+  }
+  window.addEventListener("hashchange", function(){ requestAnimationFrame(apply); });
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(apply); });
+  } else {
+    requestAnimationFrame(apply);
+  }
+})();
+</script>
+<!-- END: INLINE ROUTER -->
+
+<!-- BEGIN LESS-003 INLINE COMPLETE -->
+<script id="bp-lessons-inline-complete">
+(function(){
+  function onLessons(){
+    try{
+      var h=(location.hash||"").replace(/\/+$/,"");
+      if(h==="#/lessons") return true;
+      var p=(location.pathname||"").replace(/\/+$/,"");
+      if(p==="/lessons") return true;
+    }catch(e){}
+    return false;
+  }
+  function inject(){
+    if(!onLessons()) return;
+    var card=document.querySelector("#bp-tracks .bp-tile")||document.getElementById("bp-lessons-view");
+    if(!card) return;
+    if(document.getElementById("bp-complete-inline")) return;
+
+    var btn=document.createElement("button");
+    btn.id="bp-complete-inline";
+    btn.textContent="Complete: Hello, Pyramid";
+    btn.style.marginTop="10px";
+    btn.style.padding="8px 12px";
+    btn.style.border="1px solid rgba(255,255,255,.25)";
+    btn.style.borderRadius="8px";
+    btn.style.background="transparent";
+    btn.style.cursor="pointer";
+    (card).appendChild(btn);
+
+    btn.addEventListener("click", async function(){
+      btn.disabled=true; btn.textContent="Completing…";
+      try{
+        const r = await fetch("/api/lessons/complete", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ trackId:"python", lessonId:"py-01-01" })
+        });
+        const c = await r.json();
+        if(!r.ok || (c && c.error)) throw new Error(c?.error||"complete failed");
+
+        if (c.status==="ok" && Number.isFinite(c.awarded) && c.awarded>0) {
+          await fetch("/api/xp/add", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ delta:c.awarded, reason:`Lesson ${c.lessonId} complete` })
+          }).catch(()=>{});
+        }
+        setTimeout(()=>location.reload(),500);
+      }catch(err){
+        console.error(err);
+        btn.textContent="Try again";
+        btn.disabled=false;
+      }
+    });
+  }
+  window.addEventListener("hashchange", ()=>setTimeout(inject,0), true);
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded", ()=>setTimeout(inject,0));
+  } else {
+    setTimeout(inject,0);
+  }
+})();
+</script>
+<!-- END LESS-003 INLINE COMPLETE -->
+</body>
+</html>
+
+
+
+
+
+
     window.addEventListener("hashchange", function(){ requestAnimationFrame(apply); });
     if(document.readyState==="loading"){
       document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(apply); });
@@ -271,6 +395,7 @@
     }
   })();
   </script>
+main
 
   <!-- Header Lessons button wiring -->
   <script id="osb-lessons-button">
@@ -325,8 +450,36 @@
 <link rel="stylesheet" href="/runner.css">
 <link rel="stylesheet" href="/xp-panel.css">
 <script src="/xp-panel.js" defer></script>
+less-013-learning-actions
+
+<less-013-learning-actions
+
+less-012-learning-hub
 
 <!-- LESS-008 marker: curriculum-plumbing wired -->
 
 
 
+
+less-012-lessons-route
+
+main
+
+<!-- LESS-008 marker: curriculum-plumbing wired -->
+
+
+less-013-learning-actions
+
+less-013-learning-actions
+
+
+less-003-server-cleanup
+
+
+
+<!-- LESS-008 marker: curriculum-plumbing wired -->
+less-011-authoring-ux
+
+
+
+main
