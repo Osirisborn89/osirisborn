@@ -1,3 +1,16 @@
-* text=auto
-*.yml  text eol=lf
-*.yaml text eol=lf
+# Web assets: LF
+*.html text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+
+# Windows scripts: CRLF
+*.ps1  text eol=crlf
+*.psm1 text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Others
+*.sh   text eol=lf
+MythicCore/www/index.html merge=ours

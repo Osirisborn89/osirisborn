@@ -1,0 +1,4 @@
+{ "track":"coding","sub":"cpp","modules":[
+  {"id":"cpp-hello","title":"Hello, C++","type":"read"},
+  {"id":"cpp-build","title":"Build & Run","type":"quiz"}
+]}

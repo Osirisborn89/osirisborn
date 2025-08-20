@@ -1,0 +1,5 @@
+{ "track":"coding","sub":"python","modules":[
+  {"id":"py-hello","title":"Hello, Python","type":"read"},
+  {"id":"py-vars","title":"Variables & Types","type":"quiz"},
+  {"id":"py-loops","title":"Loops","type":"code","check":"contains:for"}
+]}

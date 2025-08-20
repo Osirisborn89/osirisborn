@@ -1,0 +1,4 @@
+{ "track":"cyber","sub":"foundations","modules":[
+  {"id":"lab-setup","title":"Lab Setup","type":"read"},
+  {"id":"sec-basics","title":"Security Basics","type":"quiz"}
+]}
