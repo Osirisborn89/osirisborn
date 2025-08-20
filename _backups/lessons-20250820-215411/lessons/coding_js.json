@@ -1,0 +1,4 @@
+{ "track":"coding","sub":"js","modules":[
+  {"id":"js-hello","title":"Hello, JS","type":"read"},
+  {"id":"js-dom","title":"DOM Basics","type":"quiz"}
+]}

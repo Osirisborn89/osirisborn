@@ -27,3 +27,7 @@ testResults.xml
 less-003-server-cleanup
 !MythicCore/www/data/curriculum.json
 main
+
+# local backups
+*.bak.*
+

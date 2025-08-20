@@ -1,0 +1,7 @@
+{
+  "tracks": [
+    { "key": "coding", "name": "Coding", "subs": ["python","js","cpp"] },
+    { "key": "cyber",  "name": "Cybersecurity", "subs": ["foundations","web","network","bounty"] },
+    { "key": "ctf",    "name": "CTFs", "subs": ["wargames","crypto","rev","pwn"] }
+  ]
+}

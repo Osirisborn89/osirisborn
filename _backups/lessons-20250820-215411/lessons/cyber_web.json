@@ -1,0 +1,4 @@
+{ "track":"cyber","sub":"web","modules":[
+  {"id":"xss-intro","title":"Intro to XSS","type":"read"},
+  {"id":"sql-injection","title":"SQLi Basics","type":"quiz"}
+]}

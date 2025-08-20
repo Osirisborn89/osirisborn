@@ -1,0 +1,4 @@
+{ "track":"ctf","sub":"wargames","modules":[
+  {"id":"bandit-0","title":"Bandit Level 0","type":"read"},
+  {"id":"bandit-1","title":"Bandit Level 1","type":"quiz"}
+]}

@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><title>SW Unregister</title>
+<pre id="out">Checking…</pre>
+<script>
+(async () => {
+  const out = m => document.getElementById('out').textContent = m;
+  try{
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const r of regs) { await r.unregister(); }
+    }
+    if ('caches' in window) {
+      const names = await caches.keys();
+      for (const n of names) { await caches.delete(n); }
+    }
+    out('Service workers unregistered and caches cleared.');
+  }catch(e){ out('Failed: ' + e); }
+})();
+</script>

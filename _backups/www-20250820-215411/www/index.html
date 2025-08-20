@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- DO_NOT_TOUCH ui/learn-full portal -->
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Black Pyramid — Portal</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="stylesheet" href="./portal.css?v=20250820214438"/>
+  <script>
+    // Dev toggle + force our scale
+    (function(){
+      var url = new URL(location.href);
+      var q = url.searchParams.get('dev');
+      if (q === '1') localStorage.setItem('osb.dev','1');
+      if (q === '0') localStorage.setItem('osb.dev','0');
+      document.documentElement.setAttribute('data-scale','bp');
+    })();
+  </script>
+</head>
+<body>
+  <nav>
+    <div class="bar">
+      <div class="brand">Black Pyramid</div>
+      <div class="tabs">
+        <a class="tab" data-tab="home"  href="#/home">Home</a>
+        <a class="tab" data-tab="learn" href="#/learn">Learning</a>
+        <a class="tab" data-tab="lounge" href="#/lounge">Lounge</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="app" class="wrap"></main>
+
+  <!-- Home -->
+  <template id="tpl-home">
+    <section class="view">
+      <h2>Welcome</h2>
+      <div class="tile-grid">
+        <a class="tile" href="#/learn"><div><h4>Learning</h4><div class="muted">Tracks, progress, XP runner</div></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/lounge"><div><h4>Lounge</h4><div class="muted">Community & updates</div></div><div class="badge">New</div></a>
+      </div>
+    </section>
+  </template>
+
+  <!-- Learning Hub: choose a track -->
+  <template id="tpl-learn">
+    <section id="view-learn" class="view">
+      <h2>Learning Hub</h2>
+      <p class="muted">Select a track to enter.</p>
+      <div class="tile-grid">
+        <a class="tile" href="#/learn/coding"><div><h4>Coding</h4><div class="muted">Python, JS, C++</div></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/learn/cyber"><div><h4>Cybersecurity</h4><div class="muted">Foundations, Web, Network, Bounty</div></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/learn/ctf"><div><h4>CTFs</h4><div class="muted">Wargames, Crypto, Rev, Pwn</div></div><div class="badge">Practice</div></a>
+      </div>
+    </section>
+  </template>
+
+  <!-- Coding: choose a language -->
+  <template id="tpl-learn-coding">
+    <section class="view">
+      <h2>Coding</h2>
+      <p class="muted">Pick a language.</p>
+      <div class="tile-grid">
+        <a class="tile" href="#/learn/python"><div><h4>Python</h4><div class="muted">Beginner → Advanced</div></div><div class="badge">Start here</div></a>
+        <a class="tile" href="#/learn/js"><div><h4>JavaScript</h4><div class="muted">Frontend + Node basics</div></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/learn/cpp"><div><h4>C++</h4><div class="muted">Language & tooling basics</div></div><div class="badge">Core</div></a>
+      </div>
+      <p style="margin-top:10px"><a class="button" href="#/learn">← Back to Learning Hub</a></p>
+    </section>
+  </template>
+
+  <script>
+    (function(){
+      console.log('LESS-016 portal booted (tpl)');
+      var app = document.getElementById('app');
+      var map = {
+        home:  'tpl-home',
+        learn: 'tpl-learn',
+        'learn/coding': 'tpl-learn-coding'
+      };
+      function routeKey(){
+        var h = location.hash.replace(/^#\//,'');
+        if(!h) return 'home';
+        if(map[h]) return h;
+        if(h.startsWith('learn/coding')) return 'learn/coding';
+        if(h.startsWith('learn')) return 'learn';
+        return 'home';
+      }
+      function setActive(tab){
+        document.querySelectorAll('.tab').forEach(el=>{
+          el.classList.toggle('active', el.getAttribute('data-tab')===tab);
+        });
+      }
+      function render(){
+        var key = routeKey();
+        var tpl = document.getElementById(map[key] || map.home);
+        app.innerHTML = tpl ? tpl.innerHTML : '<div class="card">Not found</div>';
+        setActive(key.split('/')[0]);
+        console.log('LESS-025 render (tpl)', {key});
+      }
+      window.addEventListener('hashchange', ()=>requestAnimationFrame(render));
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ()=>requestAnimationFrame(render));
+      } else {
+        requestAnimationFrame(render);
+      }
+    })();
+  </script>
+</body>
+</html>
+
