@@ -1,16 +1,25 @@
-# Web assets: LF
-*.html text eol=lf
-*.css  text eol=lf
-*.js   text eol=lf
-*.json text eol=lf
-*.md   text eol=lf
+# Default normalize to LF
+*           text=auto eol=lf
 
-# Windows scripts: CRLF
-*.ps1  text eol=crlf
-*.psm1 text eol=crlf
-*.bat  text eol=crlf
-*.cmd  text eol=crlf
+# Windows scripts keep CRLF
+*.ps1       text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
 
-# Others
-*.sh   text eol=lf
-MythicCore/www/index.html merge=ours
+# Web & config (LF)
+*.html      text eol=lf
+*.css       text eol=lf
+*.js        text eol=lf
+*.json      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.md        text eol=lf
+
+# Binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.bundle binary
