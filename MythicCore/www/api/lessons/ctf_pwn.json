@@ -1,0 +1,4 @@
+{ "track":"ctf","sub":"pwn","modules":[
+  {"id":"memory-101","title":"Memory 101","type":"read"},
+  {"id":"overflow-basics","title":"Overflow Basics","type":"quiz"}
+]}

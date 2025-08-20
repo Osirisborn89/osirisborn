@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8"/>
+<title>SW Unregister</title>
+<body style="font:14px ui-sans-serif,system-ui;margin:2rem;color:#eee;background:#111">
+<h3>Unregistering service workers & clearing caches…</h3>
+<pre id="log"></pre>
+<script>
+(async () => {
+  const log = (m)=>document.getElementById('log').append(m+"\n");
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const r of regs) { await r.unregister(); log("unregistered: " + (r.scope||"?")); }
+  } else { log("no serviceWorker API"); }
+  if (window.caches) {
+    const keys = await caches.keys();
+    for (const k of keys) { await caches.delete(k); log("cache deleted: " + k); }
+  }
+  try { localStorage.clear(); sessionStorage.clear(); log("storage cleared"); } catch(e){}
+  log("DONE — close this tab and open the portal");
+})();
+</script>
+</body>

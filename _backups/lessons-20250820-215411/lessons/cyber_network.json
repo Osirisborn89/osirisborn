@@ -1,0 +1,4 @@
+{ "track":"cyber","sub":"network","modules":[
+  {"id":"scan-basics","title":"Scanning Basics","type":"read"},
+  {"id":"pcap-101","title":"PCAP 101","type":"quiz"}
+]}

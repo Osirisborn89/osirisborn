@@ -1,0 +1,4 @@
+{ "track":"ctf","sub":"crypto","modules":[
+  {"id":"classic-ciphers","title":"Classic Ciphers","type":"read"},
+  {"id":"modular-math","title":"Modular Math","type":"quiz"}
+]}

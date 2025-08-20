@@ -1,0 +1,11 @@
+# Restore HOW-TO
+
+1) From GitHub (recommended):
+   - git fetch origin
+   - git switch backup/snapshot-<STAMP>   # or: git checkout tags/backup/<STAMP>
+
+2) From local full zip:
+   - Extract osirisborn_full_<STAMP>.zip to a new folder
+   - Open a fresh terminal in that folder
+   - Run: .\tools\Reset-Server.ps1
+   - Open: http://127.0.0.1:7780/?sw=off#/home

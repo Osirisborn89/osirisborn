@@ -1,0 +1,10 @@
+name: Portal UI Guard
+on: [pull_request]
+jobs:
+  guard:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run guard
+        shell: pwsh
+        run: pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\tests\Portal.UI.Guard.ps1 -Mode CI

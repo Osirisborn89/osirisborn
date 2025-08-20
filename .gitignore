@@ -27,3 +27,18 @@ testResults.xml
 less-003-server-cleanup
 !MythicCore/www/data/curriculum.json
 main
+
+# local backups
+*.bak.*
+
+# Local backups & restore workspace
+/_backups/
+/tools/_backups/
+/_restore/
+
+# Large backup artifacts
+*.bundle
+*.zip
+
+# Local served snapshot
+served.index.snapshot.html

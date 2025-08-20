@@ -1,0 +1,4 @@
+{ "track":"cyber","sub":"bounty","modules":[
+  {"id":"recon-101","title":"Recon 101","type":"read"},
+  {"id":"reporting","title":"Reporting","type":"quiz"}
+]}

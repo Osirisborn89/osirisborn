@@ -1,0 +1,4 @@
+{ "track":"ctf","sub":"rev","modules":[
+  {"id":"strings","title":"Strings & Symbols","type":"read"},
+  {"id":"ghidra-hello","title":"Ghidra Hello","type":"quiz"}
+]}
