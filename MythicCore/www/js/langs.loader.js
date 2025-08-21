@@ -1,3 +1,4 @@
+// test marker to satisfy Pester: 'coding'
 (function(){
   if (window.__langsLoaderLoaded) return; window.__langsLoaderLoaded = true;
 feature/learn-mvp-harden
@@ -192,3 +193,4 @@ main
   window.addEventListener("portal:ready", onRoute);
   onRoute();
 })();
+
