@@ -45,3 +45,5 @@ body.route-lang-hasdata {
   background-attachment: fixed, fixed, fixed;
   min-height: 100vh;
 }
+#lang-root { display: none; max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
+body.route-lang-hasdata #lang-root { display: block; }

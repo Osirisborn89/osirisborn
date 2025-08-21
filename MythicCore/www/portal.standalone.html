@@ -67,13 +67,12 @@ body{
 <!-- removed: placeholder include -->
 <!-- removed: placeholder include -->
 <link rel="stylesheet" href="langs.lessons.css?v=20250821-223115" />
-<script src="js/langs.loader.js?v=20250821-223115" defer></script><style id="lang-hardmask-inline">
+<script src="js/langs.loader.js?v=20250821-223115" defer></script><style id=""lang-hardmask-inline"">
 /* HARD MASK: hide EVERYTHING except nav/footer and #lang-root on language routes */
 body.route-lang-hasdata *:not(nav):not(nav *):not(.footer):not(.footer *):not(#lang-root):not(#lang-root *) {
   display: none !important;
 }
-/* Theme + ensure #lang-root visible */
-#lang-root { display:block; max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+/* Theme */
 body.route-lang-hasdata {
   background:
     radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12) 0%, rgba(110,60,255,0) 60%),
@@ -82,7 +81,11 @@ body.route-lang-hasdata {
   background-attachment: fixed, fixed, fixed;
   min-height: 100vh;
 }
-/* Debug badge so we KNOW the route class is active */
+/* Visibility: hidden by default, shown ONLY on language routes */
+#lang-root { display: none; max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
+body.route-lang-hasdata #lang-root { display: block; }
+
+/* Debug badge */
 #lang-debug-badge{
   position:fixed; bottom:8px; right:8px; z-index:9999;
   padding:6px 8px; border-radius:8px;
@@ -607,6 +610,7 @@ feature/lms-langs-track-pages-20250821150646
   <script src="js/lms.chrome.js" defer></script>
 </body>
 </html>
+
 
 
 
