@@ -14,3 +14,20 @@ body.route-lang-hasdata #lang-root { display:block; }
 
 #lang-content { margin-top:18px; padding:16px 14px; border:1px solid rgba(255,255,255,.1); border-radius:12px; }
 #lang-content .empty { opacity:.7; font-style:italic; }
+  
+/* lang-route-visibility: hide legacy siblings + restore purple theme */
+body.route-lang-hasdata > *:not(nav):not(#lang-root):not(.footer),
+body.route-lang-placeholder > *:not(nav):not(#lang-placeholder):not(#lang-root):not(.footer) {
+  display: none !important;
+}
+
+/* lang-route-theme: safe purple gradient, page-height */
+body.route-lang-hasdata,
+body.route-lang-placeholder {
+  background:
+    radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12) 0%, rgba(110,60,255,0) 60%),
+    radial-gradient(1000px 600px at 110% 10%, rgba(0,200,255,.10) 0%, rgba(0,200,255,0) 55%),
+    linear-gradient(180deg, rgba(14,11,31,1) 0%, rgba(10,9,24,1) 100%);
+  background-attachment: fixed, fixed, fixed;
+  min-height: 100vh;
+}
