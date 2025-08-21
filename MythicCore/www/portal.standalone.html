@@ -66,8 +66,41 @@ body{
 </style>
 <!-- removed: placeholder include -->
 <!-- removed: placeholder include -->
-<link rel="stylesheet" href="langs.lessons.css?v=20250821-222238" />
-<script src="js/langs.loader.js?v=20250821-222238" defer></script>
+<link rel="stylesheet" href="langs.lessons.css?v=20250821-223115" />
+<script src="js/langs.loader.js?v=20250821-223115" defer></script>
+<script id="lang-route-boot">
+(function(){
+  function isLangRoute(){
+    var h=(location.hash||""); return /^#\/learn\/[A-Za-z0-9\-]+/.test(h);
+  }
+  function ensureRoot(){
+    var r=document.getElementById("lang-root");
+    if(!r){
+      r=document.createElement("div"); r.id="lang-root";
+      var f=document.querySelector(".footer");
+      if(f&&f.parentNode) f.parentNode.insertBefore(r,f); else document.body.appendChild(r);
+    }
+    return r;
+  }
+  function apply(){
+    if(isLangRoute()){
+      document.body.classList.add("route-lang-hasdata");
+      var r=ensureRoot();
+      if(!r.innerHTML){
+        r.innerHTML = '<div class="lang-meta"><a href="#/learn/coding">← Back to Languages</a></div>'
+                    + '<h1>Loading…</h1>'
+                    + '<div id="lang-content"><div class="empty">Loading lessons (or content coming soon)…</div></div>';
+      }
+    } else {
+      document.body.classList.remove("route-lang-hasdata");
+    }
+  }
+  window.addEventListener("hashchange", apply);
+  document.addEventListener("DOMContentLoaded", apply);
+  window.addEventListener("portal:ready", apply);
+  apply();
+})();
+</script>
 </head>
 <body>
   <nav><div class="bar">
@@ -534,6 +567,7 @@ feature/lms-langs-track-pages-20250821150646
   <script src="js/lms.chrome.js" defer></script>
 </body>
 </html>
+
 
 
 
