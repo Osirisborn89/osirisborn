@@ -68,23 +68,49 @@ body{
 <!-- removed: placeholder include -->
 <link rel="stylesheet" href="langs.lessons.css?v=20250821-223115" />
 <script src="js/langs.loader.js?v=20250821-223115" defer></script>
-<script id="lang-route-boot">
+<style id="lang-hardmask-inline">
+/* HARD MASK: hide EVERYTHING except nav/footer and #lang-root on language routes */
+body.route-lang-hasdata *:not(nav):not(nav *):not(.footer):not(.footer *):not(#lang-root):not(#lang-root *) {
+  display: none !important;
+}
+/* Theme + ensure #lang-root visible */
+#lang-root { display:block; max-width:960px; margin:0 auto; padding:24px 20px 64px; }
+body.route-lang-hasdata {
+  background:
+    radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12) 0%, rgba(110,60,255,0) 60%),
+    radial-gradient(1000px 600px at 110% 10%, rgba(0,200,255,.10) 0%, rgba(0,200,255,0) 55%),
+    linear-gradient(180deg, rgba(14,11,31,1) 0%, rgba(10,9,24,1) 100%);
+  background-attachment: fixed, fixed, fixed;
+  min-height: 100vh;
+}
+/* Debug badge so we KNOW the route class is active */
+#lang-debug-badge{
+  position:fixed; bottom:8px; right:8px; z-index:9999;
+  padding:6px 8px; border-radius:8px;
+  background:#2d1b69; color:#fff; border:1px solid rgba(255,255,255,.25);
+  font:12px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  opacity:.9
+}
+</style><script id="lang-route-boot">
 (function(){
-  function isLangRoute(){
-    var h=(location.hash||""); return /^#\/learn\/[A-Za-z0-9\-]+/.test(h);
-  }
+  function isLangRoute(){ var h=(location.hash||""); return /^#\/learn\/[A-Za-z0-9\-]+/.test(h); }
   function ensureRoot(){
     var r=document.getElementById("lang-root");
-    if(!r){
-      r=document.createElement("div"); r.id="lang-root";
-      var f=document.querySelector(".footer");
-      if(f&&f.parentNode) f.parentNode.insertBefore(r,f); else document.body.appendChild(r);
+    if(!r){ r=document.createElement("div"); r.id="lang-root";
+      var f=document.querySelector(".footer"); if(f&&f.parentNode) f.parentNode.insertBefore(r,f); else document.body.appendChild(r);
     }
     return r;
+  }
+  function badge(on){
+    var b=document.getElementById("lang-debug-badge");
+    if(on){
+      if(!b){ b=document.createElement("div"); b.id="lang-debug-badge"; b.textContent="LANG ROUTE ACTIVE"; document.body.appendChild(b); }
+    } else { if(b){ b.remove(); } }
   }
   function apply(){
     if(isLangRoute()){
       document.body.classList.add("route-lang-hasdata");
+      badge(true);
       var r=ensureRoot();
       if(!r.innerHTML){
         r.innerHTML = '<div class="lang-meta"><a href="#/learn/coding">← Back to Languages</a></div>'
@@ -93,6 +119,7 @@ body{
       }
     } else {
       document.body.classList.remove("route-lang-hasdata");
+      badge(false);
     }
   }
   window.addEventListener("hashchange", apply);
@@ -100,8 +127,7 @@ body{
   window.addEventListener("portal:ready", apply);
   apply();
 })();
-</script>
-</head>
+</script></head>
 <body>
   <nav><div class="bar">
     <div class="brand">Black Pyramid</div>
@@ -567,6 +593,7 @@ feature/lms-langs-track-pages-20250821150646
   <script src="js/lms.chrome.js" defer></script>
 </body>
 </html>
+
 
 
 
