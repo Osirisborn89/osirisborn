@@ -1,0 +1,58 @@
+{
+  "trackId": "python",
+  "title": "Python",
+  "modules": [
+    {
+      "id": "python-basics",
+      "title": "Basics",
+      "lessons": [
+        { "id": "intro",        "title": "Introduction",   "est": 5,  "difficulty": "beginner",
+          "outcomes": ["Know what Python is used for", "Understand how this course is structured"],
+          "body": "[[callout:info]]Welcome to Python![[/callout]]\\n[[task]]Install Python 3.12+[[/task]]\\n[[checkpoint]]Name two things Python is good at.[[/checkpoint]]"
+        },
+        { "id": "setup",        "title": "Setup & Tooling","est": 10, "difficulty": "beginner",
+          "prereqs": ["intro"],
+          "outcomes": ["Install Python & VS Code", "Create and activate a virtual environment"],
+          "body": "[[callout:tip]]Use a fresh venv per project.[[/callout]]\\n[[code:ps1]]python --version\\npython -m venv .venv\\n# Windows\\n. .\\.venv\\Scripts\\Activate.ps1[[/code]]"
+        },
+        { "id": "syntax",       "title": "Syntax Primer",  "est": 15, "difficulty": "beginner",
+          "prereqs": ["intro","setup"],
+          "outcomes": ["Run a .py file", "Use variables and print"],
+          "body": "[[code:py]]name = 'Osirisborn'\\nprint(f'Hello, {name}!')[[/code]]\\n[[out]]Hello, Osirisborn![[/out]]"
+        }
+      ]
+    },
+    {
+      "id": "control-flow",
+      "title": "Control Flow",
+      "lessons": [
+        { "id": "conditionals", "title": "Conditionals", "est": 10, "difficulty": "beginner",
+          "prereqs": ["python-basics:syntax"],
+          "outcomes": ["Write if/elif/else"],
+          "body": "[[code:py]]x=7\\nif x>5: print('big')\\nelif x==5: print('five')\\nelse: print('small')[[/code]]"
+        },
+        { "id": "loops",        "title": "Loops",        "est": 15, "difficulty": "beginner",
+          "prereqs": ["conditionals"],
+          "outcomes": ["Use for and while loops", "Use list comprehensions"],
+          "body": "[[code:py]]nums=[1,2,3]\\nfor n in nums: print(n)\\nsquares=[n*n for n in nums]\\nprint(squares)[[/code]]"
+        }
+      ]
+    },
+    {
+      "id": "data-structures",
+      "title": "Data Structures",
+      "lessons": [
+        { "id": "collections",  "title": "Collections", "est": 15, "difficulty": "beginner",
+          "prereqs": ["control-flow:loops"],
+          "outcomes": ["Lists, tuples, dicts, sets"],
+          "body": "[[split]]\\n[[code:py]]d={'a':1,'b':2}\\nprint(list(d.keys()))[[/code]]\\n[[code:py]]s={1,2,2,3}\\nprint(s)  # {1,2,3}[[/code]]\\n[[/split]]"
+        },
+        { "id": "strings",      "title": "Strings",     "est": 10, "difficulty": "beginner",
+          "prereqs": ["collections"],
+          "outcomes": ["Format and manipulate strings"],
+          "body": "[[code:py]]s='Black Pyramid'\\nprint(s.lower(), s.upper())\\nprint(s.replace(' ','_'))[[/code]]"
+        }
+      ]
+    }
+  ]
+}
