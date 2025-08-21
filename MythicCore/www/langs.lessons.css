@@ -47,3 +47,19 @@ body.route-lang-hasdata {
 }
 #lang-root { display: none; max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
 body.route-lang-hasdata #lang-root { display: block; }
+/* ux-polish v2 */
+#lang-root h1{font-size:2rem;line-height:1.2;margin:8px 0 6px}
+#lang-root .lang-stats{opacity:.8;margin-bottom:12px;font-size:.95rem}
+#lang-root .module{border-top:1px solid rgba(255,255,255,.12);padding-top:12px;margin-top:14px}
+#lang-root .module h2{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:1.1rem;margin:0 0 8px}
+#lang-root .module h2::before{content:"▾";display:inline-block;transform:translateY(-1px)}
+#lang-root .module.collapsed h2::before{content:"▸"}
+#lang-root .lessons{list-style:none;padding:0;margin:6px 0 0}
+#lang-root .lesson{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border:1px solid rgba(255,255,255,.10);border-radius:10px;margin:8px 0;cursor:pointer}
+#lang-root .lesson:hover{background:rgba(255,255,255,.05)}
+#lang-root .lesson:focus{outline:2px solid rgba(255,255,255,.25);outline-offset:2px}
+#lang-root .lesson.active{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.25)}
+#lang-root .lesson .title{font-weight:600}
+#lang-root .lesson .mins{opacity:.75}
+#lang-content{margin-top:18px;padding:16px 14px;border:1px solid rgba(255,255,255,.12);border-radius:12px}
+#lang-content .empty{opacity:.7;font-style:italic}
