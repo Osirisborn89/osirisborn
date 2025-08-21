@@ -113,7 +113,7 @@
     let prev=null;
     if (l>0) prev={m, l:l-1}; else if (m>0){ const pm=track.modules[m-1]; prev={m:m-1, l: pm.lessons.length-1}; }
     if (prev){ const k=lessonKey(track.trackId, track.modules[prev.m].id, track.modules[prev.m].lessons[prev.l].id); if(progress.isDone(k)) return true; }
-    const cur=track.modules[m].lessons[l]; const prereqs=Array.isArray(cur.prereqs)?cur.prereqs:[];
+    const cur=track.modules[m].lessons[l]; const prereqs=Array.isArray(cur?.prereqs)?cur.prereqs:[];
     return prereqs.every(p=>{ let mk,lk; if(p.includes(":")){[mk,lk]=p.split(":")} else {mk=track.modules[m].id; lk=p;} return progress.isDone(lessonKey(track.trackId,mk,lk)); });
   }
 
@@ -175,7 +175,10 @@
   function getNext(track, m, l){
     const mod=track.modules[m]; if(!mod) return null;
     if (l < mod.lessons.length-1) return { m, l:l+1, hash:`#/learn/${track.trackId}/${mod.id}/${mod.lessons[l+1].id}` };
-    if (m < track.modules.length-1){ const nm=track.modules[m+1]; return { m:m+1, l:0, hash:`#/learn/${track.trackId}/${nm.id}/${nm.lessons[0].id}`; }
+    if (m < track.modules.length-1){
+      const nm=track.modules[m+1];
+      return { m:m+1, l:0, hash:`#/learn/${track.trackId}/${nm.id}/${nm.lessons[0].id}` };
+    }
     return null;
   }
 
@@ -227,7 +230,6 @@
     const main   = el("section", { class:"bp-main" });
 
     // Sidebar (modules/lessons with ✓/locks)
-    const pmap = progress.get();
     track.modules.forEach((m, mi)=>{
       const mod = el("div", { class:"bp-module" });
       mod.appendChild(el("h4", {}, m.title || m.id));
@@ -261,6 +263,7 @@
 
     wrap.appendChild(left);
     wrap.appendChild(main);
+    if (!qs("#bp-lms")) (document.body || document.documentElement).appendChild(host);
     host.appendChild(wrap);
 
     resume.set(route.trackId, location.hash);
