@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Black Pyramid - Portal</title>
+  <title>Black Pyramid — Portal</title>
   <style>
     /* BP PORTAL (inline, immutable) */
     :root{
@@ -513,6 +513,14 @@ body{
 
   window.addEventListener("hashchange", route);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", route); else route();
+})();
+</script>
+<script>
+/* OSB_TITLE_FIX v1 — normalize tab titles to ASCII at runtime */
+(function(){
+  function fix(){ try{ document.title = document.title.replace(/\u2014|â€”|ÔÇö/g, " - "); }catch(e){} }
+  window.addEventListener("hashchange", fix);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fix); else fix();
 })();
 </script>
 </body>
