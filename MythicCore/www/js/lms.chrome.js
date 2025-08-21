@@ -271,8 +271,44 @@
   }
 
   let scheduled=false;
-  function scheduleRender(){ if(scheduled) return; scheduled=true; requestAnimationFrame(async()=>{ scheduled=false; try{ await render(); }catch(e){ LOG("render error", e);} }); }
+  function scheduleRender(){
+  if(scheduled) return;
+  scheduled = true;
+  requestAnimationFrame(async()=>{
+    scheduled = false;
+    try {
+      LOG("scheduleRender", location.hash);
+      await render();
+      showDebug();
+    } catch(e){
+      LOG("render error", e);
+    }
+  });
+}
+function showDebug(){
+  try{
+    const hash = location.hash || "";
+    const parts = hash.replace(/^#\//, "").split("/");
+    const dbg = document.querySelector("#bp-debug") || (()=>{
+      const d = document.createElement("div");
+      d.id = "bp-debug";
+      d.style.cssText = "position:fixed;bottom:8px;right:8px;font:12px/1.4 system-ui;padding:6px 8px;border-radius:6px;background:#111a;color:#e6e6e6;border:1px solid #2b3845;z-index:99999;opacity:.9";
+      document.body.appendChild(d);
+      return d;
+    })();
+    let txt = "LMS DEBUG — ";
+    if (parts[0] !== "learn") {
+      txt += "Not a learn route";
+    } else {
+      const trackId = parts[1], moduleId = parts[2], lessonId = parts[3];
+      txt += `track=${trackId||"-"}  module=${moduleId||"-"}  lesson=${lessonId||"-"}`;
+    }
+    document.querySelector("#bp-debug").textContent = txt;
+  }catch(_){}
+}
   on(window, "hashchange", ()=>{ LOG("hashchange", location.hash); scheduleRender(); });
-  on(document, "DOMContentLoaded", ()=>{ LOG("domready"); scheduleRender(); });
+  on(document, "DOMContentLoaded", ()=>{ LOG("domready"); scheduleRender(); showDebug(); });
   scheduleRender();
 })();
+
+
