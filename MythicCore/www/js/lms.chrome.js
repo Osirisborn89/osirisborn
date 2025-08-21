@@ -1,10 +1,10 @@
-/* Black Pyramid — LMS Chrome v1 (fixed overlay mount, outside #host)
- * Renders only on lesson routes: #/learn/<track>/<module>/<lesson>
- * Mounts a sibling of #host so SPA wipes don't destroy it.
+/* Black Pyramid — LMS Chrome v1 (polished)
+ * Fixed overlay mount outside #host + backdrop to hide native content
+ * Debounced re-mount; converts \n to <br> in lesson bodies
  */
 (function () {
   "use strict";
-  const LOG=(...a)=>{try{console.debug("[LMS]",...a)}catch{}};
+  const LOG=(...a)=>{ try{ console.debug("[LMS]", ...a);}catch{} };
   const LS_PROGRESS_KEY="bp.progress", LS_RESUME_KEY="bp.resume";
   const qs=(s,el=document)=>el.querySelector(s), on=(el,ev,fn,opts)=>el.addEventListener(ev,fn,opts);
 
@@ -12,11 +12,12 @@
   const resume  ={ get(){try{return JSON.parse(localStorage.getItem(LS_RESUME_KEY)||"{}")}catch{return{}}}, set(t,u){const r=this.get(); r[t]=u; localStorage.setItem(LS_RESUME_KEY,JSON.stringify(r))} };
 
   function ensureStyles(){
-    if(qs("#bp-lms-style")) return;
+    if (qs("#bp-lms-style")) return;
     const css = `
     .bp-debug { position:fixed; bottom:8px; right:8px; z-index:2147483647; font:12px/1.4 system-ui; padding:6px 8px; border-radius:6px; background:#111a; color:#e6e6e6; border:1px solid #2b3845; opacity:.95 }
-    /* Fixed overlay container that the SPA won't layout/clear */
-    #bp-lms-root { position:fixed; z-index:2147483600; inset:64px 24px 24px 24px; pointer-events:none; }
+    /* Fixed overlay + backdrop so native content is visually hidden */
+    #bp-lms-root { position:fixed; z-index:2147483600; inset:56px 16px 16px 16px; pointer-events:none; }
+    #bp-lms-backdrop { position:fixed; inset:0; background:rgba(13,17,23,.96); z-index:-1; }
     #bp-lms { pointer-events:auto; max-width:1400px; margin:0 auto; }
     #bp-lms, #bp-lms * { box-sizing:border-box; }
     #bp-lms { font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.45; color:#e6e6e6; }
@@ -49,7 +50,7 @@
     .bp-out { border:1px dashed #2b3845; background:#0f141a; padding:8px; border-radius:6px; white-space:pre-wrap; }
     .bp-task { counter-increment: task; } .bp-task::before { content:"Task " counter(task) ": "; font-weight:700; }
     .bp-checkpoint { border:1px solid #2b3845; background:#0f141a; padding:10px; border-radius:8px; }
-    @media (max-width:980px){ .bp-wrap { grid-template-columns: 1fr; } #bp-lms-root { inset:56px 8px 8px 8px; } }
+    @media (max-width:980px){ .bp-wrap { grid-template-columns: 1fr; } #bp-lms-root { inset:48px 8px 8px 8px; } }
     `;
     const st=document.createElement("style"); st.id="bp-lms-style"; st.textContent=css; document.head.appendChild(st);
   }
@@ -67,9 +68,9 @@
 
   function getBaseHref(){ const b=document.querySelector("base"); return b? b.getAttribute("href") : "./"; }
   async function getTrack(trackId){
-    const url = getBaseHref()+"api/lessons/"+encodeURIComponent(trackId)+".json";
+    const url=getBaseHref()+"api/lessons/"+encodeURIComponent(trackId)+".json";
     LOG("fetch", url);
-    const res = await fetch(url, { cache:"no-store" });
+    const res=await fetch(url,{cache:"no-store"});
     if(!res.ok) throw new Error("Track JSON not found: "+url);
     return res.json();
   }
@@ -83,6 +84,8 @@
   function renderBody(html){
     if(!html) return "";
     let out=html;
+    // Convert escaped line breaks to <br>
+    out=out.replace(/\\n/g, "<br>");
     out=out.replace(/\[\[callout:(tip|info|warn)\]\]([\s\S]*?)\[\[\/callout\]\]/g,(_,t,b)=>`<div class="bp-callout ${t}">${b.trim()}</div>`);
     out=out.replace(/\[\[code:([a-z0-9_+-]+)\]\]([\s\S]*?)\[\[\/code\]\]/gi,(_,lang,b)=>`<pre class="bp-code" data-lang="${lang.toLowerCase()}"><code>${escapeHtml(b)}</code></pre>`);
     out=out.replace(/\[\[out\]\]([\s\S]*?)\[\[\/out\]\]/g,(_,b)=>`<div class="bp-out">${escapeHtml(b)}</div>`);
@@ -110,47 +113,6 @@
     const cur=track.modules[m].lessons[l]; const prereqs=Array.isArray(cur?.prereqs)?cur.prereqs:[];
     return prereqs.every(p=>{ let mk,lk; if(p.includes(":")){[mk,lk]=p.split(":")} else {mk=track.modules[m].id; lk=p;} return progress.isDone(lessonKey(track.trackId,mk,lk)); });
   }
-
-  function buildBreadcrumbs(route,track){
-    const bc=el("nav",{class:"bp-breadcrumbs","aria-label":"Breadcrumb"});
-    [
-      ["Learning","#/learn"],["Coding","#/learn/coding"],
-      [track?.title||route.trackId, `#/learn/${route.trackId}`],
-      [route.moduleId, `#/learn/${route.trackId}/${route.moduleId}`],
-      [route.lessonId, location.hash]
-    ].filter(x=>x[0]).forEach(([t,h])=>bc.appendChild(el("a",{href:h,class:"bp-crumb"},t)));
-    return bc;
-  }
-  function buildHeader(route,track){
-    const { lesson }=findLesson(track,route.moduleId,route.lessonId);
-    const { pct }=computeTrackProgress(track);
-    const bar=el("div",{class:"bp-progressbar",role:"progressbar","aria-valuenow":String(pct),"aria-valuemin":"0","aria-valuemax":"100"}, el("div",{style:`width:${pct}%`}));
-    const header=el("div",{class:"bp-header"},[
-      el("div",{class:"bp-title"}, lesson?.title||route.lessonId||"Lesson"),
-      el("div",{class:"bp-badges"},[
-        lesson?.difficulty? el("span",{class:"bp-badge"}, String(lesson.difficulty)) : null,
-        Number.isFinite(lesson?.est)? el("span",{class:"bp-badge"}, `${lesson.est} min`) : null
-      ].filter(Boolean))
-    ]);
-    const prereqs=Array.isArray(lesson?.prereqs)?lesson.prereqs:[];
-    const prereqWrap = prereqs.length? el("div",{class:"bp-prereqs"},[
-      "Prereqs: ",
-      ...prereqs.map((p,i)=>[el("a",{href: p.includes(":")? `#/learn/${route.trackId}/${p.split(":")[0]}/${p.split(":")[1]}` : `#/learn/${route.trackId}/${route.moduleId}/${p}`}, p), i<prereqs.length-1? ", ":""]).flat()
-    ]) : null;
-    const block=el("div",{},[header,prereqWrap].filter(Boolean));
-    return { bar, block };
-  }
-  function buildBody(route,track){
-    const { lesson }=findLesson(track,route.moduleId,route.lessonId);
-    const wrap=el("div",{class:"bp-body"});
-    if(Array.isArray(lesson?.outcomes)&&lesson.outcomes.length){
-      const ul=el("ul",{},lesson.outcomes.map(o=>el("li",{},o)));
-      wrap.appendChild(el("section",{},[el("h3",{},"Outcomes"), ul]));
-    }
-    if(lesson?.tags?.length){ wrap.appendChild(el("div",{class:"bp-badges"},lesson.tags.map(t=>el("span",{class:"bp-badge"},t)))); }
-    if(lesson?.body){ wrap.appendChild(el("section",{html:renderBody(lesson.body)})); }
-    return wrap;
-  }
   function getPrev(track,m,l){
     if(m===0&&l===0) return null;
     if(l>0) return { m,l:l-1, hash:`#/learn/${track.trackId}/${track.modules[m].id}/${track.modules[m].lessons[l-1].id}` };
@@ -163,11 +125,52 @@
     if(m<track.modules.length-1){ const nm=track.modules[m+1]; return { m:m+1,l:0, hash:`#/learn/${track.trackId}/${nm.id}/${nm.lessons[0].id}` }; }
     return null;
   }
-  function buildActions(route,track){
-    const { mIdx,lIdx }=findLesson(track,route.moduleId,route.lessonId);
+
+  function buildBreadcrumbs(r,track){
+    const bc=el("nav",{class:"bp-breadcrumbs","aria-label":"Breadcrumb"});
+    [
+      ["Learning","#/learn"],["Coding","#/learn/coding"],
+      [track?.title||r.trackId, `#/learn/${r.trackId}`],
+      [r.moduleId, `#/learn/${r.trackId}/${r.moduleId}`],
+      [r.lessonId, location.hash]
+    ].filter(x=>x[0]).forEach(([t,h])=>bc.appendChild(el("a",{href:h,class:"bp-crumb"},t)));
+    return bc;
+  }
+  function buildHeader(r,track){
+    const { lesson }=findLesson(track,r.moduleId,r.lessonId);
+    const { pct }=computeTrackProgress(track);
+    const bar=el("div",{class:"bp-progressbar",role:"progressbar","aria-valuenow":String(pct),"aria-valuemin":"0","aria-valuemax":"100"}, el("div",{style:`width:${pct}%`}));
+    const header=el("div",{class:"bp-header"},[
+      el("div",{class:"bp-title"}, lesson?.title||r.lessonId||"Lesson"),
+      el("div",{class:"bp-badges"},[
+        lesson?.difficulty? el("span",{class:"bp-badge"}, String(lesson.difficulty)) : null,
+        Number.isFinite(lesson?.est)? el("span",{class:"bp-badge"}, `${lesson.est} min`) : null
+      ].filter(Boolean))
+    ]);
+    const prereqs=Array.isArray(lesson?.prereqs)?lesson.prereqs:[];
+    const prereqWrap = prereqs.length? el("div",{class:"bp-prereqs"},[
+      "Prereqs: ",
+      ...prereqs.map((p,i)=>[el("a",{href: p.includes(":")? `#/learn/${r.trackId}/${p.split(":")[0]}/${p.split(":")[1]}` : `#/learn/${r.trackId}/${r.moduleId}/${p}`}, p), i<prereqs.length-1? ", ":""]).flat()
+    ]) : null;
+    const block=el("div",{},[header,prereqWrap].filter(Boolean));
+    return { bar, block };
+  }
+  function buildBody(r,track){
+    const { lesson }=findLesson(track,r.moduleId,r.lessonId);
+    const wrap=el("div",{class:"bp-body"});
+    if(Array.isArray(lesson?.outcomes)&&lesson.outcomes.length){
+      const ul=el("ul",{},lesson.outcomes.map(o=>el("li",{},o)));
+      wrap.appendChild(el("section",{},[el("h3",{},"Outcomes"), ul]));
+    }
+    if(lesson?.tags?.length){ wrap.appendChild(el("div",{class:"bp-badges"},lesson.tags.map(t=>el("span",{class:"bp-badge"},t)))); }
+    if(lesson?.body){ wrap.appendChild(el("section",{html:renderBody(lesson.body)})); }
+    return wrap;
+  }
+  function buildActions(r,track){
+    const { mIdx,lIdx }=findLesson(track,r.moduleId,r.lessonId);
     const actions=el("div",{class:"bp-actions"});
     const prev=getPrev(track,mIdx,lIdx), next=getNext(track,mIdx,lIdx);
-    const key=lessonKey(track.trackId,route.moduleId,route.lessonId);
+    const key=lessonKey(track.trackId,r.moduleId,r.lessonId);
     const bPrev=el("button",{class:"bp-btn",disabled:prev?null:true,onClick:()=>{ if(prev) location.hash=prev.hash; }},"← Prev");
     const bToggle=el("button",{class:"bp-btn",onClick:()=>{ const now=!progress.isDone(key); progress.mark(key,now); scheduleRender(); }}, progress.isDone(key)?"✓ Marked Done":"Mark Done");
     const unlockedNext=next? isUnlocked(track,next.m,next.l):false;
@@ -177,37 +180,31 @@
   }
 
   function mountRoot(){
-    // Mount as a sibling of #host so SPA clearing #host doesn't remove us
-    const portalHost = qs("#host");
-    const parent = (portalHost && portalHost.parentNode) || document.body || document.documentElement;
-    let root = qs("#bp-lms-root", parent);
-    if(!root){
-      root = document.createElement("div"); root.id="bp-lms-root";
-      parent.appendChild(root);
-    }
-    let host = qs("#bp-lms", root);
-    if(!host){
-      host = document.createElement("div"); host.id="bp-lms";
-      root.appendChild(host);
-    }
+    // Mount as sibling of #host so SPA wipes don't touch us.
+    const portalHost=qs("#host");
+    const parent=(portalHost && portalHost.parentNode) || document.body || document.documentElement;
+    let root=qs("#bp-lms-root",parent);
+    if(!root){ root=document.createElement("div"); root.id="bp-lms-root"; parent.appendChild(root); }
+    if(!qs("#bp-lms-backdrop",root)){ const bd=document.createElement("div"); bd.id="bp-lms-backdrop"; root.appendChild(bd); }
+    let host=qs("#bp-lms",root);
+    if(!host){ host=document.createElement("div"); host.id="bp-lms"; root.appendChild(host); }
     return { root, host };
   }
-
   function teardown(){ const r=qs("#bp-lms-root"); if(r) r.remove(); }
 
   async function render(){
     const r=parseRoute();
     if(!r.ok){ teardown(); showDebug("LMS DEBUG — not a learn route"); return; }
-    if(!r.moduleId || !r.lessonId){ teardown(); showDebug(`LMS DEBUG — track=${r.trackId||"-"} module=- lesson=-`); return; }
-    showDebug(`LMS DEBUG — track=${r.trackId} module=${r.moduleId} lesson=${r.lessonId}`);
+    if(!r.moduleId || !r.lessonId){ teardown(); showDebug(\`LMS DEBUG — track=\${r.trackId||"-"} module=- lesson=-\`); return; }
+    showDebug(\`LMS DEBUG — track=\${r.trackId} module=\${r.moduleId} lesson=\${r.lessonId}\`);
     ensureStyles();
 
     let track;
-    try{ track = await getTrack(r.trackId); }
-    catch(e){ LOG("fetch failed", e); teardown(); showDebug(`LMS DEBUG — ERROR loading ${r.trackId}.json`); return; }
+    try{ track=await getTrack(r.trackId); }
+    catch(e){ LOG("fetch failed", e); teardown(); showDebug(\`LMS DEBUG — ERROR loading \${r.trackId}.json\`); return; }
 
-    const { root, host } = mountRoot();
-    host.innerHTML = "";
+    const { root, host }=mountRoot();
+    host.innerHTML="";
 
     const wrap=el("div",{class:"bp-wrap"});
     const left=el("aside",{class:"bp-left"}); const main=el("section",{class:"bp-main"});
@@ -224,7 +221,7 @@
         const row=el("div",{class:"bp-lesson"+(current?" bp-current":"")});
         const icon=unlocked? el("span",{class:"bp-tick",title:progress.isDone(k)?"Done":"Not done"}, progress.isDone(k)?"✓":"•")
                            : el("span",{class:"bp-lock",title:"Complete the previous lesson to unlock"},"🔒");
-        const link=el("a",{href:`#/learn/${track.trackId}/${m.id}/${l.id}`}, l.title||l.id);
+        const link=el("a",{href:\`#/learn/\${track.trackId}/\${m.id}/\${l.id}\`}, l.title||l.id);
         if(!unlocked) link.addEventListener("click",(e)=>e.preventDefault());
         row.append(icon,link); list.appendChild(row);
       });
@@ -245,21 +242,22 @@
     wrap.appendChild(left); wrap.appendChild(main); host.appendChild(wrap);
 
     resume.set(r.trackId, location.hash);
-    const titleEl = host.querySelector(".bp-title"); if (titleEl){ titleEl.setAttribute("tabindex","-1"); titleEl.focus(); }
+    const titleEl=host.querySelector(".bp-title"); if(titleEl){ titleEl.setAttribute("tabindex","-1"); titleEl.focus(); }
   }
 
-  // Triggers
+  // Debounced re-render triggers
   let scheduled=false;
-  function scheduleRender(){ if(scheduled) return; scheduled=true; requestAnimationFrame(async()=>{ scheduled=false; try{ await render(); }catch(e){ LOG("render error",e); } }); }
+  function scheduleRender(){ if(scheduled) return; scheduled=true; requestAnimationFrame(async()=>{ scheduled=false; try{ await render(); }catch(e){ LOG("render error", e); } }); }
   on(window,"hashchange",()=>{ LOG("hashchange",location.hash); scheduleRender(); });
   on(window,"popstate",  ()=>{ LOG("popstate",location.hash); scheduleRender(); });
   on(document,"DOMContentLoaded",()=>{ LOG("domready"); scheduleRender(); });
 
-  // Keep trying in case the SPA navigates silently
-  (function(){ let last=location.hash; setInterval(()=>{ if(location.hash!==last){ last=location.hash; LOG("hash-poll", last); scheduleRender(); } }, 300); })();
+  // Poll for silent SPA hash changes
+  (function(){ let last=location.hash; setInterval(()=>{ if(location.hash!==last){ last=location.hash; LOG("hash-poll", last); scheduleRender(); } }, 400); })();
 
-  // If our fixed root is ever removed, re-mount (should be rare now)
-  const mo=new MutationObserver(()=>{ if(!qs("#bp-lms-root")){ LOG("root removed → re-mount"); scheduleRender(); } });
+  // Watch for our root being removed; debounce re-mount to avoid log spam
+  let remountTimer=null;
+  const mo=new MutationObserver(()=>{ if(!qs("#bp-lms-root")){ if(remountTimer) return; remountTimer=setTimeout(()=>{ remountTimer=null; LOG("root removed → re-mount"); scheduleRender(); }, 150); } });
   mo.observe(document.documentElement,{childList:true,subtree:true});
 
   scheduleRender();
