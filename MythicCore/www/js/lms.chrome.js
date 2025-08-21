@@ -1,3 +1,12 @@
+(function(){
+  try {
+    var h = (location.hash || '').toLowerCase();
+    if (h.indexOf('#/learn/python') === 0) {
+      console.log('LMS Chrome disabled on /learn/python');
+      return;
+    }
+  } catch(_) {}
+})();
 /* Black Pyramid — LMS Chrome v1 (overlay)
  * Scope: attaches to #/learn/<trackId> and #/learn/<trackId>/<module>/<lesson>
  * Guard-safe: no title/brand changes; CSS scoped under .bp-lms
@@ -514,3 +523,4 @@
   on(document, 'DOMContentLoaded', scheduleRender);
   scheduleRender();
 })();
+
