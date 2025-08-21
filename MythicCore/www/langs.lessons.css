@@ -29,3 +29,19 @@ body.route-lang-hasdata> *:not(nav):not(#lang-root):not(.footer),
   background-attachment:fixed,fixed,fixed;min-height:100vh
 }
 
+  
+/* hard-mask-only-lang-root: hide ALL legacy DOM except nav/footer and our #lang-root */
+body.route-lang-hasdata *:not(nav):not(nav *):not(.footer):not(.footer *):not(#lang-root):not(#lang-root *) {
+  display: none !important;
+}
+
+/* ensure #lang-root is visible and themed on language routes */
+#lang-root { display: block; max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
+body.route-lang-hasdata {
+  background:
+    radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12) 0%, rgba(110,60,255,0) 60%),
+    radial-gradient(1000px 600px at 110% 10%, rgba(0,200,255,.10) 0%, rgba(0,200,255,0) 55%),
+    linear-gradient(180deg, rgba(14,11,31,1) 0%, rgba(10,9,24,1) 100%);
+  background-attachment: fixed, fixed, fixed;
+  min-height: 100vh;
+}
