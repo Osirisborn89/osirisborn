@@ -1,0 +1,48 @@
+{
+  "title": "SQL",
+  "trackId": "sql",
+  "modules": [
+    {
+      "title": "SQL Basics",
+      "lessons": [
+        {
+          "title": "What is SQL?",
+          "est": 5,
+          "body": "<p>TBD — relational DBs & SQL dialects.</p>",
+          "id": "intro"
+        },
+        {
+          "title": "SELECT Essentials",
+          "est": 15,
+          "body": "<p>TBD — SELECT, WHERE, ORDER BY, LIMIT.</p>",
+          "id": "select"
+        },
+        {
+          "title": "JOINs 101",
+          "est": 20,
+          "body": "<p>TBD — INNER/LEFT/RIGHT joins.</p>",
+          "id": "joins"
+        }
+      ],
+      "id": "sql-basics"
+    },
+    {
+      "title": "Queries & Modeling",
+      "lessons": [
+        {
+          "title": "Aggregation",
+          "est": 15,
+          "body": "<p>TBD — GROUP BY, HAVING.</p>",
+          "id": "agg"
+        },
+        {
+          "title": "Indexes & Perf",
+          "est": 15,
+          "body": "<p>TBD — indexes, EXPLAIN basics.</p>",
+          "id": "indexes"
+        }
+      ],
+      "id": "sql-advanced"
+    }
+  ]
+}

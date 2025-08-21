@@ -1,4 +1,66 @@
-{ "track":"coding","sub":"cpp","modules":[
-  {"id":"cpp-hello","title":"Hello, C++","type":"read"},
-  {"id":"cpp-build","title":"Build & Run","type":"quiz"}
-]}
+{
+  "title": "C++",
+  "trackId": "cpp",
+  "modules": [
+    {
+      "title": "Basics",
+      "lessons": [
+        {
+          "title": "Introduction",
+          "est": 5,
+          "body": "<p>TBD — overview of C++, what you can build.</p>",
+          "id": "intro"
+        },
+        {
+          "title": "Setup & Tooling",
+          "est": 10,
+          "body": "<p>TBD — install runtime/SDK, editor, quick hello world.</p>",
+          "id": "setup"
+        },
+        {
+          "title": "Syntax Primer",
+          "est": 15,
+          "body": "<p>TBD — variables, types, expressions.</p>",
+          "id": "syntax"
+        }
+      ],
+      "id": "cpp-basics"
+    },
+    {
+      "title": "Control Flow",
+      "lessons": [
+        {
+          "title": "Conditionals",
+          "est": 10,
+          "body": "<p>TBD — if/else patterns in C++.</p>",
+          "id": "conds"
+        },
+        {
+          "title": "Loops",
+          "est": 15,
+          "body": "<p>TBD — loop forms and iteration.</p>",
+          "id": "loops"
+        }
+      ],
+      "id": "cpp-control"
+    },
+    {
+      "title": "Data Structures",
+      "lessons": [
+        {
+          "title": "Collections",
+          "est": 15,
+          "body": "<p>TBD — arrays/lists, maps/dicts/objects.</p>",
+          "id": "collections"
+        },
+        {
+          "title": "Strings",
+          "est": 10,
+          "body": "<p>TBD — string ops, formatting.</p>",
+          "id": "strings"
+        }
+      ],
+      "id": "cpp-data"
+    }
+  ]
+}

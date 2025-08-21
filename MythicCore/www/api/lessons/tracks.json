@@ -1,7 +1,112 @@
-{
-  "tracks": [
-    { "key": "coding", "name": "Coding", "subs": ["python","js","cpp"] },
-    { "key": "cyber",  "name": "Cybersecurity", "subs": ["foundations","web","network","bounty"] },
-    { "key": "ctf",    "name": "CTFs", "subs": ["wargames","crypto","rev","pwn"] }
-  ]
-}
+[
+  {
+    "title": "Python",
+    "file": "coding_python.json",
+    "trackId": "python"
+  },
+  {
+    "title": "JavaScript",
+    "file": "coding_javascript.json",
+    "trackId": "javascript"
+  },
+  {
+    "title": "TypeScript",
+    "file": "coding_typescript.json",
+    "trackId": "typescript"
+  },
+  {
+    "title": "Java",
+    "file": "coding_java.json",
+    "trackId": "java"
+  },
+  {
+    "title": "C#",
+    "file": "coding_csharp.json",
+    "trackId": "csharp"
+  },
+  {
+    "title": "C++",
+    "file": "coding_cpp.json",
+    "trackId": "cpp"
+  },
+  {
+    "title": "C",
+    "file": "coding_c.json",
+    "trackId": "c"
+  },
+  {
+    "title": "Go",
+    "file": "coding_go.json",
+    "trackId": "go"
+  },
+  {
+    "title": "Rust",
+    "file": "coding_rust.json",
+    "trackId": "rust"
+  },
+  {
+    "title": "PHP",
+    "file": "coding_php.json",
+    "trackId": "php"
+  },
+  {
+    "title": "Ruby",
+    "file": "coding_ruby.json",
+    "trackId": "ruby"
+  },
+  {
+    "title": "Kotlin",
+    "file": "coding_kotlin.json",
+    "trackId": "kotlin"
+  },
+  {
+    "title": "Swift",
+    "file": "coding_swift.json",
+    "trackId": "swift"
+  },
+  {
+    "title": "Dart",
+    "file": "coding_dart.json",
+    "trackId": "dart"
+  },
+  {
+    "title": "Scala",
+    "file": "coding_scala.json",
+    "trackId": "scala"
+  },
+  {
+    "title": "Haskell",
+    "file": "coding_haskell.json",
+    "trackId": "haskell"
+  },
+  {
+    "title": "Lua",
+    "file": "coding_lua.json",
+    "trackId": "lua"
+  },
+  {
+    "title": "R",
+    "file": "coding_r.json",
+    "trackId": "r"
+  },
+  {
+    "title": "MATLAB",
+    "file": "coding_matlab.json",
+    "trackId": "matlab"
+  },
+  {
+    "title": "SQL",
+    "file": "coding_sql.json",
+    "trackId": "sql"
+  },
+  {
+    "title": "Bash/Shell",
+    "file": "coding_bash.json",
+    "trackId": "bash"
+  },
+  {
+    "title": "HTML/CSS",
+    "file": "coding_htmlcss.json",
+    "trackId": "htmlcss"
+  }
+]

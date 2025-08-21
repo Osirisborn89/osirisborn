@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Black Pyramid — Portal</title>
+  <style>
+    /* BP PORTAL (inline, immutable) */
+    :root{
+      --bg:#0e0b1f; --bg2:#0b0a18; --panel:#17152b; --muted:#a7afc3; --text:#f3f5fb;
+      --border:rgba(178,156,255,.22); --badge:rgba(178,156,255,.3);
+      --accent:#6e3cff; --accent2:#9d7bff; --accentGlow:rgba(110,60,255,.35);
+      --r-lg:18px; --r-md:12px; --gap:12px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:
+        radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12), transparent 55%),
+        radial-gradient(1100px 700px at 120% 0%, rgba(157,123,255,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2) 60%, var(--bg));
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
+    .wrap{max-width:1080px;margin:0 auto;padding:20px}
+    nav{position:sticky;top:0;z-index:10;background:rgba(14,11,31,.85);backdrop-filter:saturate(180%) blur(8px);
+        border-bottom:1px solid var(--border)}
+    .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px}
+    .brand{font-weight:700;letter-spacing:.3px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{padding:8px 12px;border:1px solid var(--border);border-radius:999px;text-decoration:none;color:inherit;
+         background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01))}
+    .tab.active{box-shadow:0 0 0 2px var(--accentGlow)}
+    main{min-height:60vh}
+    .view h2{margin:0 0 8px 0;font-size:clamp(1.25rem,2.2vw,1.5rem)}
+    .hero{margin:8px 0;padding:24px;border:1px solid var(--border);border-radius:22px;
+          background:linear-gradient(180deg, rgba(110,60,255,.12), rgba(110,60,255,.02))}
+    .hero h1{margin:0 0 6px 0;font-size:clamp(1.75rem,3vw,2.25rem)}
+    .hero p{margin:0 0 12px 0;opacity:.92}
+    .quick-actions a{display:inline-block;margin:6px 8px 0 0;padding:9px 13px;border:1px solid var(--border);
+                     border-radius:12px;text-decoration:none;background:rgba(255,255,255,.03)}
+    .tile-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+    .tile{display:grid;grid-auto-rows:min-content 1fr;gap:4px;padding:16px;border:1px solid var(--border);border-radius:16px;
+          text-decoration:none;color:inherit;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015))}
+    .tile:hover{box-shadow:0 14px 36px rgba(110,60,255,.18);border-color:var(--accentGlow)}
+    .tile h4{margin:0 0 2px 0;font-size:1.05rem}
+    .tile p{margin:0;opacity:.9;font-size:.95rem}
+    .badge{justify-self:start;margin-top:8px;padding:3px 10px;border:1px solid var(--badge);border-radius:999px;font-size:.82rem;opacity:.96}
+    .toolbar{display:flex;gap:8px;align-items:center;margin:10px 0 14px}
+    .btn{display:inline-block;padding:8px 12px;border:1px solid var(--border);border-radius:10px;text-decoration:none;background:rgba(255,255,255,.03)}
+    .btn.ghost{opacity:.85}
+    footer{opacity:.7;font-size:.8rem;padding:12px 16px 24px}
+    @media (max-width:900px){ .tile-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+    @media (max-width:600px){ .tile-grid{grid-template-columns:1fr} }
+  /* purple-tweak v1 (force strong purple + anchor color) */
+:root{ --accent:#8b5cf6; --accent2:#a78bfa; }
+a{ color:inherit; text-decoration:none }
+a:hover{ filter:brightness(1.08) }
+body{
+  background:
+    radial-gradient(1200px 800px at -10% -10%, rgba(139,92,246,.18), transparent 55%),
+    radial-gradient(1100px 700px at 120% 0%, rgba(167,139,250,.12), transparent 60%),
+    linear-gradient(180deg, #0f0a1f, #0b0818 60%, #0f0a1f);
+}
+.tile:hover{ box-shadow:0 14px 36px rgba(139,92,246,.22); border-color:rgba(139,92,246,.45) }
+.tab.active{ box-shadow:0 0 0 2px rgba(139,92,246,.45) }
+</style>
+</head>
+<body>
+  <nav><div class="bar">
+    <div class="brand">Black Pyramid</div>
+    <div class="tabs">
+      <a class="tab" data-tab="home"  href="#/home">Home</a>
+      <a class="tab" data-tab="learn" href="#/learn">Learning</a>
+      <a class="tab" data-tab="lounge" href="#/lounge">Lounge</a>
+    </div>
+  </div></nav>
+
+  <main id="app" class="wrap"></main>
+
+  <!-- HOME -->
+  <template id="tpl-home">
+    <section class="view">
+      <div class="hero">
+        <h1>Black Pyramid</h1>
+        <p>Mythic OS for Learning, Hacking, and Mastery.</p>
+        <div class="quick-actions">
+          <a href="#/learn">Enter Learning</a>
+          <a href="#/lounge">Downtime Lounge</a>
+          <a href="#/project">Project Station</a>
+          <a href="#/cyber">Cybertools</a>
+          <a href="#/help">Help / FAQ</a>
+        </div>
+      </div>
+
+      <div class="tile-grid">
+        <a class="tile" href="#/learn"><div><h4>Learning Hub</h4><p>Python, JS, C++, Cyber, CTFs…</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/lounge"><div><h4>Downtime Lounge</h4><p>Playlists, timers, games</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/project"><div><h4>Project Station</h4><p>Capstones & repos</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/cyber"><div><h4>Cybertools Vault</h4><p>Snippets & BYOT</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/help"><div><h4>Help / FAQ</h4><p>Guides & troubleshooting</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/ai"><div><h4>Anubis AI</h4><p>Co-pilot</p></div><div class="badge">Beta</div></a>
+        <a class="tile" href="#/identity"><div><h4>Identity Hub</h4><p>Account / profile</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/xp"><div><h4>XP / Achievements</h4><p>Progress overview</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/career"><div><h4>Career Tools</h4><p>Portfolio & CV</p></div><div class="badge">Soon</div></a>
+  <a class="tile" href="#/lore"><div><h4>Lore &amp; Expansions</h4><p>World, factions, unlocks</p></div><div class="badge">Lore</div></a>
+  <a class="tile" href="#/sandbox"><div><h4>Sandboxes / Playgrounds</h4><p>Scratchpads & tools</p></div><div class="badge">Lab</div></a>
+
+      </div>
+
+      <div class="footer">Build: portal-standalone</div>
+    </section>
+  </template>
+
+  <!-- LEARNING HUB (tracks) -->
+  <template id="tpl-learn">
+    <section class="view" id="view-learn">
+      <h2>Learning Hub</h2>
+      <p class="muted">Select a track to enter.</p>
+      <div class="tile-grid">
+        <a class="tile" href="#/learn"><div><h4>Coding</h4><p>Python, JS, C++</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/learn/cyber"><div><h4>Cybersecurity</h4><p>Foundations, Web, Network, Bounty</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/learn/ctf"><div><h4>CTFs</h4><p>Wargames, Crypto, Rev, Pwn</p></div><div class="badge">Practice</div></a>
+      </div>
+    </section>
+  </template>
+
+  <!-- CODING (languages) -->
+  <template id="tpl-learn-coding">
+    <section class="view">
+      <div class="toolbar"><a class="btn" href="#/learn">← Learning Hub</a><a class="btn ghost" href="#/home">Home</a></div>
+      <h2>Coding</h2>
+      <p class="muted">Pick a language.</p>
+      <div class="tile-grid">
+        <a class="tile" href="#/learn/python"><div><h4>Python</h4><p>Beginner → Advanced</p></div><div class="badge">Start here</div></a>
+        <a class="tile" href="#/learn/js"><div><h4>JavaScript</h4><p>Frontend + Node basics</p></div><div class="badge">Core</div></a>
+        <a class="tile" href="#/learn/cpp"><div><h4>C++</h4><p>Language & tooling basics</p></div><div class="badge">Core</div></a>
+      </div>
+    </section>
+  </template>
+
+  <script>
+  (function(){
+    const app = document.getElementById('app');
+    const map = { home:'tpl-home', learn:'tpl-learn', 'learn/coding':'tpl-learn-coding' };
+    function routeKey(){
+      const h = (location.hash||'#/home').replace(/^#\//,'');
+      if (!h) return 'home';
+      if (map[h]) return h;
+      if (h.startsWith('learn/coding')) return 'learn/coding';
+      if (h.startsWith('learn')) return 'learn';
+      return 'home';
+    }
+    function setActive(tab){
+      document.querySelectorAll('.tab').forEach(el=>{
+        el.classList.toggle('active', el.getAttribute('data-tab')===tab);
+      });
+    }
+    function tpl(id){
+      const t = document.getElementById(id);
+      return t ? t.innerHTML : '<section class="view"><div class="hero"><h2>Not found</h2></div></section>';
+    }
+    function render(){
+      const key = routeKey();
+      app.innerHTML = tpl(map[key] || map.home);
+      setActive(key.split('/')[0]);
+      document.title = 'Black Pyramid — ' + (key.split('/')[0]||'home').replace(/^\w/,c=>c.toUpperCase());
+      console.log('render', {key});
+    }
+    addEventListener('hashchange', ()=>requestAnimationFrame(render));
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', ()=>requestAnimationFrame(render));
+    } else { requestAnimationFrame(render); }
+  })();
+  </script>
+
+
+
+
+
+
+
+<script>
+/* BP_LEARN_HUB v3 (no observers) */
+(function(){
+  var HUB_HOST_ID = 'bp-learn-host';
+  var bound = false;
+
+  function root(){
+    return document.querySelector('#app, main#app, main[role=main], #view, #root, #content, main, body');
+  }
+  function ensureHost(){
+    var r = root(); if(!r) return null;
+    var host = document.getElementById(HUB_HOST_ID);
+    if(!host){
+      host = document.createElement('div'); host.id = HUB_HOST_ID;
+      r.appendChild(host);
+    }
+    return host;
+  }
+  function clearHost(){
+    var host = document.getElementById(HUB_HOST_ID);
+    if(host){ host.innerHTML=''; }
+  }
+  function tile(href, title, sub){
+    var a=document.createElement('a'); a.className='tile'; a.href=href;
+    var t=document.createElement('div'); t.className='tile-title'; t.textContent=title; a.appendChild(t);
+    if(sub){ var s=document.createElement('div'); s.className='tile-sub'; s.textContent=sub; a.appendChild(s); }
+    return a;
+  }
+  function renderHub(){
+    var host = ensureHost(); if(!host) return;
+    var section=document.createElement('section'); section.className='px-24 py-16';
+    var h1=document.createElement('h1'); h1.className='h1'; h1.textContent='Learning'; section.appendChild(h1);
+    var grid=document.createElement('div'); grid.className='tile-grid'; section.appendChild(grid);
+
+    var lang = tile('#/learning/coding','Languages','Python, JS, C++, …');
+    lang.addEventListener('click', function(ev){ /* let SPA handle hashchange normally */ });
+
+    grid.appendChild(lang);
+    grid.appendChild(tile('#/learning/cyber','Cybersecurity','Red/Blue, CTF, SOC'));
+    grid.appendChild(tile('#/learning/encryption','Encryption','Crypto & key mgmt'));
+    grid.appendChild(tile('#/learning/networking','Networking','TCP/IP, tooling'));
+    grid.appendChild(tile('#/learning/web','Web','Frontend/Backend'));
+    grid.appendChild(tile('#/learning/osint','OSINT','Intel & automation'));
+
+    host.innerHTML=''; host.appendChild(section);
+  }
+  function onRoute(){
+    var h = (location.hash||'').toLowerCase();
+    if(h === '#/learning'){ renderHub(); }
+    else { clearHost(); }
+  }
+  function bindOnce(){
+    if(bound) return; bound = true;
+    window.addEventListener('hashchange', onRoute);
+    document.addEventListener('DOMContentLoaded', onRoute);
+  }
+  bindOnce(); onRoute();
+})();
+</script>
+
+<script>
+/* BP_CODING_HOOK v2 (no observers) */
+(function(){
+  var bound = false;
+
+  async function fetchJSON(u){
+    var url = (u.startsWith('./')?u:'./'+u);
+    url += (url.indexOf('?')>=0?'&':'?')+'bust='+Date.now();
+    var r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status+' for '+url);
+    return r.json();
+  }
+  function findCodingGrid(){
+    // Find the Coding section and its grid
+    var heading = Array.from(document.querySelectorAll('h1,h2'))
+      .find(h => (h.textContent||'').trim().toLowerCase() === 'coding');
+    var container = heading ? (heading.closest('section') || heading.parentElement) : null;
+    if(!container) return null;
+    var grid = container.querySelector('.tile-grid');
+    if(!grid){
+      grid = document.createElement('div'); grid.className='tile-grid';
+      container.appendChild(grid);
+    }
+    return grid;
+  }
+  async function renderCoding(){
+    // small frame wait to let SPA draw the page
+    await new Promise(res=>requestAnimationFrame(res));
+    var grid = findCodingGrid();
+    if(!grid) return;
+
+    try{
+      var tracks = await fetchJSON('api/lessons/tracks.json');
+      var frag = document.createDocumentFragment();
+      tracks.forEach(t=>{
+        var a = document.createElement('a'); a.className='tile'; a.href = '#/learn/'+t.trackId;
+        var title = document.createElement('div'); title.className='tile-title'; title.textContent = t.title;
+        a.appendChild(title); frag.appendChild(a);
+      });
+      grid.replaceChildren(frag);
+    } catch(e){
+      var err=document.createElement('div');
+      err.innerHTML = '<p>Failed to load <code>tracks.json</code></p><pre style="white-space:pre-wrap">'+String(e)+'</pre>';
+      grid.replaceChildren(err);
+    }
+  }
+  function onRoute(){
+    var h=(location.hash||'').toLowerCase();
+    if(h === '#/learning/coding' || h.indexOf('#/learning/coding')===0){
+      renderCoding();
+    }
+  }
+  function bindOnce(){
+    if(bound) return; bound = true;
+    window.addEventListener('hashchange', onRoute);
+    document.addEventListener('DOMContentLoaded', onRoute);
+  }
+  bindOnce(); onRoute();
+})();
+</script>
+<script>
+/* BP_LEARN_HUB v4 (Languages -> #/lessons) */
+(function(){
+  var HUB_HOST_ID='bp-learn-host';
+  function root(){ return document.querySelector('#app, main#app, main[role=main], #view, #root, #content, main, body'); }
+  function ensureHost(){ var r=root(); if(!r) return null; var h=document.getElementById(HUB_HOST_ID); if(!h){ h=document.createElement('div'); h.id=HUB_HOST_ID; r.appendChild(h); } return h; }
+  function clearHost(){ var h=document.getElementById(HUB_HOST_ID); if(h){ h.innerHTML=''; } }
+  function tile(href,t,sub){ var a=document.createElement('a'); a.className='tile'; a.href=href;
+    var tt=document.createElement('div'); tt.className='tile-title'; tt.textContent=t; a.appendChild(tt);
+    if(sub){ var s=document.createElement('div'); s.className='tile-sub'; s.textContent=sub; a.appendChild(s); }
+    return a; }
+  function renderHub(){
+    var host=ensureHost(); if(!host) return;
+    var sec=document.createElement('section'); sec.className='px-24 py-16';
+    var h1=document.createElement('h1'); h1.className='h1'; h1.textContent='Learning'; sec.appendChild(h1);
+    var grid=document.createElement('div'); grid.className='tile-grid'; sec.appendChild(grid);
+    grid.appendChild(tile('#/lessons','Languages','Python, JS, C++, …'));   // <-- align to SPA
+    grid.appendChild(tile('#/learning/cyber','Cybersecurity','Red/Blue, CTF, SOC'));
+    grid.appendChild(tile('#/learning/encryption','Encryption','Crypto & key mgmt'));
+    grid.appendChild(tile('#/learning/networking','Networking','TCP/IP, tooling'));
+    grid.appendChild(tile('#/learning/web','Web','Frontend/Backend'));
+    grid.appendChild(tile('#/learning/osint','OSINT','Intel & automation'));
+    host.innerHTML=''; host.appendChild(sec);
+  }
+  function onRoute(){
+    var h=(location.hash||'').toLowerCase();
+    if(h==='#/learning'){ renderHub(); } else { clearHost(); }
+  }
+  window.addEventListener('hashchange', onRoute);
+  document.addEventListener('DOMContentLoaded', onRoute);
+  onRoute();
+})();
+</script>
+<script>
+/* BP_LESSONS_HOOK v1 (populate languages on #/lessons) */
+(function(){
+  async function fetchJSON(u){
+    var url=(u.startsWith('./')?u:'./'+u); url+=(url.indexOf('?')>=0?'&':'?')+'bust='+Date.now();
+    var r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status+' for '+url); return r.json();
+  }
+  function findLessonsGrid(){
+    // Prefer a grid within a section that has a Lessons heading
+    var heading = Array.from(document.querySelectorAll('h1,h2'))
+      .find(h => (h.textContent||'').trim().toLowerCase() === 'lessons');
+    var container = heading ? (heading.closest('section') || heading.parentElement) : document.body;
+    // Try likely grid selectors used in the portal
+    return container.querySelector('.tile-grid, .lessons-grid, .grid, .cards') || container;
+  }
+  async function renderLanguages(){
+    // allow SPA to draw the page first
+    await new Promise(res=>requestAnimationFrame(res));
+    var grid = findLessonsGrid(); if(!grid) return;
+    var tracks;
+    try { tracks = await fetchJSON('api/lessons/tracks.json'); }
+    catch(e){
+      var err=document.createElement('div'); err.innerHTML='<p>Failed to load <code>tracks.json</code></p><pre style="white-space:pre-wrap">'+String(e)+'</pre>';
+      grid.replaceChildren(err); return;
+    }
+    var frag = document.createDocumentFragment();
+    tracks.forEach(t=>{
+      var a=document.createElement('a'); a.className='tile'; a.href = '#/learn/'+t.trackId;
+      var title=document.createElement('div'); title.className='tile-title'; title.textContent=t.title;
+      a.appendChild(title); frag.appendChild(a);
+    });
+    grid.replaceChildren(frag);
+  }
+  function onRoute(){
+    var h=(location.hash||'').toLowerCase();
+    if(h==='#/lessons' || h.startsWith('#/lessons/')){ renderLanguages(); }
+  }
+  window.addEventListener('hashchange', onRoute);
+  document.addEventListener('DOMContentLoaded', onRoute);
+  onRoute();
+})();
+</script>
+<script>
+/* BP_LEARN_WIRE v3 — route Coding → #/learning/languages */
+(function(){
+  function bindCodingClick(){
+    if ((location.hash||'').toLowerCase() !== '#/learning') return;
+    // Find anchors/buttons whose text includes 'Coding'
+    var candidates = Array.from(document.querySelectorAll('a,button,[role="button"]'));
+    candidates.filter(function(el){
+      return /coding/i.test((el.textContent||'').trim());
+    }).forEach(function(el){
+      if (el.__bpBound) return;
+      el.__bpBound = true;
+      el.addEventListener('click', function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        location.hash = '#/learning/languages';
+      }, true);
+    });
+  }
+  window.addEventListener('hashchange', bindCodingClick);
+  document.addEventListener('DOMContentLoaded', bindCodingClick);
+  bindCodingClick();
+})();
+</script>
+
+<script>
+/* BP_LANG_PAGE v1 — render Languages grid on #/learning/languages */
+(function(){
+  var HOST_ID = 'bp-lang-host';
+  function root(){
+    return document.querySelector('#app, main#app, main[role=main], #view, #root, #content, main, body');
+  }
+  function ensureHost(){
+    var r = root(); if(!r) return null;
+    var h = document.getElementById(HOST_ID);
+    if(!h){ h = document.createElement('div'); h.id = HOST_ID; r.appendChild(h); }
+    return h;
+  }
+  function clearHost(){
+    var h = document.getElementById(HOST_ID);
+    if (h) h.innerHTML = '';
+  }
+  async function fetchJSON(u){
+    var url = (u.startsWith('./') ? u : './'+u);
+    url += (url.indexOf('?')>=0?'&':'?') + 'bust=' + Date.now();
+    var r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status+' for '+url);
+    return r.json();
+  }
+  function tile(href, title, sub){
+    var a=document.createElement('a'); a.className='tile'; a.href=href;
+    var t=document.createElement('div'); t.className='tile-title'; t.textContent=title; a.appendChild(t);
+    if(sub){ var s=document.createElement('div'); s.className='tile-sub'; s.textContent=sub; a.appendChild(s); }
+    return a;
+  }
+  async function renderLanguages(){
+    var host = ensureHost(); if(!host) return;
+    // Build section scaffold
+    var sec=document.createElement('section'); sec.className='px-24 py-16';
+    var h1=document.createElement('h1'); h1.className='h1'; h1.textContent='Languages'; sec.appendChild(h1);
+    var grid=document.createElement('div'); grid.className='tile-grid'; sec.appendChild(grid);
+    // Back tile
+    grid.appendChild(tile('#/learning','← Back to Learning',''));
+    // Populate languages
+    try{
+      var tracks = await fetchJSON('api/lessons/tracks.json');
+      tracks.forEach(function(t){
+        var a=tile('#/learn/'+t.trackId, t.title, null); // next step can wire this route
+        grid.appendChild(a);
+      });
+    }catch(e){
+      var err=document.createElement('div');
+      err.innerHTML='<p>Failed to load <code>tracks.json</code></p><pre style="white-space:pre-wrap">'+String(e)+'</pre>';
+      sec.appendChild(err);
+    }
+    host.innerHTML=''; host.appendChild(sec);
+  }
+  function onRoute(){
+    var h=(location.hash||'').toLowerCase();
+    if (h === '#/learning/languages'){
+      renderLanguages();
+    } else {
+      clearHost();
+    }
+  }
+  window.addEventListener('hashchange', onRoute);
+  document.addEventListener('DOMContentLoaded', onRoute);
+  onRoute();
+})();
+</script>
+<script>
+/* BP_LEARN_WIRE v4 — hub Coding → #/learning/languages (no inline expand) */
+(function(){
+  function wire(){
+    if ((location.hash||'').toLowerCase() !== '#/learning') return;
+    // Find the first tile/card that contains 'Coding'
+    var cards = Array.from(document.querySelectorAll('a.tile, .tile a, a.card, .card a, a, button,[role=button]'));
+    var el = cards.find(e => /coding/i.test((e.textContent||'').trim()));
+    if(!el) return;
+    // Prefer the anchor; else use the nearest clickable ancestor
+    var a = el.closest('a') || el;
+    a.setAttribute('href', '#/learning/languages');
+    // If it isn't a real <a>, force navigation on click once
+    if (a.tagName !== 'A') {
+      if (a.__bpBound) return; a.__bpBound = true;
+      a.addEventListener('click', function(ev){ ev.preventDefault(); location.hash = '#/learning/languages'; }, {once:true, capture:true});
+    }
+  }
+  window.addEventListener('hashchange', wire);
+  document.addEventListener('DOMContentLoaded', wire);
+  wire();
+})();
+</script>
+
+<script>
+/* BP_LANG_PAGE v2 — dedicated Languages page (renders 22 tracks) */
+(function(){
+  var HOST_ID = 'bp-lang-host';
+  function root(){ return document.querySelector('#app, main#app, main[role=main], #view, #root, #content, main, body'); }
+  function ensureHost(){ var r=root(); if(!r) return null; var h=document.getElementById(HOST_ID); if(!h){ h=document.createElement('div'); h.id=HOST_ID; r.appendChild(h);} return h; }
+  function clearHost(){ var h=document.getElementById(HOST_ID); if(h) h.innerHTML=''; }
+  async function j(u){ var url=(u.startsWith('./')?u:'./'+u)+((u.indexOf('?')>=0?'&':'?')+'bust='+Date.now()); var r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status+' '+url); return r.json(); }
+  function tile(href,title,sub){ var a=document.createElement('a'); a.className='tile'; a.href=href; var t=document.createElement('div'); t.className='tile-title'; t.textContent=title; a.appendChild(t); if(sub){ var s=document.createElement('div'); s.className='tile-sub'; s.textContent=sub; a.appendChild(s);} return a; }
+  async function render(){
+    var host=ensureHost(); if(!host) return;
+    var sec=document.createElement('section'); sec.className='px-24 py-16';
+    var h1=document.createElement('h1'); h1.className='h1'; h1.textContent='Languages'; sec.appendChild(h1);
+    var grid=document.createElement('div'); grid.className='tile-grid'; sec.appendChild(grid);
+    grid.appendChild(tile('#/learning','← Back to Learning',''));
+    try{
+      var tracks=await j('api/lessons/tracks.json');
+      tracks.forEach(t=> grid.appendChild(tile('#/learn/'+t.trackId, t.title, null)));
+    }catch(e){
+      var err=document.createElement('div'); err.innerHTML='<p>Failed to load <code>tracks.json</code></p><pre style="white-space:pre-wrap">'+String(e)+'</pre>'; sec.appendChild(err);
+    }
+    host.innerHTML=''; host.appendChild(sec);
+  }
+  function route(){
+    var h=(location.hash||'').toLowerCase();
+    if(h==='#/learning/languages') render(); else clearHost();
+  }
+  window.addEventListener('hashchange', route);
+  document.addEventListener('DOMContentLoaded', route);
+  route();
+})();
+</script>
+<script>
+/* BP_LEARN_WIRE v6 — hub 'Coding' → #/learning/languages (href rewrite + click capture) */
+(function(){
+  function isHub(){ return (location.hash||'').toLowerCase() === '#/learning'; }
+
+  function rewriteHref(){
+    if (!isHub()) return;
+    // Look for tiles/cards/links/buttons that contain 'Coding'
+    var nodes = Array.from(document.querySelectorAll('a,button,[role="button"],.tile,.card'));
+    nodes.forEach(function(n){
+      if (n.__bpRewired) return;
+      var txt = (n.textContent||'').replace(/\s+/g,' ').trim();
+      if (!/\bcoding\b/i.test(txt)) return;
+      var a = n.closest && n.closest('a') || (n.tagName === 'A' ? n : null);
+      if (a) {
+        a.setAttribute('href','#/learning/languages');
+        a.__bpRewired = true;
+      } else {
+        n.__bpRewired = true;
+        n.addEventListener('click', function(ev){
+          ev.preventDefault(); ev.stopPropagation();
+          location.hash = '#/learning/languages';
+        }, {once:true, capture:true});
+      }
+    });
+  }
+
+  function onClickCapture(ev){
+    if (!isHub()) return;
+    var el = ev.target && ev.target.closest && ev.target.closest('.tile,.card,a,button,[role="button"]');
+    if (!el) return;
+    var txt = (el.textContent||'').replace(/\s+/g,' ').trim();
+    if (/\bcoding\b/i.test(txt)) {
+      ev.preventDefault(); ev.stopPropagation();
+      location.hash = '#/learning/languages';
+    }
+  }
+
+  // Bind once
+  if (!window.__bp_learn_wire_v6) {
+    window.__bp_learn_wire_v6 = true;
+    document.addEventListener('click', onClickCapture, true);   // delegated fallback
+    window.addEventListener('hashchange', function(){ setTimeout(rewriteHref,0); });
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(rewriteHref,0); });
+    // attempt immediately for direct loads
+    setTimeout(rewriteHref,0);
+  }
+})();
+</script>
+<script>
+/* BP_LEARN_WIRE v7 — on #/learn, make the 'Coding' card open #/learn/languages */
+(function(){
+  function onHub(){
+    if ((location.hash||'').toLowerCase() !== '#/learn') return;
+    var nodes = Array.from(document.querySelectorAll('a,button,[role="button"],.tile,.card'));
+    nodes.forEach(function(n){
+      if (n.__bpRewired) return;
+      var txt = (n.textContent||'').replace(/\s+/g,' ').trim();
+      if (!/\bcoding\b/i.test(txt)) return;
+      var a = n.closest && n.closest('a') || (n.tagName==='A'?n:null);
+      if (a) a.setAttribute('href','#/learn/languages');
+      n.__bpRewired = true;
+      n.addEventListener('click', function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        location.hash = '#/learn/languages';
+      }, {once:true, capture:true});
+    });
+  }
+  if(!window.__bp_learn_wire_v7){
+    window.__bp_learn_wire_v7 = true;
+    document.addEventListener('click', onHub, true);
+    window.addEventListener('hashchange', onHub);
+    document.addEventListener('DOMContentLoaded', onHub);
+    onHub();
+  }
+})();
+</script>
+
+<script>
+/* BP_LANG_PAGE v3 — dedicated Languages page on #/learn/languages (22 tracks) */
+(function(){
+  var HOST_ID='bp-lang-host';
+  function root(){return document.querySelector('#app, main#app, main[role=main], #view, #root, #content, main, body');}
+  function ensureHost(){var r=root(); if(!r) return null; var h=document.getElementById(HOST_ID); if(!h){h=document.createElement('div'); h.id=HOST_ID; r.appendChild(h);} return h;}
+  function clearHost(){var h=document.getElementById(HOST_ID); if(h) h.innerHTML='';}
+  async function j(u){var url=(u.startsWith('./')?u:'./'+u)+((u.indexOf('?')>=0?'&':'?')+'bust='+Date.now()); var r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status+' '+url); return r.json();}
+  function tile(href,title,sub){var a=document.createElement('a'); a.className='tile'; a.href=href; var t=document.createElement('div'); t.className='tile-title'; t.textContent=title; a.appendChild(t); if(sub){var s=document.createElement('div'); s.className='tile-sub'; s.textContent=sub; a.appendChild(s);} return a;}
+  async function render(){
+    var host=ensureHost(); if(!host) return;
+    var sec=document.createElement('section'); sec.className='px-24 py-16';
+    var h1=document.createElement('h1'); h1.className='h1'; h1.textContent='Languages'; sec.appendChild(h1);
+    var grid=document.createElement('div'); grid.className='tile-grid'; sec.appendChild(grid);
+    grid.appendChild(tile('#/learn','← Back to Learning',''));
+    try{
+      var tracks=await j('api/lessons/tracks.json');
+      tracks.forEach(t=> grid.appendChild(tile('#/learn/'+t.trackId, t.title, null)));
+    }catch(e){
+      var err=document.createElement('div'); err.innerHTML='<p>Failed to load <code>tracks.json</code></p><pre style="white-space:pre-wrap">'+String(e)+'</pre>'; sec.appendChild(err);
+    }
+    host.innerHTML=''; host.appendChild(sec);
+  }
+  function route(){var h=(location.hash||'').toLowerCase(); if(h==='#/learn/languages') render(); else clearHost();}
+  window.addEventListener('hashchange', route);
+  document.addEventListener('DOMContentLoaded', route);
+  route();
+})();
+</script>
+
+<script>
+/* BP_LEARN_CLEAN v1 — on #/learn, remove the extra bottom 'Learning' section with category tiles */
+(function(){
+  function clean(){
+    if ((location.hash||'').toLowerCase() !== '#/learn') return;
+    // Find any section that contains a tile titled 'Languages' and remove that whole section (keep the hub cards).
+    var langTile = Array.from(document.querySelectorAll('.tile, a, .card')).find(e => /\blanguages\b/i.test((e.textContent||'').trim()));
+    if (langTile){
+      var sec = langTile.closest('section');
+      if (sec && sec.parentElement) { sec.parentElement.removeChild(sec); }
+    }
+  }
+  if(!window.__bp_learn_clean_v1){
+    window.__bp_learn_clean_v1 = true;
+    window.addEventListener('hashchange', ()=>setTimeout(clean,0));
+    document.addEventListener('DOMContentLoaded', ()=>setTimeout(clean,0));
+    setTimeout(clean,0);
+  }
+})();
+</script>
+<script>
+/* BP_LEARN_WIRE v8 — intercept click on 'Coding' (capture) + rewrite href on #/learn */
+(function(){
+  function isHub(){ return (location.hash||'').toLowerCase() === '#/learn'; }
+
+  // Capture-phase click: immediate, reliable intercept
+  function onClickCapture(ev){
+    if (!isHub()) return;
+    var t = ev.target;
+    if (!t || !t.closest) return;
+    var el = t.closest('a,button,[role="button"],.tile,.card');
+    if (!el) return;
+    var txt = (el.innerText || el.textContent || '').replace(/\s+/g,' ').trim();
+    if (!/\bcoding\b/i.test(txt)) return;
+    ev.preventDefault(); ev.stopPropagation();
+    location.hash = '#/learn/languages';
+  }
+
+  // Backup: rewrite hrefs once the hub is rendered
+  function rewriteHref(){
+    if (!isHub()) return;
+    var nodes = Array.from(document.querySelectorAll('a,button,[role="button"],.tile,.card'));
+    nodes.forEach(function(n){
+      if (n.__bpRewired) return;
+      var txt = (n.innerText || n.textContent || '').replace(/\s+/g,' ').trim();
+      if (!/\bcoding\b/i.test(txt)) return;
+      var a = n.closest && n.closest('a') || (n.tagName==='A'?n:null);
+      if (a) a.setAttribute('href','#/learn/languages');
+      n.__bpRewired = true;
+    });
+  }
+
+  if (!window.__bp_learn_wire_v8) {
+    window.__bp_learn_wire_v8 = true;
+    document.addEventListener('click', onClickCapture, true);   // capture = before SPA handlers
+    window.addEventListener('hashchange', () => setTimeout(rewriteHref,0));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(rewriteHref,0));
+    setTimeout(rewriteHref,0);
+  }
+})();
+</script>
+<script>
+/* BP_LANG_PAGE v4 — overlay Languages on #/learn/languages (hide other content) */
+(function(){
+  var HOST_ID = 'bp-lang-host';
+  var STYLE_ID = 'bp-lang-hide-others';
+
+  function findRoot(){
+    return document.querySelector('#app, main#app, main[role=main], #view, #root, #content, main, body') || document.body;
+  }
+
+  function ensureOverlay(root){
+    // host
+    var host = document.getElementById(HOST_ID);
+    if(!host){
+      host = document.createElement('div');
+      host.id = HOST_ID;
+      root.appendChild(host);
+    }
+    // style to hide all siblings except our host
+    var style = document.getElementById(STYLE_ID);
+    if(!style){
+      style = document.createElement('style'); style.id = STYLE_ID;
+      var selector;
+      if (root.id){
+        selector = '#' + CSS.escape(root.id) + ' > :not(#' + HOST_ID + ')';
+      } else {
+        root.setAttribute('data-bp-root','1');
+        selector = '[data-bp-root="1"] > :not(#' + HOST_ID + ')';
+      }
+      style.textContent = selector + '{ display: none !important; }';
+      document.head.appendChild(style);
+    }
+    return host;
+  }
+
+  function clearOverlay(){
+    var host = document.getElementById(HOST_ID);
+    if (host && host.parentElement) host.parentElement.removeChild(host);
+    var style = document.getElementById(STYLE_ID);
+    if (style && style.parentElement) style.parentElement.removeChild(style);
+  }
+
+  async function j(u){
+    var url=(u.startsWith('./')?u:'./'+u) + ((u.indexOf('?')>=0?'&':'?')+'bust='+Date.now());
+    var r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status+' '+url); return r.json();
+  }
+
+  function tile(href,title,sub){
+    var a=document.createElement('a'); a.className='tile'; a.href=href;
+    var t=document.createElement('div'); t.className='tile-title'; t.textContent=title; a.appendChild(t);
+    if(sub){ var s=document.createElement('div'); s.className='tile-sub'; s.textContent=sub; a.appendChild(s); }
+    return a;
+  }
+
+  async function render(){
+    var root = findRoot();
+    var host = ensureOverlay(root);
+    // scaffold
+    var sec=document.createElement('section'); sec.className='px-24 py-16';
+    var h1=document.createElement('h1'); h1.className='h1'; h1.textContent='Languages'; sec.appendChild(h1);
+    var grid=document.createElement('div'); grid.className='tile-grid'; sec.appendChild(grid);
+    grid.appendChild(tile('#/learn','← Back to Learning',''));
+    try{
+      var tracks = await j('api/lessons/tracks.json');
+      tracks.forEach(function(t){ grid.appendChild(tile('#/learn/'+t.trackId, t.title, null)); });
+    }catch(e){
+      var err=document.createElement('div'); err.innerHTML='<p>Failed to load <code>tracks.json</code></p><pre style="white-space:pre-wrap">'+String(e)+'</pre>';
+      sec.appendChild(err);
+    }
+    host.innerHTML=''; host.appendChild(sec);
+    window.scrollTo(0,0);
+  }
+
+  function route(){
+    var h=(location.hash||'').toLowerCase();
+    if (h === '#/learn/languages'){ render(); }
+    else { clearOverlay(); }
+  }
+
+  window.addEventListener('hashchange', route);
+  document.addEventListener('DOMContentLoaded', route);
+  route();
+})();
+</script>
+<script>
+/* BP_TRACK_PAGE v1 — overlay for /learn/<trackId> (modules → lessons) */
+(function(){
+  var HOST_ID = 'bp-track-host';
+  var STYLE_ID = 'bp-track-hide-others';
+
+  function routeParts(){
+    var m = (location.hash||'').match(/^#\/learn\/([^\/]+)(?:\/([^\/]+)(?:\/([^\/]+))?)?$/i);
+    if(!m) return null;
+    return { track:m[1], mod:m[2]||null, lesson:m[3]||null };
+  }
+  function root(){
+    return document.querySelector('#app, main#app, main[role=main], #view, #root, #content, main, body') || document.body;
+  }
+  function ensureOverlay(r){
+    var host = document.getElementById(HOST_ID);
+    if(!host){ host = document.createElement('div'); host.id = HOST_ID; r.appendChild(host); }
+    var style = document.getElementById(STYLE_ID);
+    if(!style){
+      style = document.createElement('style'); style.id = STYLE_ID;
+      var selector = (r.id ? ('#'+CSS.escape(r.id)) : (r.setAttribute('data-bp-root','1'), '[data-bp-root="1"]'));
+      style.textContent = selector + ' > :not(#' + HOST_ID + '){ display:none !important;}';
+      document.head.appendChild(style);
+    }
+    return host;
+  }
+  function clearOverlay(){
+    var host = document.getElementById(HOST_ID); if(host && host.parentElement) host.parentElement.removeChild(host);
+    var style = document.getElementById(STYLE_ID); if(style && style.parentElement) style.parentElement.removeChild(style);
+  }
+  async function j(u){
+    var url=(u.startsWith('./')?u:'./'+u)+((u.indexOf('?')>=0?'&':'?')+'bust='+Date.now());
+    var r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status+' '+url); return r.json();
+  }
+  function tile(href,title,sub){
+    var a=document.createElement('a'); a.className='tile'; a.href=href;
+    var t=document.createElement('div'); t.className='tile-title'; t.textContent=title; a.appendChild(t);
+    if(sub){ var s=document.createElement('div'); s.className='tile-sub'; s.textContent=sub; a.appendChild(s); }
+    return a;
+  }
+  function getProgress(){
+    try{ return JSON.parse(localStorage.getItem('bp.progress')||'{}'); }catch(e){ return {}; }
+  }
+  function setProgress(k,val){
+    var p=getProgress(); p[k]=val; localStorage.setItem('bp.progress', JSON.stringify(p));
+  }
+
+  async function renderTrack(trackId, modId, lessonId){
+    var r=root(), host=ensureOverlay(r);
+    var data = await j('api/lessons/coding_'+trackId+'.json');
+
+    if(!modId){ // modules + lessons list
+      var sec=document.createElement('section'); sec.className='px-24 py-16';
+      var h1=document.createElement('h1'); h1.className='h1'; h1.textContent=data.title + ' — Modules'; sec.appendChild(h1);
+      var grid=document.createElement('div'); grid.className='tile-grid'; sec.appendChild(grid);
+      grid.appendChild(tile('#/learn/languages','← Back to Languages',''));
+
+      var progress=getProgress();
+
+      data.modules.forEach(function(m){
+        var modCard=document.createElement('div'); modCard.className='tile';
+        var ttl=document.createElement('div'); ttl.className='tile-title'; ttl.textContent=m.title; modCard.appendChild(ttl);
+
+        // lessons list inside the module card
+        var list=document.createElement('div'); list.style.padding='8px 12px';
+        m.lessons.forEach(function(L){
+          var key = trackId+':'+m.id+':'+L.id;
+          var a=document.createElement('a'); a.href='#/learn/'+trackId+'/'+m.id+'/'+L.id; a.className='pill';
+          a.style.display='inline-block'; a.style.margin='4px 6px'; a.style.textDecoration='none';
+          a.textContent = L.title + (progress[key]==='done' ? ' ✓' : '');
+          list.appendChild(a);
+        });
+        modCard.appendChild(list);
+        grid.appendChild(modCard);
+      });
+
+      host.innerHTML=''; host.appendChild(sec);
+      window.scrollTo(0,0);
+      return;
+    }
+
+    // lesson detail
+    var module = (data.modules||[]).find(x=>x.id===modId);
+    var lesson = module ? (module.lessons||[]).find(x=>x.id===lessonId) : null;
+
+    var sec2=document.createElement('section'); sec2.className='px-24 py-16';
+    var h1=document.createElement('h1'); h1.className='h1'; h1.textContent=(data.title||trackId)+' — '+(lesson?lesson.title:lessonId); sec2.appendChild(h1);
+    var nav=document.createElement('div'); nav.className='tile-grid';
+    nav.appendChild(tile('#/learn/'+trackId,'← Back to Modules',null));
+    sec2.appendChild(nav);
+
+    var body=document.createElement('div'); body.style.padding='12px 0';
+    body.innerHTML = lesson && lesson.body ? lesson.body : '<p>Lesson content coming soon.</p>';
+    sec2.appendChild(body);
+
+    // progress toggle
+    if (lesson){
+      var key = trackId+':'+module.id+':'+lesson.id;
+      var btn=document.createElement('button'); btn.className='tile'; btn.textContent='Mark as Done';
+      btn.addEventListener('click',function(){ setProgress(key,'done'); btn.textContent='Done ✓'; }, {once:false});
+      sec2.appendChild(btn);
+    }
+
+    host.innerHTML=''; host.appendChild(sec2);
+    window.scrollTo(0,0);
+  }
+
+  function route(){
+    var p = routeParts();
+    if (!p){ clearOverlay(); return; }
+    renderTrack(p.track, p.mod, p.lesson).catch(function(e){
+      var r=root(), host=ensureOverlay(r);
+      host.innerHTML = '<section class="px-24 py-16"><h1 class="h1">Error</h1><pre style="white-space:pre-wrap">'+String(e)+'</pre><div class="tile-grid">'+
+                       '<a class="tile" href="#/learn/languages">← Back to Languages</a></div></section>';
+    });
+  }
+
+  window.addEventListener('hashchange', route);
+  document.addEventListener('DOMContentLoaded', route);
+  route();
+})();
+</script>
+<script>
+/* BP_LANG_PAGE v5 — overlay Languages on #/learn/languages (no CSS.escape) */
+(function(){
+  var HOST_ID='bp-lang-host';
+  var STYLE_ID='bp-lang-hide-others';
+
+  function findRoot(){
+    return document.querySelector('#app, main#app, main[role=main], #view, #root, #content, main, body') || document.body;
+  }
+  function ensureOverlay(){
+    var root=findRoot();
+    var host=document.getElementById(HOST_ID);
+    if(!host){ host=document.createElement('div'); host.id=HOST_ID; root.appendChild(host); }
+    var style=document.getElementById(STYLE_ID);
+    if(!style){
+      style=document.createElement('style'); style.id=STYLE_ID;
+      root.setAttribute('data-bp-root','1');
+      style.textContent='[data-bp-root="1"] > :not(#'+HOST_ID+'){display:none !important;}';
+      document.head.appendChild(style);
+    }
+    return host;
+  }
+  function clearOverlay(){
+    var host=document.getElementById(HOST_ID);
+    if(host&&host.parentElement) host.parentElement.removeChild(host);
+    var style=document.getElementById(STYLE_ID);
+    if(style&&style.parentElement) style.parentElement.removeChild(style);
+    var r=document.querySelector('[data-bp-root="1"]'); if(r) r.removeAttribute('data-bp-root');
+  }
+  async function j(u){
+    var url=(u.startsWith('./')?u:'./'+u)+((u.indexOf('?')>=0?'&':'?')+'bust='+Date.now());
+    var r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status+' '+url); return r.json();
+  }
+  function tile(href,title,sub){
+    var a=document.createElement('a'); a.className='tile'; a.href=href;
+    var t=document.createElement('div'); t.className='tile-title'; t.textContent=title; a.appendChild(t);
+    if(sub){ var s=document.createElement('div'); s.className='tile-sub'; s.textContent=sub; a.appendChild(s); }
+    return a;
+  }
+  async function render(){
+    var host=ensureOverlay();
+    host.innerHTML='<section class="px-24 py-16"><h1 class="h1">Languages</h1><p>Loading…</p></section>';
+    try{
+      var tracks=await j('api/lessons/tracks.json');
+      var sec=document.createElement('section'); sec.className='px-24 py-16';
+      var h1=document.createElement('h1'); h1.className='h1'; h1.textContent='Languages'; sec.appendChild(h1);
+      var grid=document.createElement('div'); grid.className='tile-grid'; sec.appendChild(grid);
+      grid.appendChild(tile('#/learn','← Back to Learning',''));
+      tracks.forEach(function(t){ grid.appendChild(tile('#/learn/'+t.trackId, t.title, null)); });
+      host.innerHTML=''; host.appendChild(sec);
+      window.scrollTo(0,0);
+    }catch(e){
+      host.innerHTML='<section class="px-24 py-16"><h1 class="h1">Languages</h1><p>Failed to load tracks.</p><pre style="white-space:pre-wrap">'+String(e)+'</pre><a class="tile" href="#/learn"><div class="tile-title">← Back to Learning</div></a></section>';
+    }
+  }
+  function route(){
+    var h=(location.hash||'').toLowerCase();
+    if(h==='#/learn/languages'){ render(); } else { clearOverlay(); }
+  }
+  window.addEventListener('hashchange', route);
+  document.addEventListener('DOMContentLoaded', route);
+  route();
+})();
+</script>
+<script>
+/* BP_LANG_PAGE v6 — fixed overlay page for #/learn/languages */
+(function(){
+  var HOST_ID='bp-lang-overlay';
+
+  function ensureOverlay(){
+    var host=document.getElementById(HOST_ID);
+    if(!host){
+      host=document.createElement('div');
+      host.id=HOST_ID;
+      // Fullscreen overlay with own background; does NOT touch the rest of the app
+      host.setAttribute('style',
+        'position:fixed;inset:0;z-index:2147483647;overflow:auto;background:#fff;' +
+        'color:inherit;-webkit-font-smoothing:antialiased;');
+      document.body.appendChild(host);
+    }
+    return host;
+  }
+  function removeOverlay(){
+    var host=document.getElementById(HOST_ID);
+    if(host && host.parentElement) host.parentElement.removeChild(host);
+  }
+  async function j(u){
+    var url=(u.startsWith('./')?u:'./'+u)+((u.indexOf('?')>=0?'&':'?')+'bust='+Date.now());
+    var r=await fetch(url,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+url);
+    return r.json();
+  }
+  function tile(href,title,sub){
+    var a=document.createElement('a'); a.className='tile'; a.href=href;
+    var t=document.createElement('div'); t.className='tile-title'; t.textContent=title; a.appendChild(t);
+    if(sub){ var s=document.createElement('div'); s.className='tile-sub'; s.textContent=sub; a.appendChild(s); }
+    return a;
+  }
+  async function render(){
+    var host=ensureOverlay();
+    host.innerHTML='<section class="px-24 py-16"><h1 class="h1">Languages</h1><p>Loading…</p></section>';
+    try{
+      var tracks = await j('api/lessons/tracks.json');
+      var sec=document.createElement('section'); sec.className='px-24 py-16';
+      var h1=document.createElement('h1'); h1.className='h1'; h1.textContent='Languages'; sec.appendChild(h1);
+      var grid=document.createElement('div'); grid.className='tile-grid'; sec.appendChild(grid);
+      grid.appendChild(tile('#/learn','← Back to Learning',''));
+      tracks.forEach(function(t){ grid.appendChild(tile('#/learn/'+t.trackId, t.title, null)); });
+      host.innerHTML=''; host.appendChild(sec);
+      window.scrollTo(0,0);
+    }catch(e){
+      host.innerHTML='<section class="px-24 py-16"><h1 class="h1">Languages</h1>'+
+        '<p>Failed to load tracks.</p><pre style="white-space:pre-wrap">'+String(e)+'</pre>'+
+        '<a class="tile" href="#/learn"><div class="tile-title">← Back to Learning</div></a></section>';
+    }
+  }
+  function route(){
+    var h=(location.hash||'').toLowerCase();
+    if(h==='#/learn/languages'){ render(); } else { removeOverlay(); }
+  }
+  window.addEventListener('hashchange', route);
+  document.addEventListener('DOMContentLoaded', route);
+  route();
+})();
+</script>
+<script>
+/* BP_LANG_PAGE v7 — fixed overlay for #/learn/languages (own CSS; dark text; standalone grid) */
+(function(){
+  var HOST_ID = 'bp-lang-overlay';
+  var CSS_ID  = 'bp-lang-css';
+
+  function ensureOverlay(){
+    var host = document.getElementById(HOST_ID);
+    if(!host){
+      host = document.createElement('div');
+      host.id = HOST_ID;
+      host.style.position = 'fixed';
+      host.style.inset = '0';
+      host.style.zIndex = '2147483647';
+      host.style.overflow = 'auto';
+      host.style.background = '#ffffff';
+      host.style.color = '#111111';                 // force dark text
+      host.style.fontFamily = 'system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif';
+      host.style.lineHeight = '1.5';
+      document.body.appendChild(host);
+    }
+    // (Re)attach CSS each render to be safe
+    var css = document.getElementById(CSS_ID);
+    if(!css){
+      css = document.createElement('style'); css.id = CSS_ID;
+      css.textContent = [
+        '#'+HOST_ID+' .wrap{max-width:1200px;margin:0 auto;padding:24px;}',
+        '#'+HOST_ID+' h1{font-size:28px;margin:0 0 16px 0;font-weight:700;}',
+        '#'+HOST_ID+' .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;}',
+        '#'+HOST_ID+' a.card{display:block;padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#f9fafb;text-decoration:none;color:inherit;box-shadow:0 1px 2px rgba(0,0,0,.05);transition:.15s;}',
+        '#'+HOST_ID+' a.card:hover{box-shadow:0 4px 12px rgba(0,0,0,.12);transform:translateY(-1px);} ',
+        '#'+HOST_ID+' .title{font-weight:600;font-size:16px;}',
+        '#'+HOST_ID+' .sub{opacity:.75;font-size:13px;margin-top:4px;}',
+        '@media (prefers-color-scheme: dark){ #'+HOST_ID+'{background:#0b0b0f;color:#eaeaea;} #'+HOST_ID+' a.card{background:#13131a;border-color:#1f1f2a;} }'
+      ].join('\n');
+      document.head.appendChild(css);
+    }
+    return host;
+  }
+
+  function removeOverlay(){
+    var host = document.getElementById(HOST_ID);
+    if(host && host.parentElement) host.parentElement.removeChild(host);
+    var css = document.getElementById(CSS_ID);
+    if(css && css.parentElement) css.parentElement.removeChild(css);
+  }
+
+  async function getJSON(u){
+    var url = (u.startsWith('./')?u:'./'+u) + ((u.indexOf('?')>=0?'&':'?') + 'bust=' + Date.now());
+    var r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+url);
+    return r.json();
+  }
+
+  function card(href, title, sub){
+    var a = document.createElement('a'); a.className = 'card'; a.href = href;
+    var t = document.createElement('div'); t.className = 'title'; t.textContent = title; a.appendChild(t);
+    if(sub){ var s = document.createElement('div'); s.className = 'sub'; s.textContent = sub; a.appendChild(s); }
+    return a;
+  }
+
+  async function render(){
+    var host = ensureOverlay();
+    // scaffold
+    var wrap = document.createElement('div'); wrap.className = 'wrap';
+    var h1 = document.createElement('h1'); h1.textContent = 'Languages'; wrap.appendChild(h1);
+    var grid = document.createElement('div'); grid.className='grid'; wrap.appendChild(grid);
+
+    // Back
+    grid.appendChild(card('#/learn','← Back to Learning',''));
+
+    try{
+      var tracks = await getJSON('api/lessons/tracks.json');
+      tracks.forEach(function(t){ grid.appendChild(card('#/learn/'+t.trackId, t.title, null)); });
+    } catch(e){
+      var err = document.createElement('div');
+      err.textContent = 'Failed to load tracks.json: ' + String(e);
+      wrap.appendChild(err);
+    }
+
+    host.innerHTML = ''; host.appendChild(wrap);
+    window.scrollTo(0,0);
+  }
+
+  function route(){
+    var h = (location.hash||'').toLowerCase();
+    if (h === '#/learn/languages') render();
+    else removeOverlay();
+  }
+  window.addEventListener('hashchange', route);
+  document.addEventListener('DOMContentLoaded', route);
+  route();
+})();
+</script>
+</body>
+</html>
+

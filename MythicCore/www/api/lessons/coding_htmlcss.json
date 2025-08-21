@@ -1,0 +1,42 @@
+{
+  "title": "HTML/CSS",
+  "trackId": "htmlcss",
+  "modules": [
+    {
+      "title": "HTML Structure",
+      "lessons": [
+        {
+          "title": "Core Tags",
+          "est": 10,
+          "body": "<p>TBD — semantic HTML.</p>",
+          "id": "tags"
+        },
+        {
+          "title": "Layout 101",
+          "est": 15,
+          "body": "<p>TBD — block vs inline, basic layout.</p>",
+          "id": "layout"
+        }
+      ],
+      "id": "web-structure"
+    },
+    {
+      "title": "CSS Styling",
+      "lessons": [
+        {
+          "title": "Selectors",
+          "est": 12,
+          "body": "<p>TBD — class/id, cascades, specificity.</p>",
+          "id": "selectors"
+        },
+        {
+          "title": "Flexbox",
+          "est": 15,
+          "body": "<p>TBD — flexbox fundamentals.</p>",
+          "id": "flex"
+        }
+      ],
+      "id": "web-style"
+    }
+  ]
+}
