@@ -3,46 +3,41 @@
 
   function parseRoute(){
     var h=(location.hash||'').replace(/^#/,''), parts=h.split('/').filter(Boolean);
-    // Expect: ["learn","<lang>","<lessonId>?"]
-    if (parts[0] !== 'learn') return { lang:null, lesson:null };
+    if(parts[0]!=='learn') return { lang:null, lesson:null };
     return { lang:(parts[1]||'').toLowerCase(), lesson:(parts[2]||null) };
   }
-  function titleCase(s){ try { return s.charAt(0).toUpperCase()+s.slice(1); } catch(_){ return s; } }
+  var RESERVED = { '':1, 'coding':1, 'languages':1, 'all':1, 'tracks':1, 'hub':1, 'index':1, 'home':1 };
+
+  function titleCase(s){ try{return s.charAt(0).toUpperCase()+s.slice(1);}catch(_){return s;} }
   function ensureRoot(){
-    var root=document.getElementById('lang-root');
-    if(!root){
-      root=document.createElement('div'); root.id='lang-root';
-      var footer=document.querySelector('.footer');
-      if(footer&&footer.parentNode) footer.parentNode.insertBefore(root,footer); else document.body.appendChild(root);
+    var r=document.getElementById('lang-root');
+    if(!r){
+      r=document.createElement('div'); r.id='lang-root';
+      var f=document.querySelector('.footer'); if(f&&f.parentNode) f.parentNode.insertBefore(r,f); else document.body.appendChild(r);
     }
-    return root;
+    return r;
   }
   function setHasData(on){ document.body.classList.toggle('route-lang-hasdata', !!on); }
 
   function renderSkeleton(lang){
     setHasData(true);
-    var root=ensureRoot();
-    root.innerHTML =
-      '<div class="lang-meta"><a href="#/learn/coding">← Back to Languages</a></div>'+
-      '<h1>'+ titleCase(lang||'') +'</h1>'+
-      '<div id="lang-content"><div class="empty">Loading lessons (or content coming soon)…</div></div>';
+    var r=ensureRoot();
+    r.innerHTML = '<div class="lang-meta"><a href="#/learn/coding">← Back to Languages</a></div>'
+                + '<h1>'+ titleCase(lang||'') +'</h1>'
+                + '<div id="lang-content"><div class="empty">Loading lessons (or content coming soon)…</div></div>';
   }
 
   function renderManifest(lang, manifest, initialLesson){
     setHasData(true);
-    var root=ensureRoot();
-    var html='';
+    var root=ensureRoot(), html='';
     html+='<div class="lang-meta"><a href="#/learn/coding">← Back to Languages</a></div>';
-    html+='<h1>'+ (manifest.title||titleCase(lang)) +'</h1>';
+    html+='<h1>'+(manifest.title||titleCase(lang))+'</h1>';
     html+='<div id="lang-content"><div class="empty">Select a lesson to view its content.</div></div>';
     (manifest.modules||[]).forEach(function(m){
-      html+='<div class="module" data-module-id="'+(m.id||'m')+'">';
-      html+='<h2>'+ (m.title||'') +'</h2>';
-      html+='<ul class="lessons">';
+      html+='<div class="module" data-module-id="'+(m.id||'m')+'"><h2>'+(m.title||'')+'</h2><ul class="lessons">';
       (m.lessons||[]).forEach(function(L){
         var mins=(L.mins!=null? (L.mins+' min') : '');
-        html+='<li class="lesson" tabindex="0" data-lesson-id="'+(L.id||'')+'">';
-        html+='<div class="title">'+(L.title||'')+'</div><div class="mins">'+mins+'</div></li>';
+        html+='<li class="lesson" tabindex="0" data-lesson-id="'+(L.id||'')+'"><div class="title">'+(L.title||'')+'</div><div class="mins">'+mins+'</div></li>';
       });
       html+='</ul></div>';
     });
@@ -57,22 +52,15 @@
       (manifest.modules||[]).some(function(m){
         return (m.lessons||[]).some(function(L){ if(L.id===id){ found=L; return true; } return false; });
       });
-      slot.innerHTML = (found && found.html) ? found.html : '<div class="empty">Content coming soon.</div>';
+      slot.innerHTML=(found&&found.html)?found.html:'<div class="empty">Content coming soon.</div>';
     }
 
-    // Click + keyboard + deep-link
+    // deep-links
     root.querySelectorAll('.lesson').forEach(function(el){
       el.addEventListener('click', function(){
         var id=el.getAttribute('data-lesson-id'); if(!id) return;
-        if(history && history.replaceState){
-          history.replaceState(null,'',"#/learn/"+lang+"/"+id);
-          window.dispatchEvent(new HashChangeEvent('hashchange'));
-        } else {
-          location.hash="#/learn/"+lang+"/"+id;
-        }
-      });
-      el.addEventListener('keydown', function(e){
-        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); el.click(); }
+        if(history&&history.replaceState){ history.replaceState(null,'',"#/learn/"+lang+"/"+id); window.dispatchEvent(new HashChangeEvent('hashchange')); }
+        else { location.hash="#/learn/"+lang+"/"+id; }
       });
     });
 
@@ -80,17 +68,16 @@
   }
 
   function loadManifest(lang, lessonId){
-    renderSkeleton(lang); // always show something immediately
-    var url = "data/learn/" + lang + ".json?v=" + Date.now();
-    fetch(url, { cache: 'no-store' })
+    renderSkeleton(lang);
+    fetch("data/learn/"+lang+".json?v="+Date.now(), {cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error('missing'); return r.json(); })
       .then(function(json){ renderManifest(lang, json, lessonId); })
-      .catch(function(){ /* keep skeleton (placeholder) */ });
+      .catch(function(){ /* keep skeleton */ });
   }
 
   function onRoute(){
     var r=parseRoute();
-    if (!r.lang) { setHasData(false); return; }
+    if(!r.lang || RESERVED[r.lang]) { document.body.classList.remove('route-lang-hasdata'); return; }
     loadManifest(r.lang, r.lesson);
   }
 

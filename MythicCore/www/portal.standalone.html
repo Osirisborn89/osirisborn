@@ -92,7 +92,14 @@ body.route-lang-hasdata {
 }
 </style><script id="lang-route-boot">
 (function(){
-  function isLangRoute(){ var h=(location.hash||""); return /^#\/learn\/[A-Za-z0-9\-]+/.test(h); }
+  function isLangRoute(){
+    var h=(location.hash||"");
+    var m=h.match(/^#\/learn\/([^\/?#]+)/);
+    if(!m) return false;
+    var seg=(m[1]||"").toLowerCase();
+    var reserved={ "":1,"coding":1,"languages":1,"all":1,"tracks":1,"hub":1,"index":1,"home":1 };
+    return !reserved[seg];
+  }
   function ensureRoot(){
     var r=document.getElementById("lang-root");
     if(!r){ r=document.createElement("div"); r.id="lang-root";
@@ -100,16 +107,23 @@ body.route-lang-hasdata {
     }
     return r;
   }
-  function badge(on){
+  function badge(on,lang){
     var b=document.getElementById("lang-debug-badge");
     if(on){
-      if(!b){ b=document.createElement("div"); b.id="lang-debug-badge"; b.textContent="LANG ROUTE ACTIVE"; document.body.appendChild(b); }
+      if(!b){ b=document.createElement("div"); b.id="lang-debug-badge"; document.body.appendChild(b); }
+      b.textContent="LANG ROUTE ACTIVE: "+(lang||"");
     } else { if(b){ b.remove(); } }
+  }
+  function getLang(){
+    var h=(location.hash||"");
+    var m=h.match(/^#\/learn\/([^\/?#]+)/);
+    return m? (m[1]||"") : "";
   }
   function apply(){
     if(isLangRoute()){
+      var lang=(getLang()||"").toLowerCase();
       document.body.classList.add("route-lang-hasdata");
-      badge(true);
+      badge(true, lang);
       var r=ensureRoot();
       if(!r.innerHTML){
         r.innerHTML = '<div class="lang-meta"><a href="#/learn/coding">← Back to Languages</a></div>'
@@ -126,7 +140,8 @@ body.route-lang-hasdata {
   window.addEventListener("portal:ready", apply);
   apply();
 })();
-</script></head>
+</script>
+</head>
 <body>
   <nav><div class="bar">
     <div class="brand">Black Pyramid</div>
@@ -592,6 +607,7 @@ feature/lms-langs-track-pages-20250821150646
   <script src="js/lms.chrome.js" defer></script>
 </body>
 </html>
+
 
 
 
