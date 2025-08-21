@@ -1,0 +1,48 @@
+{
+  "title": "Bash/Shell",
+  "trackId": "bash",
+  "modules": [
+    {
+      "title": "Shell Basics",
+      "lessons": [
+        {
+          "title": "Intro & Safety",
+          "est": 10,
+          "body": "<p>TBD — running commands responsibly.</p>",
+          "id": "shell-intro"
+        },
+        {
+          "title": "Navigation",
+          "est": 10,
+          "body": "<p>TBD — pwd, ls, cd, paths.</p>",
+          "id": "nav"
+        },
+        {
+          "title": "Redirection",
+          "est": 12,
+          "body": "<p>TBD — pipes, >, >>, 2>.</p>",
+          "id": "redir"
+        }
+      ],
+      "id": "bash-basics"
+    },
+    {
+      "title": "Scripting",
+      "lessons": [
+        {
+          "title": "Variables",
+          "est": 10,
+          "body": "<p>TBD — env/user vars.</p>",
+          "id": "vars"
+        },
+        {
+          "title": "Control Flow",
+          "est": 12,
+          "body": "<p>TBD — if, for, while.</p>",
+          "id": "ctrl"
+        }
+      ],
+      "id": "bash-scripting"
+    }
+  ]
+}

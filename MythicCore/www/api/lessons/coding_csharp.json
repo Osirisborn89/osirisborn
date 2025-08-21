@@ -1,6 +1,6 @@
 {
-  "title": "Python",
-  "trackId": "python",
+  "title": "C#",
+  "trackId": "csharp",
   "modules": [
     {
       "title": "Basics",
@@ -8,7 +8,7 @@
         {
           "title": "Introduction",
           "est": 5,
-          "body": "<p>TBD — overview of Python, what you can build.</p>",
+          "body": "<p>TBD — overview of C#, what you can build.</p>",
           "id": "intro"
         },
         {
@@ -24,7 +24,7 @@
           "id": "syntax"
         }
       ],
-      "id": "python-basics"
+      "id": "csharp-basics"
     },
     {
       "title": "Control Flow",
@@ -32,7 +32,7 @@
         {
           "title": "Conditionals",
           "est": 10,
-          "body": "<p>TBD — if/else patterns in Python.</p>",
+          "body": "<p>TBD — if/else patterns in C#.</p>",
           "id": "conds"
         },
         {
@@ -42,7 +42,7 @@
           "id": "loops"
         }
       ],
-      "id": "python-control"
+      "id": "csharp-control"
     },
     {
       "title": "Data Structures",
@@ -60,7 +60,7 @@
           "id": "strings"
         }
       ],
-      "id": "python-data"
+      "id": "csharp-data"
     }
   ]
 }
