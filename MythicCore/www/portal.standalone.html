@@ -12,8 +12,9 @@
       --accent:#6e3cff; --accent2:#9d7bff; --accentGlow:rgba(110,60,255,.35);
       --r-lg:18px; --r-md:12px; --gap:12px;
     }
-    *{box-sizing:bord/* disabled bad selector near 693: body */   body{
-      margin:0;color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial, sans-serif;
+    *{box-sizing:border-box}
+    body{
+      margin:0;color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
       background:
         radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12), transparent 55%),
         radial-gradient(1100px 700px at 120% 0%, rgba(157,123,255,.08), transparent 60%),
@@ -63,37 +64,7 @@ body{
 .tile:hover{ box-shadow:0 14px 36px rgba(139,92,246,.22); border-color:rgba(139,92,246,.45) }
 .tab.active{ box-shadow:0 0 0 2px rgba(139,92,246,.45) }
 </style>
-  <style>
-  /* route-learn-python styles */
-  body.route-learn-python main,
-  body.route-learn-python .content,
-  body.route-learn-python .page {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 24px 20px 64px;
-  }
-  body.route-learn-python h1 { font-size: 2rem; line-height: 1.2; margin: 16px 0 12px; }
-  body.route-learn-python h2 { font-size: 1.25rem; line-height: 1.3; margin: 14px 0 10px; }
-  body.route-learn-python p,
-  body.route-learn-python li { font-size: 1rem; line-height: 1.6; }
-  body.route-learn-python a { color: var(--link, #9bd); text-decoration: none; }
-  body.route-learn-python a:hover { text-decoration: underline; }
-  body.route-learn-python .muted { opacity: .8; }
-  </style>  <script>
-  // route-learn-python class toggle
-  (function(){
-    function applyRouteClass(){
-      try {
-        var onPy = (location.hash || '').toLowerCase().indexOf('#/learn/python') === 0;
-        document.body.classList.toggle('route-learn-python', !!onPy);
-      } catch(_) {}
-    }
-    window.addEventListener('hashchange', applyRouteClass);
-    window.addEventListener('portal:ready', applyRouteClass);
-    document.addEventListener('DOMContentLoaded', applyRouteClass);
-    applyRouteClass();
-  })();
-  </script></head>
+</head>
 <body>
   <nav><div class="bar">
     <div class="brand">Black Pyramid</div>
@@ -556,11 +527,7 @@ feature/lms-langs-track-pages-20250821150646
 
   main
   
-  <!-- disabled: lms.chrome.js removed for /learn/python UI fix -->
+  <script src="js/lms.chrome.js" defer></script>
 </body>
 </html>
-
-
-
-
 
