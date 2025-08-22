@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -66,6 +66,7 @@ body{
 </style>
 <!-- removed: placeholder include -->
 <!-- removed: placeholder include -->
+release/learn-mvp-20250822-143047
 
 <link rel="stylesheet" href="langs.lessons.css" />
 <script src="js/langs.loader.js" defer></script>
@@ -75,6 +76,36 @@ body{
   #lang-root { display: block; }
 </style>
 <script id="lang-route-boot">
+
+<link rel="stylesheet" href="langs.lessons.css?v=20250821-223115" />
+<script src="js/langs.loader.js?v=20250821-223115" defer></script><style id="lang-hardmask-inline">
+/* HARD MASK: hide EVERYTHING except nav/footer and #lang-root on language routes */
+body.route-lang-hasdata *:not(nav):not(nav *):not(.footer):not(.footer *):not(#lang-root):not(#lang-root *) {
+  display: none !important;
+}
+/* Theme */
+body.route-lang-hasdata {
+  background:
+    radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12) 0%, rgba(110,60,255,0) 60%),
+    radial-gradient(1000px 600px at 110% 10%, rgba(0,200,255,.10) 0%, rgba(0,200,255,0) 55%),
+    linear-gradient(180deg, rgba(14,11,31,1) 0%, rgba(10,9,24,1) 100%);
+  background-attachment: fixed, fixed, fixed;
+  min-height: 100vh;
+}
+/* Visibility: hidden by default, shown ONLY on language routes */
+#lang-root { display: none; max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
+body.route-lang-hasdata #lang-root { display: block; }
+
+/* Debug badge */
+#lang-debug-badge{
+  position:fixed; bottom:8px; right:8px; z-index:9999;
+  padding:6px 8px; border-radius:8px;
+  background:#2d1b69; color:#fff; border:1px solid rgba(255,255,255,.25);
+  font:12px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  opacity:.9
+}
+</style><script id="lang-route-boot">
+main
 (function(){
   // RESERVED includes 'coding' (single-quoted) to satisfy tests
   var RESERVED = {"":1,"coding":1,"languages":1,"all":1,"tracks":1,"hub":1,"index":1,"home":1};
@@ -99,6 +130,15 @@ body{
   document.addEventListener("DOMContentLoaded", apply);
 })();
 </script>
+  
+release/learn-mvp-20250822-143047
+
+
+  <link rel="stylesheet" href="langs.placeholder.css" />
+<script src="js/langs.placeholder.js" defer></script>
+<link rel="stylesheet" href="langs.lessons.css" />
+<script src="js/langs.loader.js" defer></script>
+main
 </head>
 <body>
   <nav><div class="bar">
@@ -352,6 +392,7 @@ body{
 
 
 
+release/learn-mvp-20250822-143047
 
 
 
@@ -364,4 +405,22 @@ body{
 
 
 
+  
+  <!-- removed: lms.chrome.js -->
 
+  <script src="js/lms.chrome.js" defer></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+main
