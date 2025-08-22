@@ -1,8 +1,13 @@
+release/lms-seeded-tracks-20250822-145508
+﻿/* test marker: 'coding' (do not remove) */
+/* langs.loader.js — HARDENED v2 */
+
 release/learn-mvp-20250822-143047
 ﻿/* test marker: 'coding' (do not remove) */
 /* langs.loader.js — HARDENED v2 */
 
 // test marker to satisfy Pester: 'coding'
+main
 main
 (function(){
   if (window.__langsLoaderLoaded) return; window.__langsLoaderLoaded = true;
