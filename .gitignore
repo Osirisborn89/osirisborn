@@ -43,3 +43,4 @@ main
 # Local served snapshot
 served.index.snapshot.html
 backup/
+# local backups & temp staging

@@ -16,3 +16,111 @@ body.route-lang-hasdata #lang-root{display:block}
 .lesson.active{outline:2px solid rgba(110,60,255,.45)}
 @media (max-width:600px){ .lessons{grid-template-columns:1fr} }
 #lang-debug-badge{display:none !important}
+feature/lms-python-mvp-20250822-192625
+
+/* quiz UI */
+.quiz{margin-top:16px;padding:14px;border:1px solid rgba(178,156,255,.25);border-radius:12px}
+.quiz h3{margin:0 0 8px 0;font-size:1.05rem}
+.quiz .q{margin:10px 0 12px 0;padding-bottom:8px;border-bottom:1px dashed rgba(255,255,255,.15)}
+.quiz .q:last-child{border-bottom:0}
+.quiz .qt{margin-bottom:6px}
+.quiz .opt{display:block;margin:4px 0}
+.quiz .check{margin-top:6px;padding:6px 10px;border:1px solid rgba(178,156,255,.35);border-radius:8px;background:transparent;cursor:pointer}
+.quiz .feedback{margin-top:6px;min-height:1em;opacity:.9}
+.quiz .feedback.ok{color:#6de36d}
+.quiz .feedback.bad{color:#ff6b6b}
+.quiz .feedback.warn{color:#ffd166}
+/* xp hud */
+#xp-hud{
+  position:fixed;top:8px;right:8px;z-index:9999;padding:4px 10px;border-radius:10px;
+  background:#1b103f; color:#fff; border:1px solid rgba(178,156,255,.35); font:13px/1.2 system-ui,Segoe UI,Roboto,Arial;
+  box-shadow:0 8px 18px rgba(0,0,0,.25)
+}
+#xp-hud .label{opacity:.85;margin-right:6px}
+/* completion tick */
+.lesson.complete{position:relative;border-color:rgba(110,255,160,.45)}
+.lesson.complete::after{
+  content:"✓"; position:absolute; top:6px; right:8px; font-weight:700;
+}/* locked lesson style */
+.lesson.locked {
+  opacity:.5;
+  cursor:not-allowed;
+  pointer-events:auto;
+}
+.lesson.locked .title { color:#aaa; }
+.lesson.locked:hover { background:rgba(255,255,255,0.05); }
+.lesson .lock { font-size:.9em; opacity:.8; margin-left:4px; }/* lesson content polish */
+.lesson-wrap h2{margin:.2rem 0 0.6rem}
+.lesson-wrap h3{margin:1rem 0 0.5rem;font-size:1.05rem}
+.lesson-wrap p{margin:.4rem 0 .6rem}
+.lesson-wrap pre{margin:.5rem 0 1rem; padding:.6rem .75rem; border:1px solid rgba(178,156,255,.22); border-radius:10px; overflow:auto}
+.lesson-wrap code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+.callout{margin:1rem 0;padding:.75rem .9rem; border:1px solid rgba(255,255,255,.2); border-radius:10px; background:rgba(255,255,255,.03)}
+/* lesson content polish */
+.lesson-wrap h2{margin:.2rem 0 0.6rem}
+.lesson-wrap h3{margin:1rem 0 0.5rem;font-size:1.05rem}
+.lesson-wrap p{margin:.4rem 0 .6rem}
+.lesson-wrap ul{margin:.4rem 0 .8rem;padding-left:1.2rem}
+.lesson-wrap pre{margin:.5rem 0 1rem; padding:.6rem .75rem; border:1px solid rgba(178,156,255,.22); border-radius:10px; overflow:auto}
+.lesson-wrap code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+.callout{margin:1rem 0;padding:.75rem .9rem; border:1px solid rgba(255,255,255,.2); border-radius:10px; background:rgba(255,255,255,.03)}
+
+/* codepad UI */
+.codepad{margin-top:16px;padding:14px;border:1px solid rgba(178,156,255,.25);border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015))}
+.cp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cp-lang{opacity:.85;font-size:.9rem}
+.cp-editor{width:100%;min-height:140px;resize:vertical;border:1px solid rgba(178,156,255,.25);border-radius:8px;padding:10px;background:rgba(0,0,0,.15);color:inherit;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+.cp-actions{display:flex;gap:10px;align-items:center;margin-top:8px}
+.cp-run{padding:6px 10px;border:1px solid rgba(178,156,255,.35);border-radius:8px;background:transparent;cursor:pointer}
+.cp-status{opacity:.85}
+.cp-output{margin-top:8px;min-height:56px;border:1px dashed rgba(178,156,255,.25);border-radius:8px;padding:8px;white-space:pre-wrap}.cp-head strong{letter-spacing:.2px}
+/* quiz styles */
+.quiz-wrap { margin-top:16px; padding:12px; border:1px solid rgba(178,156,255,.22); border-radius:12px; }
+.quiz-wrap h3 { margin:0 0 8px 0; font-size:1.05rem; }
+.quiz-q { margin:8px 0; }
+.quiz-q label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+.quiz-q input[type=radio] {
+  appearance:auto; /* ensure visible in all browsers */
+  inline-size:auto; block-size:auto; /* avoid weird resets */
+}
+.quiz-result { margin-top:8px; font-weight:600; }
+/* quiz styles v2 */
+.quiz-wrap{ margin-top:16px; padding:12px; border:1px solid rgba(178,156,255,.22); border-radius:12px; background:rgba(255,255,255,.02) }
+.quiz-wrap h3{ margin:0 0 8px 0; font-size:1.05rem }
+.quiz-q{ margin:10px 0 }
+.quiz-q label{ display:flex; align-items:center; gap:8px; cursor:pointer }
+.quiz-q input[type=radio]{ appearance:auto; width:18px; height:18px }
+.quiz-result{ margin-top:10px; font-weight:600 }
+
+/* accessible buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:40px; padding:10px 14px; border-radius:10px;
+  font:600 14px/1.2 system-ui,Segoe UI,Roboto,Arial;
+  background:#3c5bfd; color:#fff; border:1px solid rgba(255,255,255,.85);
+  box-shadow:0 4px 14px rgba(60,91,253,.35);
+  cursor:pointer; text-decoration:none; user-select:none;
+}
+.btn:hover{ filter:brightness(1.05) }
+.btn:active{ transform:translateY(1px) }
+.btn:focus-visible{ outline:3px solid #fff; outline-offset:2px; box-shadow:0 0 0 3px rgba(60,91,253,.55), 0 4px 14px rgba(60,91,253,.35) }
+.btn[disabled], .btn[aria-disabled="true"]{ opacity:.55; cursor:not-allowed; filter:grayscale(15%) }
+
+/* hook classes used by loader */
+.quiz-submit{ }
+.dev-complete-btn{ margin-top:12px }
+/* codepad ui v1 */
+.codepad-ui{ margin-top:10px; padding:10px; border:1px solid rgba(178,156,255,.22); border-radius:12px; background:rgba(255,255,255,.02) }
+.codepad-ui .header{ display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:600; font-size:.95rem }
+.codepad-ui textarea{
+  width:100%; min-height:140px; padding:8px; border-radius:8px;
+  border:1px solid rgba(178,156,255,.22); background:rgba(255,255,255,.03);
+  font:13px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; color:inherit;
+}
+.codepad-ui .runrow{ display:flex; align-items:center; gap:8px; margin-top:8px }
+.codepad-ui .output{
+  white-space:pre-wrap; margin-top:8px; padding:8px; min-height:28px;
+  border:1px dashed rgba(178,156,255,.25); border-radius:8px; background:rgba(255,255,255,.015)
+}
+
+main

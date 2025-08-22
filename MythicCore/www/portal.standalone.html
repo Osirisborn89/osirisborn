@@ -66,6 +66,8 @@ body{
 </style>
 <!-- removed: placeholder include -->
 <!-- removed: placeholder include -->
+feature/lms-python-mvp-20250822-192625
+
 release/lms-seeded-tracks-20250822-145508
 
 release/learn-mvp-20250822-143047
@@ -79,6 +81,8 @@ main
   #lang-root { display: block; }
 </style>
 <script id="lang-route-boot">
+feature/lms-python-mvp-20250822-192625
+
 release/lms-seeded-tracks-20250822-145508
 
 
@@ -111,6 +115,7 @@ body.route-lang-hasdata #lang-root { display: block; }
 }
 </style><script id="lang-route-boot">
 main
+main
 (function(){
   // RESERVED includes 'coding' (single-quoted) to satisfy tests
   var RESERVED = {"":1,"coding":1,"languages":1,"all":1,"tracks":1,"hub":1,"index":1,"home":1};
@@ -135,6 +140,8 @@ main
   document.addEventListener("DOMContentLoaded", apply);
 })();
 </script>
+feature/lms-python-mvp-20250822-192625
+
 release/lms-seeded-tracks-20250822-145508
 
   
@@ -147,6 +154,7 @@ release/learn-mvp-20250822-143047
 <script src="js/langs.loader.js" defer></script>
 main
 main
+ main
 </head>
 <body>
   <nav><div class="bar">
@@ -257,6 +265,37 @@ main
   </script>
 
   <!-- removed: lms.chrome.js -->
+feature/lms-python-mvp-20250822-192625
+
+  <script src="js/lms.chrome.js" defer></script>
+<script id="osb-mini-router">/* OSB_MINI_ROUTER v2 */
+(function(){
+  try{
+    var app=document.getElementById('app')||document.querySelector('main#app');
+    if(!app) return;
+    var map={ home:'tpl-home', learn:'tpl-learn', 'learn/coding':'tpl-learn-coding' };
+    function tpl(k){ var id=map[k]||map.home; var t=document.getElementById(id); return t?t.innerHTML:'<section class="view"><div class="hero"><h2>Loading…</h2></div></section>'; }
+    function key(){
+      var h=(location.hash||'#/home').replace(/^#\//,''); if(!h) return 'home';
+      if(map[h]) return h;
+      if(h.indexOf('learn/coding')===0) return 'learn/coding';
+      if(h.indexOf('learn')===0) return 'learn';
+      return 'home';
+    }
+    function render(){
+      var k=key();
+      app.innerHTML=tpl(k);
+      document.querySelectorAll('.tab').forEach(function(el){ el.classList.toggle('active', el.getAttribute('data-tab')===k.split('/')[0]); });
+      try{ document.title='Black Pyramid - '+(k.split('/')[0]||'home').replace(/^\w/,function(c){return c.toUpperCase()}); }catch(e){}
+      window.dispatchEvent(new Event('portal:ready'));
+    }
+    window.addEventListener('hashchange', function(){ requestAnimationFrame(render); });
+    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', function(){ requestAnimationFrame(render); }); } else { requestAnimationFrame(render); }
+  }catch(e){ console.error('mini-router error', e); }
+})();
+</script>
+
+
 
   <script src="js/lms.chrome.js" defer></script>
 <script id="osb-mini-router">/* OSB_MINI_ROUTER v2 */
@@ -394,16 +433,7 @@ release/lms-seeded-tracks-20250822-145508
 </html>
 
 
-
-
-
-
-
-
-
-
-
-
+main
 <script id="osb-minispa">
 (function(){
   var app = document.getElementById("app");
@@ -475,9 +505,15 @@ release/lms-seeded-tracks-20250822-145508
     if (!grid) return;
     if (grid.getAttribute('data-enhanced') === '1') return;
     grid.setAttribute('data-enhanced','1');
+feature/lms-python-mvp-20250822-192625
 
     var frag = document.createDocumentFragment();
 
+
+
+    var frag = document.createDocumentFragment();
+
+main
     var back = document.createElement('a'); back.className='tile'; back.href='#/learn';
     var bt = document.createElement('div'); bt.textContent='Back to Learning';
     back.appendChild(bt); frag.appendChild(back);
@@ -509,6 +545,20 @@ release/lms-seeded-tracks-20250822-145508
 </script>
 </body>
 </html>
+feature/lms-python-mvp-20250822-192625
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -541,12 +591,3 @@ release/learn-mvp-20250822-143047
 
 
 main
-
-
-
-
-
-
-
-
-
