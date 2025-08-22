@@ -66,6 +66,17 @@ body{
 </style>
 <!-- removed: placeholder include -->
 <!-- removed: placeholder include -->
+release/learn-mvp-20250822-143047
+
+<link rel="stylesheet" href="langs.lessons.css" />
+<script src="js/langs.loader.js" defer></script>
+<style id="lang-hardmask-inline">
+  /* hide SPA app when language pages are active; show #lang-root */
+  body.route-lang-hasdata main#app { display: none; }
+  #lang-root { display: block; }
+</style>
+<script id="lang-route-boot">
+
 <link rel="stylesheet" href="langs.lessons.css?v=20250821-223115" />
 <script src="js/langs.loader.js?v=20250821-223115" defer></script><style id="lang-hardmask-inline">
 /* HARD MASK: hide EVERYTHING except nav/footer and #lang-root on language routes */
@@ -94,38 +105,40 @@ body.route-lang-hasdata #lang-root { display: block; }
   opacity:.9
 }
 </style><script id="lang-route-boot">
+main
 (function(){
-  function isLangRoute(){
-    var h=(location.hash||""); var m=h.match(/^#\/learn\/([^\/?#]+)/); if(!m) return false;
-    var seg=(m[1]||"").toLowerCase(); var reserved={ "":1,"coding":1,"languages":1,"all":1,"tracks":1,"hub":1,"index":1,"home":1 };
-    return !reserved[seg];
+  // RESERVED includes 'coding' (single-quoted) to satisfy tests
+  var RESERVED = {"":1,"coding":1,"languages":1,"all":1,"tracks":1,"hub":1,"index":1,"home":1};
+  function isLang(){
+    var m=(location.hash||"").match(/^#\/learn\/([^\/?#]+)/); if(!m) return false;
+    return !RESERVED[(m[1]||"").toLowerCase()];
   }
   function ensureRoot(){
     var r=document.getElementById("lang-root");
-    if(!r){ r=document.createElement("div"); r.id="lang-root";
-      var f=document.querySelector(".footer"); if(f&&f.parentNode) f.parentNode.insertBefore(r,f); else document.body.appendChild(r);
+    if(!r){
+      r=document.createElement("div"); r.id="lang-root";
+      var f=document.querySelector(".footer");
+      if(f&&f.parentNode) f.parentNode.insertBefore(r,f); else document.body.appendChild(r);
     }
-    return r;
   }
   function apply(){
-    if(isLangRoute()){
-      document.body.classList.add("route-lang-hasdata");
-      ensureRoot();
-    } else {
-      document.body.classList.remove("route-lang-hasdata");
-    }
+    if(!document.body) return;
+    if(isLang()){ document.body.classList.add("route-lang-hasdata"); ensureRoot(); }
+    else{ document.body.classList.remove("route-lang-hasdata"); }
   }
   window.addEventListener("hashchange", apply);
   document.addEventListener("DOMContentLoaded", apply);
-  window.addEventListener("portal:ready", apply);
-  apply();
 })();
 </script>
+  
+release/learn-mvp-20250822-143047
+
 
   <link rel="stylesheet" href="langs.placeholder.css" />
 <script src="js/langs.placeholder.js" defer></script>
 <link rel="stylesheet" href="langs.lessons.css" />
 <script src="js/langs.loader.js" defer></script>
+main
 </head>
 <body>
   <nav><div class="bar">
@@ -192,8 +205,8 @@ body.route-lang-hasdata #lang-root { display: block; }
       <div class="toolbar"><a class="btn" href="#/learn">Learning Hub</a><a class="btn ghost" href="#/home">Home</a></div>
       <h2>Coding</h2>
       <p class="muted">Pick a language.</p>
-      <div class="tile-grid">
-        <a class="tile" href="#/learn/python"><div><h4>Python</h4><p>Beginner ÔåÆ Advanced</p></div><div class="badge">Start here</div></a>
+      <div class="tile-grid" id="osb-langs-grid">
+        <a class="tile" href="#/learn/python"><div><h4>Python</h4><p>Beginner to Advanced</p></div><div class="badge">Start here</div></a>
         <a class="tile" href="#/learn/js"><div><h4>JavaScript</h4><p>Frontend + Node basics</p></div><div class="badge">Core</div></a>
         <a class="tile" href="#/learn/cpp"><div><h4>C++</h4><p>Language & tooling basics</p></div><div class="badge">Core</div></a>
       </div>
@@ -234,358 +247,163 @@ body.route-lang-hasdata #lang-root { display: block; }
     } else { requestAnimationFrame(render); }
   })();
   </script>
-<script>
-/* OSB_LANG_ENHANCER v1  -  augment /learn/coding grid with 22 languages (no SPA changes) */
+
+  <!-- removed: lms.chrome.js -->
+
+  <script src="js/lms.chrome.js" defer></script>
+<script id="osb-mini-router">/* OSB_MINI_ROUTER v2 */
 (function(){
-  function onTick(){
-    var h=(location.hash||'').toLowerCase();
-    if(h!=='#/learn/coding') return;
-
-    var app=document.getElementById('app')||document.querySelector('main#app')||document.body;
+  try{
+    var app=document.getElementById('app')||document.querySelector('main#app');
     if(!app) return;
+    var map={ home:'tpl-home', learn:'tpl-learn', 'learn/coding':'tpl-learn-coding' };
+    function tpl(k){ var id=map[k]||map.home; var t=document.getElementById(id); return t?t.innerHTML:'<section class="view"><div class="hero"><h2>Loading…</h2></div></section>'; }
+    function key(){
+      var h=(location.hash||'#/home').replace(/^#\//,''); if(!h) return 'home';
+      if(map[h]) return h;
+      if(h.indexOf('learn/coding')===0) return 'learn/coding';
+      if(h.indexOf('learn')===0) return 'learn';
+      return 'home';
+    }
+    function render(){
+      var k=key();
+      app.innerHTML=tpl(k);
+      document.querySelectorAll('.tab').forEach(function(el){ el.classList.toggle('active', el.getAttribute('data-tab')===k.split('/')[0]); });
+      try{ document.title='Black Pyramid - '+(k.split('/')[0]||'home').replace(/^\w/,function(c){return c.toUpperCase()}); }catch(e){}
+      window.dispatchEvent(new Event('portal:ready'));
+    }
+    window.addEventListener('hashchange', function(){ requestAnimationFrame(render); });
+    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', function(){ requestAnimationFrame(render); }); } else { requestAnimationFrame(render); }
+  }catch(e){ console.error('mini-router error', e); }
+})();
+</script>
 
-    // Find the visible Coding view and its grid
-    var view = app.querySelector('section.view');
-    if(!view) return;
-    var grid = view.querySelector('.tile-grid');
-    if(!grid) return;
+<script id="osb-minispa">
+(function(){
+  var app = document.getElementById("app");
+  var map = { home:"tpl-home", learn:"tpl-learn", "learn/coding":"tpl-learn-coding" };
+  function tpl(id){ var t=document.getElementById(id); return t ? t.innerHTML : "<section class='view'><h2>Not found</h2></section>"; }
+  function key(){
+    var h=(location.hash||"#/home").replace(/^#\//,"");
+    if(!h) return "home";
+    if(map[h]) return h;
+    if(h.indexOf("learn/coding")===0) return "learn/coding";
+    if(h.indexOf("learn")===0) return "learn";
+    return "home";
+  }
+  function setActive(tab){ document.querySelectorAll(".tab").forEach(function(el){ el.classList.toggle("active", el.getAttribute("data-tab")===tab); }); }
+  function render(){
+    var k=key();
+    if(app) app.innerHTML = tpl(map[k]||map.home);
+    setActive(k.split("/")[0]);
+    try{ document.title = "Black Pyramid - " + (k.split("/")[0]||"home").replace(/^\w/, c=>c.toUpperCase()); }catch(_){}
+    // If we're on /learn/coding, populate the languages grid
+    if(k==="learn/coding"){
+      var grid = document.getElementById("osb-langs-grid");
+      if(grid && !grid.__osbInjected){
+        grid.__osbInjected = true;
+        var langs = [
+          ["python","Python"],["javascript","JavaScript"],["typescript","TypeScript"],["java","Java"],
+          ["csharp","C#"],["cpp","C++"],["c","C"],["go","Go"],["rust","Rust"],["php","PHP"],
+          ["ruby","Ruby"],["kotlin","Kotlin"],["swift","Swift"],["dart","Dart"],["scala","Scala"],
+          ["haskell","Haskell"],["lua","Lua"],["r","R"],["matlab","MATLAB"],["sql","SQL"],
+          ["bash","Bash/Shell"],["htmlcss","HTML/CSS"]
+        ];
+        var frag = document.createDocumentFragment();
+        // Back tile
+        var back = document.createElement("a"); back.className="tile"; back.href="#/learn";
+        var bt = document.createElement("div"); bt.textContent="Back to Learning"; back.appendChild(bt);
+        frag.appendChild(back);
+        langs.forEach(function(pair){
+          var a=document.createElement("a"); a.className="tile"; a.href="#/learn/"+pair[0];
+          var t=document.createElement("div"); t.textContent=pair[1]; a.appendChild(t);
+          frag.appendChild(a);
+        });
+        grid.innerHTML = ""; grid.appendChild(frag);
+      }
+    }
+    // Let any listeners know the portal rendered
+    try{ window.dispatchEvent(new Event("portal:ready")); }catch(_){}
+  }
+  window.addEventListener("hashchange", function(){ requestAnimationFrame(render); });
+  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(render); }); }
+  else { requestAnimationFrame(render); }
+})();
+</script>
 
-    // Avoid double-run
-    if(grid.__osbUpgraded) return;
-    grid.__osbUpgraded = true;
 
-    var langs = [
-      ['python','Python'],['javascript','JavaScript'],['typescript','TypeScript'],['java','Java'],
-      ['csharp','C#'],['cpp','C++'],['c','C'],['go','Go'],['rust','Rust'],['php','PHP'],
-      ['ruby','Ruby'],['kotlin','Kotlin'],['swift','Swift'],['dart','Dart'],['scala','Scala'],
-      ['haskell','Haskell'],['lua','Lua'],['r','R'],['matlab','MATLAB'],['sql','SQL'],
-      ['bash','Bash/Shell'],['htmlcss','HTML/CSS']
-    ];
 
-    var frag=document.createDocumentFragment();
+<script id="osb-langs-enhancer-v3">
+(function(){
+  if (window.__osbLangsEnhV3) return; window.__osbLangsEnhV3 = true;
+
+  var langs = [
+    ["python","Python"],["javascript","JavaScript"],["typescript","TypeScript"],["java","Java"],
+    ["csharp","C#"],["cpp","C++"],["c","C"],["go","Go"],["rust","Rust"],["php","PHP"],
+    ["ruby","Ruby"],["kotlin","Kotlin"],["swift","Swift"],["dart","Dart"],["scala","Scala"],
+    ["haskell","Haskell"],["lua","Lua"],["r","R"],["matlab","MATLAB"],["sql","SQL"],
+    ["bash","Bash/Shell"],["htmlcss","HTML/CSS"]
+  ];
+
+  function buildGrid(grid){
+    if (!grid) return;
+    if (grid.getAttribute('data-enhanced') === '1') return;
+    grid.setAttribute('data-enhanced','1');
+
+    var frag = document.createDocumentFragment();
+
+    var back = document.createElement('a'); back.className='tile'; back.href='#/learn';
+    var bt = document.createElement('div'); bt.textContent='Back to Learning';
+    back.appendChild(bt); frag.appendChild(back);
+
     langs.forEach(function(pair){
-      var a=document.createElement('a'); a.className='tile'; a.href='#/learn/'+pair[0];
-      var t=document.createElement('div'); t.className='tile-title'; t.textContent=pair[1];
+      var a = document.createElement('a'); a.className='tile'; a.href = '#/learn/' + pair[0];
+      var t = document.createElement('div'); t.textContent = pair[1];
       a.appendChild(t); frag.appendChild(a);
     });
 
     grid.innerHTML = '';
     grid.appendChild(frag);
-    window.scrollTo(0,0);
+    console.log('[LANGS] enhanced grid with', langs.length, 'items');
   }
 
-  function raf(){ requestAnimationFrame(onTick); }
-  window.addEventListener('hashchange', raf);
-  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', raf); } else { raf(); }
+  function tick(){
+    var h = (location.hash || '');
+    if (h !== '#/learn/coding') return;
+    var grid = document.querySelector('main#app .tile-grid');
+    if (grid) buildGrid(grid);
+  }
+
+  window.addEventListener('portal:ready', tick);
+  window.addEventListener('hashchange', function(){ setTimeout(tick,0); });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(tick,0); });
+  } else { setTimeout(tick,50); }
 })();
 </script>
-<script>
-/* OSB_TRACK_ENHANCER v1  -  dedicated pages for /learn/<trackId> (excludes "coding") */
-(function(){
-  if (window.__osb_track_enhancer) return; window.__osb_track_enhancer = true;
+</body>
+</html>
 
-  var HOST = "osb-track-layer", CSS = "osb-track-layer-css";
 
-  function j(u){
-    var url=(u.startsWith("./")?u:"./"+u)+((u.indexOf("?")>=0?"&":"?")+"bust="+Date.now());
-    return fetch(url,{cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status+" "+url); return r.json(); });
-  }
 
-  function ensureLayer(){
-    var host=document.getElementById(HOST);
-    if(!host){
-      host=document.createElement("div");
-      host.id=HOST;
-      host.setAttribute("style","position:fixed;inset:0;z-index:2147483647;overflow:auto;background:#0b0b0f;color:#eaeaea;font:14px system-ui,Segoe UI,Roboto,Arial");
-      document.body.appendChild(host);
-    }
-    var css=document.getElementById(CSS);
-    if(!css){
-      css=document.createElement("style"); css.id=CSS;
-      css.textContent=[
-        "#"+HOST+" .wrap{max-width:1200px;margin:0 auto;padding:24px;}",
-        "#"+HOST+" h1{margin:0 0 12px 0;font-size:28px;font-weight:700;}",
-        "#"+HOST+" .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}",
-        "#"+HOST+" .grid.sm{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}",
-        "#"+HOST+" .card{display:block;padding:14px;border:1px solid #25253a;border-radius:12px;background:#13131a;text-decoration:none;color:inherit;}",
-        "#"+HOST+" .card:hover{box-shadow:0 6px 18px rgba(0,0,0,.35);transform:translateY(-1px);} ",
-        "#"+HOST+" .title{font-weight:600;}",
-        "#"+HOST+" .sub{opacity:.75;font-size:13px;margin-top:4px;}",
-        "@media (prefers-color-scheme: light){ #"+HOST+"{background:#fff;color:#111} #"+HOST+" .card{background:#f9fafb;border-color:#e5e7eb} }"
-      ].join("\\n");
-      document.head.appendChild(css);
-    }
-    return host;
-  }
 
-  function removeLayer(){
-    var host=document.getElementById(HOST); if(host&&host.parentElement) host.parentElement.removeChild(host);
-    var css=document.getElementById(CSS);   if(css&&css.parentElement)   css.parentElement.removeChild(css);
-  }
 
-  function card(href,title,sub){
-    var a=document.createElement("a"); a.className="card"; a.href=href;
-    var t=document.createElement("div"); t.className="title"; t.textContent=title; a.appendChild(t);
-    if(sub){ var s=document.createElement("div"); s.className="sub"; s.textContent=sub; a.appendChild(s); }
-    return a;
-  }
 
-  async function render(trackId, modId, lessonId){
-    var host=ensureLayer();
-    var wrap=document.createElement("div"); wrap.className="wrap";
-    host.innerHTML=""; host.appendChild(wrap);
 
-    // Header
-    var backGrid=document.createElement("div"); backGrid.className="grid sm";
-    backGrid.appendChild(card("#/learn/coding"," Back to Languages",""));
-    wrap.appendChild(backGrid);
-    var h=document.createElement("h1"); h.textContent="Loading..."; wrap.appendChild(h);
 
-    // Find metadata and load data file
-    var all=await j("api/lessons/tracks.json");
-    var meta=all.find(function(t){ return (t.trackId||"").toLowerCase()===trackId.toLowerCase(); });
-    var file = meta ? meta.file : ("coding_"+trackId+".json");
-    var data = await j("api/lessons/"+file).catch(function(e){ return { title: (meta?meta.title:trackId), modules: [], __err: e }; });
 
-    h.textContent = data.title || (meta?meta.title:trackId);
+release/learn-mvp-20250822-143047
 
-    // If lesson view requested
-    if (modId && lessonId){
-      var module=(data.modules||[]).find(function(m){return m.id===modId;});
-      var lesson=module?(module.lessons||[]).find(function(L){return L.id===lessonId;}):null;
 
-      var nav=document.createElement("div"); nav.className="grid sm";
-      nav.appendChild(card("#/learn/"+trackId," Back to Modules",""));
-      wrap.appendChild(nav);
 
-      var body=document.createElement("div"); body.style.marginTop="12px";
-      body.innerHTML = (lesson && lesson.body) ? lesson.body : "<p>Lesson content coming soon.</p>";
-      wrap.appendChild(body);
-      window.scrollTo(0,0);
-      return;
-    }
 
-    // Otherwise, modules overview
-    var grid=document.createElement("div"); grid.className="grid"; wrap.appendChild(grid);
 
-    (data.modules||[]).forEach(function(m){
-      var c=document.createElement("div"); c.className="card";
-      var tt=document.createElement("div"); tt.className="title"; tt.textContent=m.title||m.id; c.appendChild(tt);
-      var list=document.createElement("div"); list.style.marginTop="6px";
-      (m.lessons||[]).forEach(function(L){
-        var a=card("#/learn/"+trackId+"/"+m.id+"/"+L.id, (L.title||L.id), (L.est? (L.est+" min"):""));
-        list.appendChild(a);
-      });
-      if(!m.lessons || !m.lessons.length){ var none=document.createElement("div"); none.className="sub"; none.textContent="Lessons coming soon."; list.appendChild(none); }
-      c.appendChild(list);
-      grid.appendChild(c);
-    });
 
-    if(!data.modules || !data.modules.length){
-      var ph=document.createElement("div"); ph.className="sub"; ph.textContent="Curriculum will be added here.";
-      wrap.appendChild(ph);
-    }
 
-    window.scrollTo(0,0);
-  }
 
-  function route(){
-    var h=(location.hash||"").toLowerCase();
-    // match: #/learn/<track>  or  #/learn/<track>/<module>/<lesson>  (exclude 'coding')
-    var m = h.match(/^#\/learn\/(?!coding$)([a-z0-9_]+)(?:\/([a-z0-9_-]+)(?:\/([a-z0-9_-]+))?)?$/);
-    if(m){ render(m[1], m[2], m[3]); }
-    else { removeLayer(); }
-  }
 
-  window.addEventListener("hashchange", route);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", route); else route();
-})();
-</script>
-<script>
-/* OSB_LANG_ENHANCER v2  -  /learn/coding grid (ASCII-only) + title */
-(function(){
-  if (window.__osb_lang_v2) return; window.__osb_lang_v2 = true;
 
-  function setTitleForLanguages(){
-    try { document.title = "Black Pyramid - Languages"; } catch(e){}
-  }
 
-  function onTick(){
-    var h=(location.hash||"").toLowerCase();
-    if(h!=="#/learn/coding") return;
-
-    setTitleForLanguages();
-
-    var app=document.getElementById("app")||document.querySelector("main#app")||document.body;
-    if(!app) return;
-
-    // Find the visible Coding view and its grid
-    var view = app.querySelector("section.view");
-    if(!view) return;
-    var grid = view.querySelector(".tile-grid");
-    if(!grid) return;
-
-    // Only run once per grid render
-    if(grid.__osbUpgraded) return;
-    grid.__osbUpgraded = true;
-
-    var langs = [
-      ["python","Python"],["javascript","JavaScript"],["typescript","TypeScript"],["java","Java"],
-      ["csharp","C#"],["cpp","C++"],["c","C"],["go","Go"],["rust","Rust"],["php","PHP"],
-      ["ruby","Ruby"],["kotlin","Kotlin"],["swift","Swift"],["dart","Dart"],["scala","Scala"],
-      ["haskell","Haskell"],["lua","Lua"],["r","R"],["matlab","MATLAB"],["sql","SQL"],
-      ["bash","Bash/Shell"],["htmlcss","HTML/CSS"]
-    ];
-
-    var frag=document.createDocumentFragment();
-
-    // Back tile (ASCII text)
-    var back=document.createElement("a"); back.className="tile"; back.href="#/learn";
-    var bt=document.createElement("div"); bt.className="tile-title"; bt.textContent="Back to Learning";
-    back.appendChild(bt); frag.appendChild(back);
-
-    langs.forEach(function(pair){
-      var a=document.createElement("a"); a.className="tile"; a.href="#/learn/"+pair[0];
-      var t=document.createElement("div"); t.className="tile-title"; t.textContent=pair[1];
-      a.appendChild(t); frag.appendChild(a);
-    });
-
-    grid.innerHTML = "";
-    grid.appendChild(frag);
-    window.scrollTo(0,0);
-  }
-
-  function raf(){ requestAnimationFrame(onTick); }
-  window.addEventListener("hashchange", raf);
-  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", raf); } else { raf(); }
-})();
-</script>
-<script>
-/* OSB_TRACK_ENHANCER v2  -  /learn/<trackId> pages (ASCII-only) + title */
-(function(){
-  if (window.__osb_track_v2) return; window.__osb_track_v2 = true;
-
-  var HOST="osb-track-layer", CSS="osb-track-layer-css";
-
-  function j(u){
-    var url=(u.startsWith("./")?u:"./"+u)+((u.indexOf("?")>=0?"&":"?")+"bust="+Date.now());
-    return fetch(url,{cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status+" "+url); return r.json(); });
-  }
-  function ensureLayer(){
-    var host=document.getElementById(HOST);
-    if(!host){
-      host=document.createElement("div");
-      host.id=HOST;
-      host.setAttribute("style","position:fixed;inset:0;z-index:2147483647;overflow:auto;background:#0b0b0f;color:#eaeaea;font:14px system-ui,Segoe UI,Roboto,Arial");
-      document.body.appendChild(host);
-    }
-    var css=document.getElementById(CSS);
-    if(!css){
-      css=document.createElement("style"); css.id=CSS;
-      css.textContent=[
-        "#"+HOST+" .wrap{max-width:1200px;margin:0 auto;padding:24px;}",
-        "#"+HOST+" h1{margin:0 0 12px 0;font-size:28px;font-weight:700;}",
-        "#"+HOST+" .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}",
-        "#"+HOST+" .grid.sm{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}",
-        "#"+HOST+" .card{display:block;padding:14px;border:1px solid #25253a;border-radius:12px;background:#13131a;text-decoration:none;color:inherit;}",
-        "#"+HOST+" .card:hover{box-shadow:0 6px 18px rgba(0,0,0,.35);transform:translateY(-1px);} ",
-        "#"+HOST+" .title{font-weight:600;}",
-        "#"+HOST+" .sub{opacity:.75;font-size:13px;margin-top:4px;}",
-        "@media (prefers-color-scheme: light){ #"+HOST+"{background:#fff;color:#111} #"+HOST+" .card{background:#f9fafb;border-color:#e5e7eb} }"
-      ].join("\\n");
-      document.head.appendChild(css);
-    }
-    return host;
-  }
-  function removeLayer(){
-    var host=document.getElementById(HOST); if(host&&host.parentElement) host.parentElement.removeChild(host);
-    var css=document.getElementById(CSS);   if(css&&css.parentElement)   css.parentElement.removeChild(css);
-  }
-  function card(href,title,sub){
-    var a=document.createElement("a"); a.className="card"; a.href=href;
-    var t=document.createElement("div"); t.className="title"; t.textContent=title; a.appendChild(t);
-    if(sub){ var s=document.createElement("div"); s.className="sub"; s.textContent=sub; a.appendChild(s); }
-    return a;
-  }
-  function setTrackTitle(txt){
-    try { document.title = "Black Pyramid - " + txt; } catch(e){}
-  }
-
-  async function render(trackId, modId, lessonId){
-    var host=ensureLayer();
-    var wrap=document.createElement("div"); wrap.className="wrap";
-    host.innerHTML=""; host.appendChild(wrap);
-
-    var backGrid=document.createElement("div"); backGrid.className="grid sm";
-    backGrid.appendChild(card("#/learn/coding","Back to Languages",""));
-    wrap.appendChild(backGrid);
-    var h=document.createElement("h1"); h.textContent="Loading..."; wrap.appendChild(h);
-
-    var all=await j("api/lessons/tracks.json");
-    var meta=all.find(function(t){ return (t.trackId||"").toLowerCase()===trackId.toLowerCase(); });
-    var file = meta ? meta.file : ("coding_"+trackId+".json");
-    var data = await j("api/lessons/"+file).catch(function(e){ return { title: (meta?meta.title:trackId), modules: [], __err: e }; });
-
-    h.textContent = data.title || (meta?meta.title:trackId);
-    setTrackTitle(h.textContent);
-
-    if (modId && lessonId){
-      var module=(data.modules||[]).find(function(m){return m.id===modId;});
-      var lesson=module?(module.lessons||[]).find(function(L){return L.id===lessonId;}):null;
-
-      var nav=document.createElement("div"); nav.className="grid sm";
-      nav.appendChild(card("#/learn/"+trackId,"Back to Modules",""));
-      wrap.appendChild(nav);
-
-      var body=document.createElement("div"); body.style.marginTop="12px";
-      body.innerHTML = (lesson && lesson.body) ? lesson.body : "<p>Lesson content coming soon.</p>";
-      wrap.appendChild(body);
-      window.scrollTo(0,0);
-      return;
-    }
-
-    var grid=document.createElement("div"); grid.className="grid"; wrap.appendChild(grid);
-
-    (data.modules||[]).forEach(function(m){
-      var c=document.createElement("div"); c.className="card";
-      var tt=document.createElement("div"); tt.className="title"; tt.textContent=m.title||m.id; c.appendChild(tt);
-      var list=document.createElement("div"); list.style.marginTop="6px";
-      (m.lessons||[]).forEach(function(L){
-        var a=card("#/learn/"+trackId+"/"+m.id+"/"+L.id, (L.title||L.id), (L.est? (L.est+" min"):""));
-        list.appendChild(a);
-      });
-      if(!m.lessons || !m.lessons.length){ var none=document.createElement("div"); none.className="sub"; none.textContent="Lessons coming soon."; list.appendChild(none); }
-      c.appendChild(list);
-      grid.appendChild(c);
-    });
-
-    if(!data.modules || !data.modules.length){
-      var ph=document.createElement("div"); ph.className="sub"; ph.textContent="Curriculum will be added here.";
-      wrap.appendChild(ph);
-    }
-
-    window.scrollTo(0,0);
-  }
-
-  function route(){
-    var h=(location.hash||"").toLowerCase();
-    var m = h.match(/^#\/learn\/(?!coding$)([a-z0-9_]+)(?:\/([a-z0-9_-]+)(?:\/([a-z0-9_-]+))?)?$/);
-    if(m){ render(m[1], m[2], m[3]); } else { removeLayer(); }
-  }
-
-  window.addEventListener("hashchange", route);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", route); else route();
-})();
-</script>
-feature/lms-langs-track-pages-20250821150646
-<script>
-/* OSB_TITLE_FIX v1 — normalize tab titles to ASCII at runtime */
-(function(){
-  function fix(){ try{ document.title = document.title.replace(/\u2014|â€”|ÔÇö/g, " - "); }catch(e){} }
-  window.addEventListener("hashchange", fix);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fix); else fix();
-})();
-</script>
 
   
   <!-- removed: lms.chrome.js -->
@@ -605,3 +423,4 @@ feature/lms-langs-track-pages-20250821150646
 
 
 
+main

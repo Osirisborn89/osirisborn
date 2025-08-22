@@ -1,97 +1,18 @@
-feature/learn-mvp-harden
+﻿/* langs.lessons.css (safe + gating) */
 #lang-root{display:none;max-width:960px;margin:0 auto;padding:24px 20px 64px}
 body.route-lang-hasdata #lang-root{display:block}
-#lang-root h1{font-size:2rem;line-height:1.2;margin:8px 0 12px}
-#lang-root h2{font-size:1.2rem;line-height:1.35;margin:18px 0 8px;opacity:.9}
-#lang-root .lang-meta{opacity:.8;margin-bottom:8px}
-#lang-root .module{border-top:1px solid var(--line,rgba(255,255,255,.1));padding-top:12px;margin-top:12px}
-#lang-root .module.collapsed .lessons{display:none}
-#lang-root .module h2{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
-#lang-root .module h2::before{content:"▾";display:inline-block;transform:translateY(-1px)}
-#lang-root .module.collapsed h2::before{content:"▸"}
-#lang-root .lessons{list-style:none;padding:0;margin:6px 0 0}
-#lang-root .lesson{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;margin:8px 0;cursor:pointer}
-#lang-root .lesson:hover{background:rgba(255,255,255,.05)}
-#lang-root .lesson:focus{outline:2px solid rgba(255,255,255,.25);outline-offset:2px}
-#lang-root .lesson.active{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.25)}
-#lang-root .lesson .title{font-weight:600}
-#lang-root .lesson .mins{opacity:.75}
-#lang-content{margin-top:18px;padding:16px 14px;border:1px solid rgba(255,255,255,.1);border-radius:12px}
-#lang-content .empty{opacity:.7;font-style:italic}
-
-/* lang-route-visibility: hide legacy siblings + restore purple theme */
-body.route-lang-hasdata> *:not(nav):not(#lang-root):not(.footer),
-
-/* lang-route-theme */
-  background:
-    radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12) 0%, rgba(110,60,255,0) 60%),
-    radial-gradient(1000px 600px at 110% 10%, rgba(0,200,255,.10) 0%, rgba(0,200,255,0) 55%),
-    linear-gradient(180deg, rgba(14,11,31,1) 0%, rgba(10,9,24,1) 100%);
-  background-attachment:fixed,fixed,fixed;min-height:100vh
-}
-
-  
-/* hard-mask-only-lang-root: hide ALL legacy DOM except nav/footer and our #lang-root */
-body.route-lang-hasdata *:not(nav):not(nav *):not(.footer):not(.footer *):not(#lang-root):not(#lang-root *) {
-  display: none !important;
-}
-
-/* ensure #lang-root is visible and themed on language routes */
-#lang-root { display: block; max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
-body.route-lang-hasdata {
-
-  #lang-root { display:none; max-width:960px; margin:0 auto; padding:24px 20px 64px; }
-body.route-lang-hasdata #lang-root { display:block; }
-
-#lang-root h1 { font-size:2rem; line-height:1.2; margin:8px 0 12px; }
-#lang-root h2 { font-size:1.2rem; line-height:1.35; margin:18px 0 8px; opacity:.9; }
-#lang-root .lang-meta { opacity:.8; margin-bottom:8px; }
-
-#lang-root .module { border-top:1px solid var(--line, rgba(255,255,255,.1)); padding-top:12px; margin-top:12px; }
-#lang-root .lessons { list-style:none; padding:0; margin:6px 0 0; }
-#lang-root .lesson { display:flex; justify-content:space-between; gap:16px; padding:10px 12px; border:1px solid rgba(255,255,255,.08); border-radius:10px; margin:8px 0; cursor:pointer; }
-#lang-root .lesson:hover { background:rgba(255,255,255,.05); }
-#lang-root .lesson .title { font-weight:600; }
-#lang-root .lesson .mins { opacity:.75; }
-
-#lang-content { margin-top:18px; padding:16px 14px; border:1px solid rgba(255,255,255,.1); border-radius:12px; }
-#lang-content .empty { opacity:.7; font-style:italic; }
-  
-/* lang-route-visibility: hide legacy siblings + restore purple theme */
-body.route-lang-hasdata > *:not(nav):not(#lang-root):not(.footer),
-body.route-lang-placeholder > *:not(nav):not(#lang-placeholder):not(#lang-root):not(.footer) {
-  display: none !important;
-}
-
-/* lang-route-theme: safe purple gradient, page-height */
-body.route-lang-hasdata,
-body.route-lang-placeholder {
-main
-  background:
-    radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12) 0%, rgba(110,60,255,0) 60%),
-    radial-gradient(1000px 600px at 110% 10%, rgba(0,200,255,.10) 0%, rgba(0,200,255,0) 55%),
-    linear-gradient(180deg, rgba(14,11,31,1) 0%, rgba(10,9,24,1) 100%);
-  background-attachment: fixed, fixed, fixed;
-  min-height: 100vh;
-}
-feature/learn-mvp-harden
-#lang-root { display: none; max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
-body.route-lang-hasdata #lang-root { display: block; }
-/* ux-polish v2 */
-#lang-root h1{font-size:2rem;line-height:1.2;margin:8px 0 6px}
-#lang-root .lang-stats{opacity:.8;margin-bottom:12px;font-size:.95rem}
-#lang-root .module{border-top:1px solid rgba(255,255,255,.12);padding-top:12px;margin-top:14px}
-#lang-root .module h2{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:1.1rem;margin:0 0 8px}
-#lang-root .module h2::before{content:"▾";display:inline-block;transform:translateY(-1px)}
-#lang-root .module.collapsed h2::before{content:"▸"}
-#lang-root .lessons{list-style:none;padding:0;margin:6px 0 0}
-#lang-root .lesson{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border:1px solid rgba(255,255,255,.10);border-radius:10px;margin:8px 0;cursor:pointer}
-#lang-root .lesson:hover{background:rgba(255,255,255,.05)}
-#lang-root .lesson:focus{outline:2px solid rgba(255,255,255,.25);outline-offset:2px}
-#lang-root .lesson.active{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.25)}
-#lang-root .lesson .title{font-weight:600}
-#lang-root .lesson .mins{opacity:.75}
-#lang-content{margin-top:18px;padding:16px 14px;border:1px solid rgba(255,255,255,.12);border-radius:12px}
-#lang-content .empty{opacity:.7;font-style:italic}
-
-main
+#lang-debug-badge{position:fixed;bottom:8px;right:8px;z-index:9999;padding:4px 6px;border-radius:6px;
+  background:#2d1b69;color:#fff;border:1px solid rgba(255,255,255,.25);font:12px system-ui,Segoe UI,Roboto,Arial;opacity:.9}
+#lang-root .lang-meta{margin-bottom:8px}
+#lang-root h1{margin:0 0 10px 0;font-size:clamp(1.6rem,3vw,2.2rem)}
+#lang-root .empty{opacity:.9}
+.module{margin:14px 0;padding:14px;border:1px solid rgba(178,156,255,.22);border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015))}
+.module h2{margin:0 0 8px 0;font-size:1.15rem;cursor:pointer}
+.lessons{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.lesson{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid rgba(178,156,255,.22);border-radius:10px;cursor:pointer}
+.lesson:hover{border-color:rgba(110,60,255,.35);box-shadow:0 8px 22px rgba(110,60,255,.18)}
+.lesson .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px}
+.lesson .mins{opacity:.8;font-size:.9rem}
+.lesson.active{outline:2px solid rgba(110,60,255,.45)}
+@media (max-width:600px){ .lessons{grid-template-columns:1fr} }
+#lang-debug-badge{display:none !important}
