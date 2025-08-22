@@ -16,6 +16,7 @@ body.route-lang-hasdata #lang-root{display:block}
 .lesson.active{outline:2px solid rgba(110,60,255,.45)}
 @media (max-width:600px){ .lessons{grid-template-columns:1fr} }
 #lang-debug-badge{display:none !important}
+feature/lms-python-mvp-20250822-192625
 
 /* quiz UI */
 .quiz{margin-top:16px;padding:14px;border:1px solid rgba(178,156,255,.25);border-radius:12px}
@@ -121,3 +122,5 @@ body.route-lang-hasdata #lang-root{display:block}
   white-space:pre-wrap; margin-top:8px; padding:8px; min-height:28px;
   border:1px dashed rgba(178,156,255,.25); border-radius:8px; background:rgba(255,255,255,.015)
 }
+
+main
