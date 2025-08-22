@@ -334,3 +334,14 @@
     }catch(e){}
   };
 })();
+/* osbDevUnlockGuardV1 */
+(function(){
+  try{
+    var params = location.search || "";
+    var host   = (location.hostname||"").toLowerCase();
+    var isLocal = (host==="127.0.0.1" || host==="localhost");
+    if (!/dev=unlock/.test(params) && !isLocal) {
+      localStorage.removeItem("__osb_unlock_all");
+    }
+  }catch(_){}
+})();
