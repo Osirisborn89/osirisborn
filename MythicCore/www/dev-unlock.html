@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8">
+<script>
+  try {
+    localStorage.setItem("__osb_unlock_all","1");
+    // Go to lesson 7 after unlocking
+    location.replace("#/learn/python/python-files-07");
+  } catch (e) {
+    document.body.textContent = "Could not set localStorage: " + e;
+  }
+</script>
