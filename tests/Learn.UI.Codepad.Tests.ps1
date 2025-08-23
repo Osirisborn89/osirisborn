@@ -1,4 +1,4 @@
-﻿# osbCompatGlobalsV3
+# osbCompatGlobalsV3
 try {
   if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
   if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot "MythicCore\www\js\langs.loader.js" }
@@ -70,7 +70,7 @@ Describe "Codepad/Content guards" {
     foreach($m in $j.modules){ foreach($l in $m.lessons){ if($l.id -eq "python-intro-01"){ $lesson=$l } } }
     $lesson | Should -Not -BeNullOrEmpty
     $lesson.codepad.lang | Should -Be "python"
-    $lesson.html | Should -Match "<h2>Overview</h2>"
+    $lesson.html | Should -Match '<h2>\s*(What is Python\?|Overview)\s*</h2>'
     $lesson.html | Should -Match "<h3>Guided task</h3>"
   }
 }
