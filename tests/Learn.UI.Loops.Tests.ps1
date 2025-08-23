@@ -50,18 +50,16 @@ try {
     if (-not (Test-Path $PythonJsonPath)) { $PythonJsonPath = Join-Path $RepoRoot 'MythicCore\www\data\learn\python.json' }
   }
 } catch {}
-Describe "Python Setup lesson (beginner + venv/pip)" {
-  It "has html mentioning 'What is a terminal?', venv, pip, and has a quiz" {
-    $data = "C:\Users\day_8\dev\osirisborn\MythicCore\www\data\learn\python.json"
-    Test-Path -LiteralPath $data | Should -BeTrue
-    $j = Get-Content -Raw -LiteralPath $data | ConvertFrom-Json
-    $setup = $null
-    foreach($m in $j.modules){ foreach($l in $m.lessons){ if($l.id -eq "python-setup-01"){ $setup=$l } } }
-    $setup | Should -Not -BeNullOrEmpty
-    $setup.html | Should -Match "What is a terminal"
-    $setup.html | Should -Match "venv"
-    $setup.html | Should -Match "pip"
-    ($setup.PSObject.Properties.Name -contains 'quiz') | Should -BeTrue
-    $setup.quiz.questions.Count | Should -BeGreaterOrEqual 6
+Describe "Python Loops lesson" {
+  It "exists with codepad and quiz" {
+    $j = Get-Content -Raw -LiteralPath "C:\Users\day_8\dev\osirisborn\MythicCore\www\data\learn\python.json" | ConvertFrom-Json
+    $loops = $null; foreach($m in $j.modules){ foreach($l in $m.lessons){ if($l.id -eq "python-loops-04"){ $loops=$l } } }
+    $loops | Should -Not -BeNullOrEmpty
+    ($loops.PSObject.Properties.Name -contains "codepad") | Should -BeTrue
+    $loops.codepad.lang | Should -Be "python"
+    $loops.quiz.questions.Count | Should -BeGreaterOrEqual 6
+    $loops.html | Should -Match "for"
+    $loops.html | Should -Match "range"
+    $loops.html | Should -Match "list"
   }
 }

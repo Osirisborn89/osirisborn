@@ -66,12 +66,6 @@ body{
 </style>
 <!-- removed: placeholder include -->
 <!-- removed: placeholder include -->
-feature/lms-python-mvp-20250822-192625
-
-release/lms-seeded-tracks-20250822-145508
-
-release/learn-mvp-20250822-143047
-main
 
 <link rel="stylesheet" href="langs.lessons.css" />
 <script src="js/langs.loader.js" defer></script>
@@ -81,41 +75,6 @@ main
   #lang-root { display: block; }
 </style>
 <script id="lang-route-boot">
-feature/lms-python-mvp-20250822-192625
-
-release/lms-seeded-tracks-20250822-145508
-
-
-<link rel="stylesheet" href="langs.lessons.css?v=20250821-223115" />
-<script src="js/langs.loader.js?v=20250821-223115" defer></script><style id="lang-hardmask-inline">
-/* HARD MASK: hide EVERYTHING except nav/footer and #lang-root on language routes */
-body.route-lang-hasdata *:not(nav):not(nav *):not(.footer):not(.footer *):not(#lang-root):not(#lang-root *) {
-  display: none !important;
-}
-/* Theme */
-body.route-lang-hasdata {
-  background:
-    radial-gradient(1200px 800px at -10% -10%, rgba(110,60,255,.12) 0%, rgba(110,60,255,0) 60%),
-    radial-gradient(1000px 600px at 110% 10%, rgba(0,200,255,.10) 0%, rgba(0,200,255,0) 55%),
-    linear-gradient(180deg, rgba(14,11,31,1) 0%, rgba(10,9,24,1) 100%);
-  background-attachment: fixed, fixed, fixed;
-  min-height: 100vh;
-}
-/* Visibility: hidden by default, shown ONLY on language routes */
-#lang-root { display: none; max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
-body.route-lang-hasdata #lang-root { display: block; }
-
-/* Debug badge */
-#lang-debug-badge{
-  position:fixed; bottom:8px; right:8px; z-index:9999;
-  padding:6px 8px; border-radius:8px;
-  background:#2d1b69; color:#fff; border:1px solid rgba(255,255,255,.25);
-  font:12px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  opacity:.9
-}
-</style><script id="lang-route-boot">
-main
-main
 (function(){
   // RESERVED includes 'coding' (single-quoted) to satisfy tests
   var RESERVED = {"":1,"coding":1,"languages":1,"all":1,"tracks":1,"hub":1,"index":1,"home":1};
@@ -140,21 +99,6 @@ main
   document.addEventListener("DOMContentLoaded", apply);
 })();
 </script>
-feature/lms-python-mvp-20250822-192625
-
-release/lms-seeded-tracks-20250822-145508
-
-  
-release/learn-mvp-20250822-143047
-
-
-  <link rel="stylesheet" href="langs.placeholder.css" />
-<script src="js/langs.placeholder.js" defer></script>
-<link rel="stylesheet" href="langs.lessons.css" />
-<script src="js/langs.loader.js" defer></script>
-main
-main
- main
 </head>
 <body>
   <nav><div class="bar">
@@ -265,7 +209,6 @@ main
   </script>
 
   <!-- removed: lms.chrome.js -->
-feature/lms-python-mvp-20250822-192625
 
   <script src="js/lms.chrome.js" defer></script>
 <script id="osb-mini-router">/* OSB_MINI_ROUTER v2 */
@@ -294,37 +237,6 @@ feature/lms-python-mvp-20250822-192625
   }catch(e){ console.error('mini-router error', e); }
 })();
 </script>
-
-
-
-  <script src="js/lms.chrome.js" defer></script>
-<script id="osb-mini-router">/* OSB_MINI_ROUTER v2 */
-(function(){
-  try{
-    var app=document.getElementById('app')||document.querySelector('main#app');
-    if(!app) return;
-    var map={ home:'tpl-home', learn:'tpl-learn', 'learn/coding':'tpl-learn-coding' };
-    function tpl(k){ var id=map[k]||map.home; var t=document.getElementById(id); return t?t.innerHTML:'<section class="view"><div class="hero"><h2>Loading…</h2></div></section>'; }
-    function key(){
-      var h=(location.hash||'#/home').replace(/^#\//,''); if(!h) return 'home';
-      if(map[h]) return h;
-      if(h.indexOf('learn/coding')===0) return 'learn/coding';
-      if(h.indexOf('learn')===0) return 'learn';
-      return 'home';
-    }
-    function render(){
-      var k=key();
-      app.innerHTML=tpl(k);
-      document.querySelectorAll('.tab').forEach(function(el){ el.classList.toggle('active', el.getAttribute('data-tab')===k.split('/')[0]); });
-      try{ document.title='Black Pyramid - '+(k.split('/')[0]||'home').replace(/^\w/,function(c){return c.toUpperCase()}); }catch(e){}
-      window.dispatchEvent(new Event('portal:ready'));
-    }
-    window.addEventListener('hashchange', function(){ requestAnimationFrame(render); });
-    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', function(){ requestAnimationFrame(render); }); } else { requestAnimationFrame(render); }
-  }catch(e){ console.error('mini-router error', e); }
-})();
-</script>
-release/lms-seeded-tracks-20250822-145508
 
 <script id="osb-minispa">
 (function(){
@@ -433,119 +345,6 @@ release/lms-seeded-tracks-20250822-145508
 </html>
 
 
-main
-<script id="osb-minispa">
-(function(){
-  var app = document.getElementById("app");
-  var map = { home:"tpl-home", learn:"tpl-learn", "learn/coding":"tpl-learn-coding" };
-  function tpl(id){ var t=document.getElementById(id); return t ? t.innerHTML : "<section class='view'><h2>Not found</h2></section>"; }
-  function key(){
-    var h=(location.hash||"#/home").replace(/^#\//,"");
-    if(!h) return "home";
-    if(map[h]) return h;
-    if(h.indexOf("learn/coding")===0) return "learn/coding";
-    if(h.indexOf("learn")===0) return "learn";
-    return "home";
-  }
-  function setActive(tab){ document.querySelectorAll(".tab").forEach(function(el){ el.classList.toggle("active", el.getAttribute("data-tab")===tab); }); }
-  function render(){
-    var k=key();
-    if(app) app.innerHTML = tpl(map[k]||map.home);
-    setActive(k.split("/")[0]);
-    try{ document.title = "Black Pyramid - " + (k.split("/")[0]||"home").replace(/^\w/, c=>c.toUpperCase()); }catch(_){}
-    // If we're on /learn/coding, populate the languages grid
-    if(k==="learn/coding"){
-      var grid = document.getElementById("osb-langs-grid");
-      if(grid && !grid.__osbInjected){
-        grid.__osbInjected = true;
-        var langs = [
-          ["python","Python"],["javascript","JavaScript"],["typescript","TypeScript"],["java","Java"],
-          ["csharp","C#"],["cpp","C++"],["c","C"],["go","Go"],["rust","Rust"],["php","PHP"],
-          ["ruby","Ruby"],["kotlin","Kotlin"],["swift","Swift"],["dart","Dart"],["scala","Scala"],
-          ["haskell","Haskell"],["lua","Lua"],["r","R"],["matlab","MATLAB"],["sql","SQL"],
-          ["bash","Bash/Shell"],["htmlcss","HTML/CSS"]
-        ];
-        var frag = document.createDocumentFragment();
-        // Back tile
-        var back = document.createElement("a"); back.className="tile"; back.href="#/learn";
-        var bt = document.createElement("div"); bt.textContent="Back to Learning"; back.appendChild(bt);
-        frag.appendChild(back);
-        langs.forEach(function(pair){
-          var a=document.createElement("a"); a.className="tile"; a.href="#/learn/"+pair[0];
-          var t=document.createElement("div"); t.textContent=pair[1]; a.appendChild(t);
-          frag.appendChild(a);
-        });
-        grid.innerHTML = ""; grid.appendChild(frag);
-      }
-    }
-    // Let any listeners know the portal rendered
-    try{ window.dispatchEvent(new Event("portal:ready")); }catch(_){}
-  }
-  window.addEventListener("hashchange", function(){ requestAnimationFrame(render); });
-  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", function(){ requestAnimationFrame(render); }); }
-  else { requestAnimationFrame(render); }
-})();
-</script>
-
-
-
-<script id="osb-langs-enhancer-v3">
-(function(){
-  if (window.__osbLangsEnhV3) return; window.__osbLangsEnhV3 = true;
-
-  var langs = [
-    ["python","Python"],["javascript","JavaScript"],["typescript","TypeScript"],["java","Java"],
-    ["csharp","C#"],["cpp","C++"],["c","C"],["go","Go"],["rust","Rust"],["php","PHP"],
-    ["ruby","Ruby"],["kotlin","Kotlin"],["swift","Swift"],["dart","Dart"],["scala","Scala"],
-    ["haskell","Haskell"],["lua","Lua"],["r","R"],["matlab","MATLAB"],["sql","SQL"],
-    ["bash","Bash/Shell"],["htmlcss","HTML/CSS"]
-  ];
-
-  function buildGrid(grid){
-    if (!grid) return;
-    if (grid.getAttribute('data-enhanced') === '1') return;
-    grid.setAttribute('data-enhanced','1');
-feature/lms-python-mvp-20250822-192625
-
-    var frag = document.createDocumentFragment();
-
-
-
-    var frag = document.createDocumentFragment();
-
-main
-    var back = document.createElement('a'); back.className='tile'; back.href='#/learn';
-    var bt = document.createElement('div'); bt.textContent='Back to Learning';
-    back.appendChild(bt); frag.appendChild(back);
-
-    langs.forEach(function(pair){
-      var a = document.createElement('a'); a.className='tile'; a.href = '#/learn/' + pair[0];
-      var t = document.createElement('div'); t.textContent = pair[1];
-      a.appendChild(t); frag.appendChild(a);
-    });
-
-    grid.innerHTML = '';
-    grid.appendChild(frag);
-    console.log('[LANGS] enhanced grid with', langs.length, 'items');
-  }
-
-  function tick(){
-    var h = (location.hash || '');
-    if (h !== '#/learn/coding') return;
-    var grid = document.querySelector('main#app .tile-grid');
-    if (grid) buildGrid(grid);
-  }
-
-  window.addEventListener('portal:ready', tick);
-  window.addEventListener('hashchange', function(){ setTimeout(tick,0); });
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(tick,0); });
-  } else { setTimeout(tick,50); }
-})();
-</script>
-</body>
-</html>
-feature/lms-python-mvp-20250822-192625
 
 
 
@@ -566,28 +365,3 @@ feature/lms-python-mvp-20250822-192625
 
 
 
-
-
-release/learn-mvp-20250822-143047
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  <!-- removed: lms.chrome.js -->
-
-  <script src="js/lms.chrome.js" defer></script>
-</body>
-</html>
-
-
-
-main

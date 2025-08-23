@@ -1,0 +1,738 @@
+﻿/* RESERVED: '','coding','languages','all','tracks','hub','index','home' */
+/* langs.loader.js — HARDENED V4 (osbSafe) */
+(function(){
+  if (window.__langsLoaderLoaded) { console.log("[LOADER] already loaded"); return; }
+  window.__langsLoaderLoaded = true;
+
+  var RESERVED = {"":1,"coding":1,"languages":1,"all":1,"tracks":1,"hub":1,"index":1,"home":1};
+
+  function parse(){
+    var m=(location.hash||"").match(/^#\/learn\/([a-z0-9_]+)(?:\/([a-z0-9_-]+))?/i);
+    if(!m) return null;
+    var lang=(m[1]||"").toLowerCase();
+    if (RESERVED[lang]) return null;
+    return { lang: lang, lesson: (m[2]||null) };
+  }
+
+  function osbDevUnlock(){
+    try{
+      if (/\bdev=unlock\b/i.test(location.search) || /\bdev=unlock\b/i.test(location.hash)) return true;
+      if (localStorage.getItem("__osb_unlock_all")==="1") return true;
+    }catch(e){}
+    return false;
+  }
+  window.osbDevUnlock=osbDevUnlock; /* osbDevUnlockPatched */
+
+  function esc(s){
+    try{
+      if (window.CSS && CSS.escape) return CSS.escape(s);
+      return String(s).replace(/[^a-zA-Z0-9_-]/g, "\\$&");
+    }catch(e){ return s; }
+  }
+
+  function ensureRoot(){
+    var r=document.getElementById("lang-root");
+    if(!r){
+      r=document.createElement("div"); r.id="lang-root";
+      var f=document.querySelector(".footer");
+      if (f&&f.parentNode) f.parentNode.insertBefore(r,f); else (document.body||document.documentElement).appendChild(r);
+      var b=document.getElementById("lang-debug-badge");
+      if(!b){ b=document.createElement("div"); b.id="lang-debug-badge"; b.textContent="LANG";
+        (document.body||document.documentElement).appendChild(b);
+      }
+      console.log("[LOADER] #lang-root created");
+    }
+    try{
+      var dev=osbDevUnlock();
+      var db=document.getElementById("dev-unlock-badge");
+      if (dev && !db){
+        db=document.createElement("div"); db.id="dev-unlock-badge"; db.textContent="DEV UNLOCK";
+        db.style.cssText="position:fixed;top:8px;right:8px;z-index:9999;padding:4px 8px;border-radius:6px;background:#0b6;border:1px solid rgba(255,255,255,.25);color:#fff;font:12px system-ui,Segoe UI,Roboto,Arial;opacity:.9";
+        (document.body||document.documentElement).appendChild(db);
+        console.log("[DEV] unlock badge shown");
+      } else if(!dev && db){ db.parentNode.removeChild(db); }
+    }catch(e){}
+    return r;
+  }
+
+  function removeRoot(){
+    var r=document.getElementById("lang-root");
+    if (r && r.parentElement) r.parentElement.removeChild(r);
+    var b=document.getElementById("lang-debug-badge");
+    if (b && b.parentElement) b.parentElement.removeChild(b);
+    document.body && document.body.classList.remove("route-lang-hasdata");
+    console.log("[LOADER] removed #lang-root (not a lang route)");
+  }
+
+  function setHasData(on){ if (!document.body) return; document.body.classList.toggle("route-lang-hasdata", !!on); }
+  function titleCase(s){ try{ return s.charAt(0).toUpperCase()+s.slice(1);}catch(_){return s;} }
+  function isDone(lang, id){ try{ return localStorage.getItem("lms:done:"+lang+":"+id)==="1"; } catch(e){ return false; } }
+
+  function resolveLessonId(man, id){
+    try{
+      if(!id) return null;
+      var found=null;
+      (man.modules||[]).some(function(m){
+        return (m.lessons||[]).some(function(L){ if(L.id===id){ found=L.id; return true; } return false; });
+      });
+      if(found) return found;
+      var base=id.replace(/-\d+$/,"");
+      var alt=null;
+      (man.modules||[]).some(function(m){
+        return (m.lessons||[]).some(function(L){ if(String(L.id||"").indexOf(base)===0){ alt=L.id; return true; } return false; });
+      });
+      return alt;
+    }catch(e){ return id; }
+  }
+
+  function osbDecorateLocks(man){
+    try{
+      var r=document.getElementById("lang-root"); if(!r) return;
+      var dev=osbDevUnlock();
+      var flat=[]; (man.modules||[]).forEach(function(m){ (m.lessons||[]).forEach(function(L){ flat.push(L); }); });
+      var lockNext=false;
+      for (var i=0;i<flat.length;i++){
+        var L=flat[i];
+        var el=r.querySelector('.lesson[data-lesson-id="'+esc(L.id||"")+'"]');
+        if(!el) continue;
+        var done=isDone(man.lang||"", L.id||"");
+        if(done) el.classList.add("completed"); else el.classList.remove("completed");
+        if(!dev){
+          if(lockNext){ el.classList.add("locked"); } else { el.classList.remove("locked"); }
+          if(!done){ lockNext=true; }
+        } else {
+          el.classList.remove("locked");
+        }
+      }
+      if (dev) console.log("[DEV] all lessons unlocked for this view", (man.modules||[]).length);
+    }catch(e){}
+  }
+  window.osbDecorateLocks = osbDecorateLocks; /* skip locks in dev */
+
+  (function(){
+    if (window.__osbQuizFnsV1) return; window.__osbQuizFnsV1 = true;
+    window.osbMarkComplete = function(lang, lessonId){
+      try { localStorage.setItem("lms:done:"+lang+":"+lessonId,"1"); console.log("[LMS] marked complete", lang, lessonId);}catch(e){}
+    };
+    window.osbRenderDevComplete = function(container, man, lesson){
+      try{
+        if (!osbDevUnlock()) return;
+        var btn=document.createElement("button");
+        btn.textContent="✅ Mark complete (dev)";
+        btn.className="btn dev-complete-btn"; btn.setAttribute("type","button");
+        btn.addEventListener("click", function(){
+          osbMarkComplete(man.lang||"", (lesson && lesson.id)||"");
+          try{ osbDecorateLocks(man); }catch(_){}
+        });
+        container.appendChild(btn);
+      }catch(e){}
+    };
+    window.osbRenderQuiz = function(container, man, lesson){
+      try{
+        var q = lesson && lesson.quiz; if(!q || !q.questions || !q.questions.length) return;
+        var wrap=document.createElement("div"); wrap.className="quiz-wrap";
+        var h=document.createElement("h3"); h.textContent=q.title||"Quick Check"; wrap.appendChild(h);
+        (q.questions||[]).forEach(function(Q,qi){
+          var card=document.createElement("div"); card.className="quiz-q";
+          var p=document.createElement("p"); p.textContent=(qi+1)+". "+(Q.text||""); card.appendChild(p);
+          (Q.options||[]).forEach(function(opt,oi){
+            var label=document.createElement("label"); label.style.display="block"; label.style.margin="4px 0";
+            var radio=document.createElement("input"); radio.type="radio"; radio.name="q"+qi; radio.value=oi;
+            label.appendChild(radio); label.appendChild(document.createTextNode(" "+opt));
+            card.appendChild(label);
+          });
+          wrap.appendChild(card);
+        });
+        var submit=document.createElement("button"); submit.textContent="Check answers"; submit.className="btn quiz-submit"; submit.setAttribute("type","button");
+        var result=document.createElement("div"); result.className="quiz-result"; result.setAttribute("aria-live","polite");
+        submit.addEventListener("click", function(){
+          var correct=0;
+          (q.questions||[]).forEach(function(Q,qi){
+            var chosen = wrap.querySelector('input[name="q'+qi+'"]:checked');
+            if (chosen && (+chosen.value) === (+Q.answerIndex)) correct++;
+          });
+          result.textContent="Score: "+correct+" / "+q.questions.length;
+          if (correct === q.questions.length) {
+            osbMarkComplete(man.lang||"", lesson.id||"");
+            try{ osbDecorateLocks(man); }catch(_){}
+          }
+        });
+        wrap.appendChild(submit); wrap.appendChild(result); console.log('[QUIZ] built radios:', wrap.querySelectorAll('input[type=radio]').length);
+        container.appendChild(wrap);
+      }catch(e){ console.error("[QUIZ] render failed", e); }
+    };
+  })();
+
+  function activate(man, id){
+    var slot=document.getElementById("lang-content"); if(!slot) return;
+    var found=null;
+    (man.modules||[]).some(function(m){
+      return (m.lessons||[]).some(function(L){ if(L.id===id){ found=L; return true; } return false; });
+    });
+    slot.innerHTML = (found && found.html) ? found.html : '<div class="empty">Content coming soon.</div>'; setTimeout(function(){ try{ if(window.osbInstallCodepads) osbInstallCodepads(slot); }catch(e){ console.warn("[CODEPAD] post-render install failed", e); } }, 30); /* osbCodepadInstallTickV1 */ try{ if(window.osbInitCodepadsSafe) osbInitCodepadsSafe(slot); }catch(_){ }
+    var r=document.getElementById("lang-root");
+    if(r){
+      r.querySelectorAll(".lesson.active").forEach(function(n){ n.classList.remove("active"); });
+      var a=r.querySelector('.lesson[data-lesson-id="'+esc(id||"")+'"]');
+      if(a) a.classList.add("active");
+    }
+    try{ slot.querySelectorAll("#lang-tail").forEach(function(n){ n.remove(); }); }catch(e){}
+    var tail=document.createElement("div"); tail.id="lang-tail";
+    try{ if(found && found.quiz && typeof osbRenderQuiz==="function"){ osbRenderQuiz(tail, man, found); } }catch(_){}
+    try{ if(osbDevUnlock() && (!found || !found.quiz) && typeof osbRenderDevComplete==="function"){ osbRenderDevComplete(tail, man, found); } }catch(_){}
+    slot.appendChild(tail);
+    console.log("[LOADER] activate", id, !!found);
+  }
+  window.__osbActivate = activate;
+
+  function skeleton(lang){
+    var r=ensureRoot(); setHasData(true);
+    r.innerHTML = '<div class="lang-meta"><a id="lang-back" href="#/learn/coding">← Back to Languages</a></div>'
+                + '<h1>'+titleCase(lang)+'</h1>'
+                + '<div id="lang-content"><div class="empty">Select a lesson to view its content.</div></div>';
+    console.log("[LOADER] skeleton", lang);
+    return r;
+  }
+
+  function render(man, initialLesson){
+    var r=ensureRoot(); setHasData(true);
+    var html = '<div class="lang-meta"><a id="lang-back" href="#/learn/coding">← Back to Languages</a></div>'
+             + '<h1>'+(titleCase(man.title||man.lang||""))+'</h1>'
+             + '<div id="lang-content"><div class="empty">Select a lesson to view its content.</div></div>';
+    (man.modules||[]).forEach(function(m){
+      html+='<div class="module"><h2>'+(m.title||"")+'</h2><ul class="lessons">';
+      (m.lessons||[]).forEach(function(L){
+        var mins=(L.mins!=null? (L.mins+" min"):"");
+        html+='<li class="lesson" tabindex="0" data-lesson-id="'+(L.id||"")+'">'
+           +  '<div class="title">'+(L.title||"")+'</div><div class="mins">'+mins+'</div></li>';
+      });
+      html+='</ul></div>';
+    });
+    r.innerHTML = html;
+
+    if (!r.__osbDelegated) {
+      r.__osbDelegated = true;
+      /* osbDelegatedClickV1 compat */
+      r.addEventListener("click", function(ev){
+        var el = ev.target && ev.target.closest ? ev.target.closest(".lesson") : null;
+        if(!el || !r.contains(el)) return;
+        var id = el.getAttribute("data-lesson-id"); if(!id) return;
+        if(el.classList.contains("locked") && !(osbDevUnlock())){ alert("🔒 Complete the previous lesson first!"); return; }
+        try { activate(man, id); } catch(e){ console.warn("[LOADER] activate fallback", e); }
+        var newHash = "#/learn/"+(man.lang||"")+"/"+id;
+        if (history && history.replaceState) { history.replaceState(null,"",newHash); } else { location.hash = newHash; }
+      });
+    }
+
+    osbDecorateLocks(man);
+    if (initialLesson) {
+      var rid = resolveLessonId(man, initialLesson);
+      if (rid) activate(man, rid);
+    }
+  }
+
+  function load(lang, lesson){
+    skeleton(lang); try{ if(window.osbBindBackLink) osbBindBackLink(); }catch(_){ }
+    var url="data/learn/"+lang+".json?v="+Date.now();
+    fetch(url,{cache:"no-store"})
+      .then(function(resp){ return resp.ok ? resp.json() : {lang:lang, modules:[]}; })
+      .then(function(man){ man.lang = man.lang || lang; render(man, lesson); })
+      .catch(function(e){ console.error("[LOADER] fetch failed", e); });
+  }
+
+  function onRoute(){
+    var r=parse();
+    if(!r){ removeRoot(); return; }
+    if(!document.body){ requestAnimationFrame(onRoute); return; }
+    load(r.lang, r.lesson);
+  }
+
+  window.addEventListener("hashchange", onRoute);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", onRoute); else onRoute();
+})();
+/* osbCodepadV2 */
+(function(){
+  if (window.__osbCodepadV2) return; window.__osbCodepadV2 = true;
+
+  function decodeStarter(s){
+    try{
+      if (s==null) return '';
+      // reverse minimal HTML entity and \n encodings
+      s = s.replace(/&quot;/g,'"').replace(/&amp;/g,'&');
+      s = s.replace(/\\n/g, '\n').replace(/\r\n/g,'\n');
+      return s;
+    }catch(_){ return String(s||''); }
+  }
+
+  // Try several runners; prefer a project-provided one if present
+  async function runPython(code){
+    try{
+      if (window.OSB_PY_RUN) {
+        // expected to return string (stdout)
+        return await window.OSB_PY_RUN(code);
+      }
+      if (window.pyodide && pyodide.runPythonAsync) {
+        // basic pyodide run; stdout may not be captured unless OSB_PY_RUN hooks it
+        let out = await pyodide.runPythonAsync(code);
+        return (out==null) ? '' : String(out);
+      }
+    }catch(e){
+      return 'Error: ' + (e && e.message ? e.message : e);
+    }
+    return '(Runner not available in this build)';
+  }
+
+  window.osbInitCodepadsSafe = function(root){
+    try{
+      var scope = root || document;
+      var pads = scope.querySelectorAll('.codepad');
+      pads.forEach(function(p){
+        if (p.__osbPadInit) return; p.__osbPadInit = true;
+        var lang = (p.getAttribute('data-lang')||'').toLowerCase();
+        var title = p.getAttribute('data-title') || (lang.toUpperCase());
+        var starter = decodeStarter(p.getAttribute('data-starter')||'');
+        var wrap = document.createElement('div'); wrap.className = 'codepad-ui';
+        var head = document.createElement('div'); head.className = 'header'; head.textContent = (title||'PRACTICE');
+        var ta = document.createElement('textarea'); ta.value = starter;
+        var runrow = document.createElement('div'); runrow.className = 'runrow';
+        var btn = document.createElement('button'); btn.textContent = 'Run'; btn.className = 'btn'; btn.setAttribute('type','button');
+        var out = document.createElement('div'); out.className = 'output'; out.setAttribute('aria-live','polite'); out.textContent = '';
+        btn.addEventListener('click', async function(){
+          btn.disabled = true;
+          try {
+            if (lang === 'python') {
+              out.textContent = 'Running...';
+              var res = await runPython(ta.value);
+              out.textContent = res;
+            } else {
+              out.textContent = '(No runner for '+lang+')';
+            }
+          } finally { btn.disabled = false; }
+        });
+        runrow.appendChild(btn);
+        wrap.appendChild(head); wrap.appendChild(ta); wrap.appendChild(runrow); wrap.appendChild(out);
+        p.innerHTML = ''; p.appendChild(wrap);
+      });
+      if (pads.length){ console.log('[CODEPAD] initialized', pads.length); }
+    }catch(e){ console.warn('[CODEPAD] init failed', e); }
+  };
+
+  // Smart back link: prefer history.back(), else fallback to languages grid
+  window.osbBindBackLink = function(){
+    try{
+      var a = document.querySelector('#lang-root .lang-meta a, #lang-back');
+      if (!a || a.__osbBackBound) return;
+      a.__osbBackBound = true;
+      a.id = a.id || 'lang-back';
+      a.addEventListener('click', function(ev){
+        ev.preventDefault();
+        try {
+          if (history.length > 1) { history.back(); return; }
+        } catch(_) {}
+        location.hash = '#/learn/coding';
+      });
+    }catch(e){}
+  };
+})();
+/* osbDevUnlockGuardV1 */
+(function(){
+  try{
+    var params = location.search || "";
+    var host   = (location.hostname||"").toLowerCase();
+    var isLocal = (host==="127.0.0.1" || host==="localhost");
+    if (!/dev=unlock/.test(params) && !isLocal) {
+      localStorage.removeItem("__osb_unlock_all");
+    }
+  }catch(_){}
+})();
+/* osbCodepadHooksV4 */
+(function(){
+  if (window.__osbCodepadHooksV4) return; window.__osbCodepadHooksV4 = true;
+
+  function decodeStarter(s){ try{ return (s||"").replace(/\\n/g,"\n"); }catch(_){ return s||""; } }
+
+  function install(scope){
+    var root = scope || document;
+    var pads = root.querySelectorAll('.codepad:not([data-osb-installed])');
+    if (pads.length) console.log('[CODEPAD] installing', pads.length);
+    pads.forEach(function(div){
+      div.setAttribute('data-osb-installed','1');
+      var lang    = div.getAttribute('data-lang')   || 'text';
+      var starter = decodeStarter(div.getAttribute('data-starter') || '');
+      var title   = div.getAttribute('data-title')  || lang.toUpperCase();
+
+      var wrap = document.createElement('div'); wrap.className='codepad-wrap';
+      var hdr  = document.createElement('div'); hdr.className='codepad-hdr'; hdr.textContent = title;
+      var ta   = document.createElement('textarea'); ta.className='codepad-editor'; ta.value = starter;
+      var btn  = document.createElement('button'); btn.className='btn codepad-run'; btn.type='button'; btn.textContent='Run';
+      var out  = document.createElement('pre'); out.className='codepad-out'; out.setAttribute('aria-live','polite');
+
+      btn.addEventListener('click', function(){
+        try{
+          if (lang==='python' && window.osbRunPython) {
+            window.osbRunPython(ta.value, out);
+          } else if (window.osbRun) {
+            window.osbRun(lang, ta.value, out);
+          } else {
+            out.textContent = ta.value;
+          }
+        }catch(e){ out.textContent = String(e); }
+      });
+
+      wrap.appendChild(hdr); wrap.appendChild(ta); wrap.appendChild(btn); wrap.appendChild(out);
+      div.innerHTML=''; div.appendChild(wrap);
+    });
+  }
+  window.osbInstallCodepads = install;
+
+  document.addEventListener('DOMContentLoaded', function(){ try{ install(document); }catch(_){} });
+  window.addEventListener('hashchange', function(){ setTimeout(function(){ try{ install(document.getElementById('lang-root')||document); }catch(_){} }, 40); });
+
+  var t = document.getElementById('lang-root');
+  if (t && window.MutationObserver){
+    var mo = new MutationObserver(function(){ try{ install(t); }catch(_){} });
+    mo.observe(t, {childList:true, subtree:true});
+  }
+})();
+/* osbCodepadHooksV3 */
+(function(){
+  if (window.__osbCodepadHooksV3) return; window.__osbCodepadHooksV3 = true;
+
+  function decodeStarter(s){ try{ return (s||"").replace(/\\n/g,"\n"); }catch(_){ return s||""; } }
+
+  window.osbInstallCodepads = function(scope){
+    var root = scope || document;
+    var pads = root.querySelectorAll('.codepad:not([data-osb-installed])');
+    pads.forEach(function(div){
+      div.setAttribute('data-osb-installed','1');
+      var lang    = div.getAttribute('data-lang')   || 'text';
+      var starter = decodeStarter(div.getAttribute('data-starter') || '');
+      var title   = div.getAttribute('data-title')  || lang.toUpperCase();
+
+      var wrap = document.createElement('div'); wrap.className='codepad-wrap';
+      var hdr  = document.createElement('div'); hdr.className='codepad-hdr'; hdr.textContent = title;
+      var ta   = document.createElement('textarea'); ta.className='codepad-editor'; ta.value = starter;
+      var run  = document.createElement('button'); run.className='btn codepad-run'; run.type='button'; run.textContent='Run';
+      var out  = document.createElement('pre'); out.className='codepad-out'; out.setAttribute('aria-live','polite');
+
+      run.addEventListener('click', function(){
+        try{
+          if (lang==='python' && window.osbRunPython) {
+            window.osbRunPython(ta.value, out);
+          } else if (window.osbRun) {
+            window.osbRun(lang, ta.value, out);
+          } else {
+            out.textContent = ta.value; // fallback: echo
+          }
+        } catch(e){ out.textContent = String(e); }
+      });
+
+      wrap.appendChild(hdr); wrap.appendChild(ta); wrap.appendChild(run); wrap.appendChild(out);
+      div.innerHTML=''; div.appendChild(wrap);
+    });
+  };
+
+  // Initial attempt on DOM ready
+  document.addEventListener('DOMContentLoaded', function(){ try{ osbInstallCodepads(document); }catch(_){} });
+
+  // Reinstall after hash changes (lesson navigation)
+  window.addEventListener('hashchange', function(){
+    setTimeout(function(){
+      try{
+        var scope = document.getElementById('lang-root') || document;
+        osbInstallCodepads(scope);
+      }catch(_){}
+    },40);
+  });
+
+  // Observe #lang-root for dynamic updates
+  var target = document.getElementById('lang-root');
+  if (target && window.MutationObserver){
+    var mo = new MutationObserver(function(){ try{ osbInstallCodepads(target); }catch(_){} });
+    mo.observe(target, {childList:true, subtree:true});
+  }
+})();
+/* osbInstallCodepadsV3 */
+(function(){
+  if (window.__osbInstallCodepadsV3) return; window.__osbInstallCodepadsV3 = true;
+  window.osbInstallCodepads = function(root){
+    try{
+      var r = root || document; var pads = r.querySelectorAll(".codepad");
+      if (!pads || !pads.length) return;
+      console.log("[CODEPAD] installing", pads.length);
+      pads.forEach(function(p){
+        if (p.__installed) return; p.__installed = true;
+        var starter = p.getAttribute("data-starter") || "";
+        var ta = document.createElement("textarea"); ta.className="codepad-editor"; ta.value = starter.replace(/\\n/g,"\n");
+        var run = document.createElement("button"); run.textContent="Run"; run.className="btn codepad-run"; run.type="button";
+        var out = document.createElement("pre"); out.className="codepad-output"; out.setAttribute("aria-live","polite");
+        run.addEventListener("click", function(){
+          var code = ta.value;
+          if (typeof window.osbRunPython === "function") {
+            Promise.resolve(osbRunPython(code)).then(function(res){ out.textContent = (res==null) ? "" : String(res) })
+              .catch(function(e){ out.textContent = "[error] " + (e && e.message || e) });
+          } else if (typeof window.osbRun === "function") {
+            Promise.resolve(osbRun("python", code)).then(function(res){ out.textContent = (res==null) ? "" : String(res) })
+              .catch(function(e){ out.textContent = "[error] " + (e && e.message || e) });
+          } else {
+            out.textContent = code; // fallback echo
+          }
+        });
+        p.appendChild(ta); p.appendChild(run); p.appendChild(out);
+      });
+    }catch(e){ console.error("[CODEPAD] install failed", e); }
+  };
+})();
+/* osbXpHelpersV1 */
+(function(){
+  if (window.__osbXpHelpersV1) return; window.__osbXpHelpersV1 = true;
+  function k(ns,key){ return "lms:"+ns+":"+key }
+  window.osbGet = function(ns,key){ try{ return localStorage.getItem(k(ns,key)) }catch(_){ return null } };
+  window.osbSet = function(ns,key,v){ try{ localStorage.setItem(k(ns,key), v) }catch(_){ } };
+  window.osbAddXP = function(amount){ var cur = parseInt(osbGet("xp","total")||"0",10); osbSet("xp","total", String(cur + (amount|0))); };
+  window.osbAwardOnce = function(key, amount){ if (osbGet("xp","aw:"+key)) return false; osbAddXP(amount|0); osbSet("xp","aw:"+key, "1"); return true; };
+  window.osbRenderXpHud = function(container, man, lesson){
+    try{
+      var xp = parseInt(osbGet("xp","total")||"0",10);
+      var hud = document.createElement("div"); hud.className="xp-hud";
+      var badge = document.createElement("span"); badge.className="xp-badge"; badge.textContent = "XP " + xp;
+      var row = document.createElement("div"); row.className="row"; row.appendChild(badge);
+      if (lesson && lesson.id && localStorage.getItem("lms:done:"+(man.lang||"")+":"+lesson.id) === "1") {
+        var done = document.createElement("span"); done.className="lesson-complete"; done.textContent="Completed";
+        row.appendChild(done);
+      }
+      hud.appendChild(row); container.appendChild(hud);
+    }catch(e){}
+  };
+  // hook completion: when a quiz is passed fully, mark complete + awardOnce
+  var _mark = window.osbMarkComplete;
+  window.osbMarkComplete = function(lang, lessonId){
+    try{
+      if (_mark) _mark(lang, lessonId);
+      var key = (lang||"")+":"+lessonId;
+      if (osbAwardOnce("lesson:"+key, 10)) { console.log("[XP] +10 for", key); }
+    }catch(e){}
+  };
+})();
+/* osbPruneDuplicatePadsV2 */
+(function(){
+  if (window.__osbPadPrunerV1) return; window.__osbPadPrunerV1 = true;
+  window.osbPruneDuplicatePads = function(){
+    try{
+      // Keep only the first .codepad per lesson area; remove subsequent siblings
+      var roots = document.querySelectorAll(".codepad");
+      if(!roots || !roots.length) return;
+      // Remove immediate sibling .codepad blocks after the first in the same section
+      roots.forEach(function(cp){
+        // remove duplicate editors inside one block
+        var eds = cp.querySelectorAll(".codepad-editor");
+        for (var j=1;j<eds.length;j++){ try{eds[j].remove();}catch(_){} }
+        // remove following sibling .codepad blocks
+        var next = cp.nextElementSibling;
+        while(next && next.classList && next.classList.contains("codepad")){
+          var kill = next; next = next.nextElementSibling;
+          try{ kill.remove(); }catch(_){ if(kill.parentNode){ kill.parentNode.removeChild(kill); } }
+        }
+      });
+    }catch(e){}
+  };
+  window.addEventListener("hashchange", function(){ setTimeout(function(){ try{ osbPruneDuplicatePads(); }catch(_){ } }, 60); });
+  document.addEventListener("DOMContentLoaded", function(){ setTimeout(function(){ try{ osbPruneDuplicatePads(); }catch(_){ } }, 120); });
+})();
+/* osbCodepadSingleInitV3 */
+(function(){
+  if (window.__osbCodepadFixV3) return; window.__osbCodepadFixV3 = true;
+
+  function killAllButFirst(list){
+    for (var i=1;i<list.length;i++){
+      try{ list[i].remove(); }catch(_){ if(list[i] && list[i].parentNode){ list[i].parentNode.removeChild(list[i]); } }
+    }
+  }
+
+  // Ensure a codepad has exactly: 1 editor, 1 Run, 1 output; and bind Run once.
+  window.osbCodepadFix = function(){
+    try{
+      document.querySelectorAll(".codepad").forEach(function(cp){
+        // Mark container so other installers can see it's done
+        if (!cp.dataset) cp.dataset = {};
+        // Keep one editor; if none, create from data-starter
+        var editors = cp.querySelectorAll(".codepad-editor");
+        if (editors.length === 0){
+          var ta = document.createElement("textarea");
+          ta.className = "codepad-editor";
+          var starter = (cp.getAttribute("data-starter")||"").replace(/\\n/g,"\n");
+          ta.value = starter || "";
+          cp.insertBefore(ta, cp.firstChild);
+          editors = cp.querySelectorAll(".codepad-editor");
+        }
+        killAllButFirst(editors);
+
+        // Keep one output
+        var out = cp.querySelector(".codepad-output");
+        if (!out){ out = document.createElement("div"); out.className = "codepad-output"; cp.appendChild(out); }
+        // Remove extra outputs
+        killAllButFirst(cp.querySelectorAll(".codepad-output"));
+
+        // Keep exactly one Run button
+        var runs = cp.querySelectorAll("button.codepad-run");
+        if (!runs.length){
+          // fallback: find any button literally labeled "Run"
+          runs = Array.prototype.filter.call(cp.querySelectorAll("button"), function(b){
+            return (b.textContent||"").trim().toLowerCase()==="run";
+          });
+        }
+        if (!runs.length){
+          var b = document.createElement("button");
+          b.textContent = "Run";
+          b.className = "btn codepad-run";
+          b.setAttribute("type","button");
+          cp.insertBefore(b, out);
+          runs = [b];
+        } else {
+          // keep first, remove the rest
+          killAllButFirst(runs);
+        }
+
+        // Rebind the single Run (clone replaces to drop any old listeners)
+        var only = runs[0];
+        var clone = only.cloneNode(true);
+        only.parentNode.replaceChild(clone, only);
+
+        clone.addEventListener("click", function(){
+          try{
+            var editor = cp.querySelector(".codepad-editor");
+            var code   = (editor && (editor.value||editor.textContent||"")) || "";
+            var runner = (typeof window.osbRunPython==="function") ? window.osbRunPython :
+                         (typeof window.osbRun==="function")       ? function(_,c,t){ return window.osbRun(c,t); } :
+                         null;
+            if (runner){
+              try { runner("python", code, out); }
+              catch(e){ out.textContent = String(e && e.message || e); }
+            } else {
+              out.textContent = "No Python runtime configured.\n\nYour code:\n\n" + code;
+            }
+          }catch(err){
+            try{ out.textContent = String(err && err.message || err); }catch(_){}
+          }
+        });
+      });
+    }catch(e){}
+  };
+
+  function tick(){ setTimeout(function(){ try{ osbCodepadFix(); }catch(_){ } }, 30);
+                   setTimeout(function(){ try{ osbCodepadFix(); }catch(_){ } }, 160); }
+  window.addEventListener("hashchange", tick);
+  document.addEventListener("DOMContentLoaded", tick);
+})();
+;
+    return window.osbPythonReady;
+  };
+
+  // Runner used by codepad; captures stdout/stderr via StringIO
+  window.osbRunPython = async function(lang, code, outEl){
+    try{
+      if (!(outEl && outEl.nodeType===1)) outEl = document.createElement("div");
+      outEl.textContent = "Running…";
+      await window.osbEnsurePythonRuntime();
+      pyodide.globals.set("__code__", String(code||""));
+      await pyodide.runPythonAsync(`
+import sys, io, traceback
+buf = io.StringIO()
+oldout, olderr = sys.stdout, sys.stderr
+sys.stdout = sys.stderr = buf
+__ok = True
+try:
+    exec(__code__, {})
+except Exception:
+    __ok = False
+    traceback.print_exc()
+finally:
+    sys.stdout, sys.stderr = oldout, olderr
+__result = buf.getvalue()
+`);
+      var txt = pyodide.globals.get("__result");
+      outEl.textContent = txt || "(no output)";
+      try:
+        pyodide.globals.delete("__code__");
+        pyodide.globals.delete("__result");
+      }catch(_){}
+    }catch(e){
+      outEl.textContent = "Runtime error: " + (e && e.message || e);
+    }
+  };
+})();
+;/* osbPyodideRunnerV2 */
+(function(){
+  if (window.__osbPyodideRunnerV2) return; window.__osbPyodideRunnerV2 = true;
+
+  function loadScriptFallback(list, done){
+    var i = 0;
+    (function next(){
+      if (i >= list.length) return done(new Error("Pyodide source failed"));
+      var s = document.createElement("script");
+      s.src = list[i++]; s.async = true;
+      s.onload = function(){ done(); };
+      s.onerror = function(){ next(); };
+      document.head.appendChild(s);
+    })();
+  }
+
+  // Load Pyodide once
+  window.osbEnsurePythonRuntime = function(){
+    if (window.osbPythonReady) return window.osbPythonReady;
+    window.osbPythonReady = new Promise(function(resolve, reject){
+      function ready(){
+        try {
+          loadPyodide({}).then(function(py){
+            window.pyodide = py;
+            resolve(true);
+          }, reject);
+        } catch(e){ reject(e); }
+      }
+      if (window.loadPyodide){ ready(); return; }
+      var src  = window.osbPyodideSrc;
+      var urls = src ? [src] : [
+        "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js",
+        "https://pyodide-cdn2.iodide.io/v0.24.1/full/pyodide.js"
+      ];
+      loadScriptFallback(urls, function(err){ if (err) reject(err); else ready(); });
+    });
+    return window.osbPythonReady;
+  };
+
+  // Runner used by the codepad
+  window.osbRunPython = function(lang, code, outEl){
+    outEl = (outEl && outEl.nodeType===1) ? outEl : document.createElement("div");
+    outEl.textContent = "Running…";
+    window.osbEnsurePythonRuntime().then(async function(){
+      try{
+        pyodide.globals.set("__code__", String(code||""));
+        await pyodide.runPythonAsync(`
+import sys, io, traceback
+buf = io.StringIO()
+oldout, olderr = sys.stdout, sys.stderr
+sys.stdout = sys.stderr = buf
+__ok = True
+try:
+    exec(__code__, {})
+except Exception:
+    __ok = False
+    traceback.print_exc()
+finally:
+    sys.stdout, sys.stderr = oldout, olderr
+__result = buf.getvalue()
+`);
+        var txt = pyodide.globals.get("__result");
+        outEl.textContent = txt || "(no output)";
+        try:
+          pyodide.globals.delete("__code__")
+          pyodide.globals.delete("__result")
+        catch(_){}
+      }catch(e){
+        outEl.textContent = "Runtime error: " + (e && e.message || e);
+      }
+    }, function(e){
+      outEl.textContent = "Failed to init Python: " + (e && e.message || e);
+    });
+  };
+})();
