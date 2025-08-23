@@ -1,4 +1,12 @@
-﻿# osbCompatGlobalsV3
+### OSIRISBORN TEST HEADER (PS7 ABSOLUTE) — DO NOT REMOVE ###
+# PowerShell 7-safe header: uses env override with absolute fallback.
+\\$repo\\ \\ \\ \\ \\ =\\ \\$env:OSIR_REPO;\\ if\\ \\(\\[string]::IsNullOrWhiteSpace\\(\\$repo\\)\\)\\ \\{\\ \\$repo\\ =\\ 'C:\\\\Users\\\\day_8\\\\dev\\\\osirisborn'\\ }
+if ([string]::IsNullOrWhiteSpace($repo)) { $repo = 'C:\Users\day_8\dev\osirisborn' }
+\\$jsonPath\\ =\\ Join-Path\\ \\$repo\\ 'MythicCore\\\\www\\\\data\\\\learn\\\\python\\.json'
+if (-not (Test-Path -LiteralPath $jsonPath)) { throw "Not found: $jsonPath" }
+### /OSIRISBORN TEST HEADER ###
+
+# osbCompatGlobalsV3
 try {
   if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
   if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot "MythicCore\www\js\langs.loader.js" }

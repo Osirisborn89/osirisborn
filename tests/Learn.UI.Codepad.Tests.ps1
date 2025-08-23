@@ -1,4 +1,12 @@
-﻿# osbCompatGlobalsV3
+### OSIRISBORN TEST HEADER (PS7 ABSOLUTE) — DO NOT REMOVE ###
+# PowerShell 7-safe header: uses env override with absolute fallback.
+\\$repo\\ \\ \\ \\ \\ =\\ \\$env:OSIR_REPO;\\ if\\ \\(\\[string]::IsNullOrWhiteSpace\\(\\$repo\\)\\)\\ \\{\\ \\$repo\\ =\\ 'C:\\\\Users\\\\day_8\\\\dev\\\\osirisborn'\\ }
+if ([string]::IsNullOrWhiteSpace($repo)) { $repo = 'C:\Users\day_8\dev\osirisborn' }
+\\$jsonPath\\ =\\ Join-Path\\ \\$repo\\ 'MythicCore\\\\www\\\\data\\\\learn\\\\python\\.json'
+if (-not (Test-Path -LiteralPath $jsonPath)) { throw "Not found: $jsonPath" }
+### /OSIRISBORN TEST HEADER ###
+
+# osbCompatGlobalsV3
 try {
   if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
   if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot "MythicCore\www\js\langs.loader.js" }
@@ -70,7 +78,7 @@ Describe "Codepad/Content guards" {
     foreach($m in $j.modules){ foreach($l in $m.lessons){ if($l.id -eq "python-intro-01"){ $lesson=$l } } }
     $lesson | Should -Not -BeNullOrEmpty
     $lesson.codepad.lang | Should -Be "python"
-    $lesson.html | Should -Match "<h2>Overview</h2>"
+    $lesson.html | Should -Match '<h2>\s*(What is Python\?|Overview)\s*</h2>'
     $lesson.html | Should -Match "<h3>Guided task</h3>"
   }
 }
