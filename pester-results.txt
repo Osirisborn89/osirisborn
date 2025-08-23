@@ -1,0 +1,3 @@
+
+==== SUMMARY ====
+Passed: 40  Failed: 7  Skipped: 0
