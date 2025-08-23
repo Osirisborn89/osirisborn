@@ -1,3 +1,10 @@
+### OSIRISBORN TEST HEADER — DO NOT REMOVE ###
+# PS7-safe absolute paths for this repo; prevents $jsonPath nulls
+$repo     = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$jsonPath = Join-Path $repo 'MythicCore\www\data\learn\python.json'
+if (-not (Test-Path -LiteralPath $jsonPath)) { throw "Not found: $jsonPath" }
+### /OSIRISBORN TEST HEADER ###
+
 BeforeAll {
   $here = Split-Path -Parent $PSCommandPath
   try { $root = (Resolve-Path (Join-Path $here '..')).Path } catch { $root = (Get-Location).Path }

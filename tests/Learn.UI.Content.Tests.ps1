@@ -1,4 +1,11 @@
-﻿# Learn.UI.Content.Tests.ps1 — hard-coded path, PS5.1-safe
+### OSIRISBORN TEST HEADER — DO NOT REMOVE ###
+# PS7-safe absolute paths for this repo; prevents $jsonPath nulls
+$repo     = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$jsonPath = Join-Path $repo 'MythicCore\www\data\learn\python.json'
+if (-not (Test-Path -LiteralPath $jsonPath)) { throw "Not found: $jsonPath" }
+### /OSIRISBORN TEST HEADER ###
+
+# Learn.UI.Content.Tests.ps1 — hard-coded path, PS5.1-safe
 $ErrorActionPreference = 'Stop'
 
 # absolute path to your python.json

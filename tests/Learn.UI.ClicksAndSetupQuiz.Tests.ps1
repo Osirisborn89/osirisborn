@@ -1,4 +1,11 @@
-﻿# osbCompatGlobalsV3
+### OSIRISBORN TEST HEADER — DO NOT REMOVE ###
+# PS7-safe absolute paths for this repo; prevents $jsonPath nulls
+$repo     = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$jsonPath = Join-Path $repo 'MythicCore\www\data\learn\python.json'
+if (-not (Test-Path -LiteralPath $jsonPath)) { throw "Not found: $jsonPath" }
+### /OSIRISBORN TEST HEADER ###
+
+# osbCompatGlobalsV3
 try {
   if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
   if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot "MythicCore\www\js\langs.loader.js" }
