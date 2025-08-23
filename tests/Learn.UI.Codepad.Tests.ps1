@@ -1,4 +1,4 @@
-﻿# osbCompatGlobalsV3
+# osbCompatGlobalsV3
 try {
   if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
   if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot "MythicCore\www\js\langs.loader.js" }
