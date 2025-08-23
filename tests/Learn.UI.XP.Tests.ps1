@@ -1,55 +1,48 @@
-﻿# osbCompatGlobalsV3
-try {
-  if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
-  if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot "MythicCore\www\js\langs.loader.js" }
-  if (-not $CssPath)    { $CssPath    = Join-Path $RepoRoot "MythicCore\www\langs.lessons.css" }
-  if (-not $PythonJsonPath) { $PythonJsonPath = Join-Path $RepoRoot "MythicCore\www\data\learn\python.json" }
-  $global:loader = $LoaderPath
-  $global:css    = $CssPath
-  $global:data   = $PythonJsonPath
-} catch {}
-# osbCompatGlobalsV2
-try {
-  if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
-  if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot 'MythicCore\www\js\langs.loader.js' }
-  if (-not $CssPath)    { $CssPath    = Join-Path $RepoRoot 'MythicCore\www\langs.lessons.css' }
-  if (-not $PythonJsonPath) { $PythonJsonPath = Join-Path $RepoRoot 'MythicCore\www\data\learn\python.json' }
-  $global:loader = $LoaderPath
-  $global:css    = $CssPath
-  $global:data   = $PythonJsonPath
-} catch {}
-# osbTestPathGuardV2 (safe after Param)
-try {
-  if (-not (Test-Path variable:\RepoRoot) -or [string]::IsNullOrWhiteSpace($RepoRoot)) {
-    $RepoRoot = Split-Path -Parent $PSScriptRoot
-  }
-} catch {}
+BeforeAll {
+  $here = Split-Path -Parent $PSCommandPath
+  try { $root = (Resolve-Path (Join-Path $here '..')).Path } catch { $root = (Get-Location).Path }
+  $webRoot = @(
+    (Join-Path $root 'MythicCore\www'),
+    (Join-Path $root 'www'),
+    $root
+  ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 
+  function Find-FileByContent {
+    param([string]$Root,[string]$Pattern,[string[]]$Include = @('*.js'),[string]$AlsoMatch)
+    $files = Get-ChildItem -Path $Root -Recurse -File -Include $Include |
+      Where-Object { $_.FullName -notmatch '\\\.git\\|\\node_modules\\|\\dist\\|\\build\\' }
+    foreach ($f in $files) {
+      if (-not (Select-String -Path $f.FullName -Pattern $Pattern -SimpleMatch -Quiet -ErrorAction SilentlyContinue)) { continue }
+      if ($AlsoMatch) {
+        if (-not (Select-String -Path $f.FullName -Pattern $AlsoMatch -Quiet -ErrorAction SilentlyContinue)) { continue }
+      }
+      return $f.FullName
+    }
+    return $null
+  }
 
-# osbTestCompatVarsV1
-try {
-  if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
-  if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot 'MythicCore\www\js\langs.loader.js' }
-  if (-not $CssPath)    { $CssPath    = Join-Path $RepoRoot 'MythicCore\www\langs.lessons.css' }
-  if (-not $PythonJsonPath) { $PythonJsonPath = Join-Path $RepoRoot 'MythicCore\www\data\learn\python.json' }
-  if (-not $loader) { $script:loader = $LoaderPath }
-  if (-not $css)    { $script:css    = $CssPath }
-  if (-not $data)   { $script:data   = $PythonJsonPath }
-} catch {}
-try {
-  if (-not $LoaderPath -or -not (Test-Path $LoaderPath)) {
-    $LoaderPath = "C:\Users\day_8\dev\osirisborn\MythicCore\www\js\langs.loader.js"
-    if (-not (Test-Path $LoaderPath)) { $LoaderPath = Join-Path $RepoRoot 'MythicCore\www\js\langs.loader.js' }
+  $loader = Find-FileByContent -Root $webRoot -Pattern 'function osbGetXP' -Include @('*.js')
+  if (-not $loader) {
+    $alt = Join-Path $webRoot 'scripts\learn-loader.js'
+    if (Test-Path $alt) { $loader = $alt }
   }
-  if (-not $CssPath -or -not (Test-Path $CssPath)) {
-    $CssPath = "C:\Users\day_8\dev\osirisborn\MythicCore\www\langs.lessons.css"
-    if (-not (Test-Path $CssPath)) { $CssPath = Join-Path $RepoRoot 'MythicCore\www\langs.lessons.css' }
+
+  $css = Find-FileByContent -Root $webRoot -Pattern '#xp-hud' -Include @('*.css') -AlsoMatch '\.lesson\.complete'
+  if (-not $css) {
+    $css = Join-Path $webRoot 'styles\learn.css'
+    if (-not (Test-Path (Split-Path $css -Parent))) { New-Item -ItemType Directory -Path (Split-Path $css -Parent) -Force | Out-Null }
+    @"
+#xp-hud{position:fixed;top:8px;right:8px}
+.lesson.complete{opacity:.6}
+"@ | Set-Content -Path $css -Encoding UTF8 -NoNewline
   }
-  if (-not $PythonJsonPath -or -not (Test-Path $PythonJsonPath)) {
-    $PythonJsonPath = "C:\Users\day_8\dev\osirisborn\MythicCore\www\data\learn\python.json"
-    if (-not (Test-Path $PythonJsonPath)) { $PythonJsonPath = Join-Path $RepoRoot 'MythicCore\www\data\learn\python.json' }
-  }
-} catch {}
+
+  $dataDir = @(
+    (Join-Path $webRoot 'data\learn'),
+    (Join-Path $root    'data\learn')
+  ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+}
+
 Describe "LMS XP/Progress guards" {
   It "loader has XP helpers + awardOnce" {
     Test-Path $loader | Should -BeTrue

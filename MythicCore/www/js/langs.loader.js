@@ -782,3 +782,77 @@ function mountCodepad(target, opts){
   }catch(e){ console.warn("[CODEPAD] mount failed", e); return null; }
 }
 try { if (!window.mountCodepad) window.mountCodepad = mountCodepad; } catch(e){}
+/* JavaScript code runner + osbRun dispatcher */
+(function(){
+  try{
+    if (typeof window.runJavaScript !== 'function'){
+      window.runJavaScript = function(lang, code, outEl){
+        try {
+          outEl = (outEl && outEl.nodeType===1)? outEl : document.createElement('pre');
+          var logs = [];
+          var origLog = console.log;
+          try {
+            console.log = function(){
+              try {
+                logs.push(Array.prototype.map.call(arguments, function(a){ try{return String(a);}catch(e){return ''; } }).join(' '));
+              } catch(_){}
+              try { origLog.apply(console, arguments); } catch(_){}
+            };
+          } catch(_){}
+          try {
+            var fn = new Function(String(code||''));
+            var ret = fn();
+            if (typeof ret !== 'undefined') { logs.push(String(ret)); }
+          } catch(e){
+            logs.push((e && e.stack) || String(e));
+          } finally {
+            try { console.log = origLog; } catch(_){}
+          }
+          var out = logs.join('\n');
+          outEl.textContent = out || '(no output)';
+          return outEl;
+        } catch(e){
+          try { outEl.textContent = 'Runtime error: ' + ((e && e.message) || e); } catch(_){}
+          return outEl;
+        }
+      };
+    }
+    if (typeof window.osbRun !== 'function'){
+      window.osbRun = function(lang, code, outEl){
+        var L = String(lang||'').toLowerCase();
+        if ((L === 'javascript' || L === 'js') && typeof window.runJavaScript === 'function') return window.runJavaScript(L, code, outEl);
+        if (L === 'python' && typeof window.osbRunPython === 'function') return window.osbRunPython(L, code, outEl);
+        if (outEl && outEl.nodeType===1) outEl.textContent = '(No runner for ' + L + ')';
+        return null;
+      };
+    }
+  }catch(e){}
+})();/* JavaScript code runner */
+function runJavaScript(lang, code, outEl){
+  try {
+    outEl = (outEl && outEl.nodeType===1)? outEl : document.createElement('pre');
+    var logs = [];
+    var origLog = console.log;
+    try {
+      console.log = function(){
+        try { logs.push(Array.prototype.map.call(arguments, function(a){ try{return String(a);}catch(e){return ''; } }).join(' ')); } catch(_){}
+        try { origLog.apply(console, arguments); } catch(_){}
+      };
+    } catch(_){}
+    try {
+      var fn = new Function(String(code||''));
+      var ret = fn();
+      if (typeof ret !== 'undefined') { logs.push(String(ret)); }
+    } catch(e){
+      logs.push((e && e.stack) || String(e));
+    } finally {
+      try { console.log = origLog; } catch(_){}
+    }
+    var out = logs.join('\n');
+    outEl.textContent = out || '(no output)';
+    return outEl;
+  } catch(e){
+    try { outEl.textContent = 'Runtime error: ' + ((e && e.message) || e); } catch(_){}
+    return outEl;
+  }
+}
