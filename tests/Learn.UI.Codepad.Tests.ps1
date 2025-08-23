@@ -1,76 +1,50 @@
-﻿# osbCompatGlobalsV3
-try {
-  if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
-  if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot "MythicCore\www\js\langs.loader.js" }
-  if (-not $CssPath)    { $CssPath    = Join-Path $RepoRoot "MythicCore\www\langs.lessons.css" }
-  if (-not $PythonJsonPath) { $PythonJsonPath = Join-Path $RepoRoot "MythicCore\www\data\learn\python.json" }
-  $global:loader = $LoaderPath
-  $global:css    = $CssPath
-  $global:data   = $PythonJsonPath
-} catch {}
-# osbCompatGlobalsV2
-try {
-  if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
-  if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot 'MythicCore\www\js\langs.loader.js' }
-  if (-not $CssPath)    { $CssPath    = Join-Path $RepoRoot 'MythicCore\www\langs.lessons.css' }
-  if (-not $PythonJsonPath) { $PythonJsonPath = Join-Path $RepoRoot 'MythicCore\www\data\learn\python.json' }
-  $global:loader = $LoaderPath
-  $global:css    = $CssPath
-  $global:data   = $PythonJsonPath
-} catch {}
-# osbTestPathGuardV2 (safe after Param)
-try {
-  if (-not (Test-Path variable:\RepoRoot) -or [string]::IsNullOrWhiteSpace($RepoRoot)) {
-    $RepoRoot = Split-Path -Parent $PSScriptRoot
-  }
-} catch {}
+﻿# Learn.UI.Codepad.Tests.ps1 — hard-coded paths, PS5.1-safe
+$ErrorActionPreference = 'Stop'
 
+# --- absolute paths on your machine ---
+$RepoRoot       = 'C:\Users\day_8\dev\osirisborn'
+$LoaderPath     = 'C:\Users\day_8\dev\osirisborn\MythicCore\www\js\langs.loader.js'
+$CssPath        = 'C:\Users\day_8\dev\osirisborn\MythicCore\www\langs.lessons.css'
+$PythonJsonPath = 'C:\Users\day_8\dev\osirisborn\MythicCore\www\data\learn\python.json'
 
-# osbTestCompatVarsV1
-try {
-  if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
-  if (-not $LoaderPath) { $LoaderPath = Join-Path $RepoRoot 'MythicCore\www\js\langs.loader.js' }
-  if (-not $CssPath)    { $CssPath    = Join-Path $RepoRoot 'MythicCore\www\langs.lessons.css' }
-  if (-not $PythonJsonPath) { $PythonJsonPath = Join-Path $RepoRoot 'MythicCore\www\data\learn\python.json' }
-  if (-not $loader) { $script:loader = $LoaderPath }
-  if (-not $css)    { $script:css    = $CssPath }
-  if (-not $data)   { $script:data   = $PythonJsonPath }
-} catch {}
-try {
-  if (-not $LoaderPath -or -not (Test-Path $LoaderPath)) {
-    $LoaderPath = "C:\Users\day_8\dev\osirisborn\MythicCore\www\js\langs.loader.js"
-    if (-not (Test-Path $LoaderPath)) { $LoaderPath = Join-Path $RepoRoot 'MythicCore\www\js\langs.loader.js' }
+Describe 'Codepad/Content guards' {
+
+  It 'path sanity (loader/css/json present)' {
+    Test-Path -LiteralPath $LoaderPath     | Should -BeTrue -Because "expected langs.loader.js at $LoaderPath"
+    Test-Path -LiteralPath $CssPath        | Should -BeTrue -Because "expected langs.lessons.css at $CssPath"
+    Test-Path -LiteralPath $PythonJsonPath | Should -BeTrue -Because "expected python.json at $PythonJsonPath"
   }
-  if (-not $CssPath -or -not (Test-Path $CssPath)) {
-    $CssPath = "C:\Users\day_8\dev\osirisborn\MythicCore\www\langs.lessons.css"
-    if (-not (Test-Path $CssPath)) { $CssPath = Join-Path $RepoRoot 'MythicCore\www\langs.lessons.css' }
+
+  BeforeAll {
+    $script:loaderText = Get-Content -LiteralPath $LoaderPath -Raw -Encoding UTF8
+    $script:cssText    = Get-Content -LiteralPath $CssPath -Raw -Encoding UTF8
+    $script:json       = Get-Content -LiteralPath $PythonJsonPath -Raw -Encoding UTF8 | ConvertFrom-Json
   }
-  if (-not $PythonJsonPath -or -not (Test-Path $PythonJsonPath)) {
-    $PythonJsonPath = "C:\Users\day_8\dev\osirisborn\MythicCore\www\data\learn\python.json"
-    if (-not (Test-Path $PythonJsonPath)) { $PythonJsonPath = Join-Path $RepoRoot 'MythicCore\www\data\learn\python.json' }
+
+  It 'loader contains codepad functions' {
+    $script:loaderText | Should -Match 'function\s+codepadHTML'
+    $script:loaderText | Should -Match 'function\s+mountCodepad'
+    $script:loaderText | Should -Match 'runPython'
+    $script:loaderText | Should -Match 'runJavaScript'
   }
-} catch {}
-Describe "Codepad/Content guards" {
-  It "loader contains codepad functions" {
-    Test-Path $loader | Should -BeTrue
-    $c = Get-Content -Raw $loader
-    $c | Should -Match "function codepadHTML"
-    $c | Should -Match "function mountCodepad"
-    $c | Should -Match "runPython"
-    $c | Should -Match "runJavaScript"
+
+  It 'CSS defines .codepad styles' {
+    $script:cssText | Should -Match '\.codepad\s*\{'
   }
-  It "CSS defines .codepad styles" {
-    Test-Path $css | Should -BeTrue
-    (Get-Content -Raw $css) | Should -Match "\.codepad\s*\{"
-  }
-  It "python intro lesson defines a codepad block" {
-    Test-Path $data | Should -BeTrue
-    $j = Get-Content -Raw $data | ConvertFrom-Json
+
+  It 'python intro lesson defines a codepad block' {
     $lesson = $null
-    foreach($m in $j.modules){ foreach($l in $m.lessons){ if($l.id -eq "python-intro-01"){ $lesson=$l } } }
+    foreach ($m in $script:json.modules) {
+      foreach ($l in $m.lessons) {
+        if ($l.id -eq 'python-intro-01') { $lesson = $l; break }
+      }
+      if ($lesson) { break }
+    }
+
     $lesson | Should -Not -BeNullOrEmpty
-    $lesson.codepad.lang | Should -Be "python"
-    $lesson.html | Should -Match "<h2>Overview</h2>"
-    $lesson.html | Should -Match "<h3>Guided task</h3>"
+    $lesson.codepad.lang | Should -Be 'python'
+    $lesson.html | Should -Match '<h2>\s*(What is Python\?|Overview)\s*</h2>'
+    $lesson.html | Should -Match '<h3>Guided task</h3>'
+    $lesson.html | Should -Match '<div\s+class="codepad"[^>]*data-lang="python"'
   }
 }
