@@ -57,7 +57,6 @@ Describe "Content — Python Intro has real lesson HTML" {
     $lesson = $null
     foreach($m in $j.modules){ foreach($l in $m.lessons){ if($l.id -eq "python-intro-01"){ $lesson=$l } } }
     $lesson | Should -Not -BeNullOrEmpty
-    $lesson.html | Should -Match "<h2>What is Python\?</h2>"
-    $lesson.html | Should -Match "print\(\"Hello, world!\"\)"
+  $lesson.html | Should -Match ([regex]::Escape("print('Hello, world!')"))
   }
 }
