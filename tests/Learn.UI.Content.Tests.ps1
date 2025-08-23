@@ -1,9 +1,29 @@
+publish/working-20250823-213812
+
+publish/fix-intro-h2-and-content-path-20250823-202457
+### OSIRISBORN HEADER — DO NOT REMOVE ###
+# PS7-safe absolute paths for this repo; prevents $jsonPath nulls
+$repo     = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$jsonPath = Join-Path $repo 'MythicCore\www\data\learn\python.json'
+if (-not (Test-Path -LiteralPath $jsonPath)) { throw "Not found: $jsonPath" }
+### /OSIRISBORN HEADER ###
+
+# Learn.UI.Content.Tests.ps1 — hard-coded path, PS5.1-safe
+$ErrorActionPreference = 'Stop'
+
+# absolute path to your python.json
+$PythonJsonPath = 'C:\Users\day_8\dev\osirisborn\MythicCore\www\data\learn\python.json'
+
+
+main
 ﻿# Learn.UI.Content.Tests.ps1 — hard-coded path, PS5.1-safe
 $ErrorActionPreference = 'Stop'
 
 # absolute path to your python.json
 $PythonJsonPath = 'C:\Users\day_8\dev\osirisborn\MythicCore\www\data\learn\python.json'
 
+publish/working-20250823-213812
+main
 Describe 'Content — Python Intro has real lesson HTML' {
 
   It 'python.json exists' {
