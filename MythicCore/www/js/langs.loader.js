@@ -2,7 +2,7 @@
   if (window.__langsLoaderLoaded) return; window.__langsLoaderLoaded = true;
 feature/learn-mvp-harden
 
-  var RESERVED = { "":1,"coding":1,"languages":1,"all":1,"tracks":1,"hub":1,"index":1,"home":1 };
+  var RESERVED = { "":1,'coding':1,"languages":1,"all":1,"tracks":1,"hub":1,"index":1,"home":1 };
 
   function parseRoute(){
     var h=(location.hash||"").replace(/^#/,""), parts=h.split("/").filter(Boolean);
